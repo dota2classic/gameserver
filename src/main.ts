@@ -7,14 +7,14 @@ import { Transport } from '@nestjs/microservices';
 import { inspect } from 'util';
 import { Subscriber } from 'rxjs';
 import { Logger } from '@nestjs/common';
-import { Repository } from 'typeorm';
 
 export function prepareModels(publisher: EventPublisher) {
   publisher.mergeClassContext(GameServerModel);
 }
 
 async function bootstrap() {
-  const app = await NestFactory.createMicroservice(AppModule, {
+  const app = await NestFactory.create(AppModule);
+  app.connectMicroservice({
     transport: Transport.REDIS,
     options: {
       url: REDIS_URL(),
@@ -22,7 +22,9 @@ async function bootstrap() {
       retryDelay: 5000,
     },
   });
-  await app.listenAsync();
+
+  await app.listen(5003);
+  await app.startAllMicroservices();
 
   const publisher = app.get(EventPublisher);
   prepareModels(publisher);

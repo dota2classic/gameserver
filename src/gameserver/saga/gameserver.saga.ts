@@ -6,10 +6,6 @@ import { GameServerNotFoundEvent } from 'gateway/events/game-server-not-found.ev
 import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
 import { MatchInfo, RoomReadyEvent } from 'gateway/events/room-ready.event';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
-import { GameServerFoundEvent } from 'gateway/events/game-server-found.event';
-import { CreateMatchCommand } from 'gameserver/command/CreateMatch/create-match.command';
-import { MatchCreatedEvent } from 'gameserver/event/match-created.event';
-import { StartGameServerCommand } from 'gameserver/command/StartGameServer/start-game-server.command';
 
 @Injectable()
 export class GameserverSaga {
@@ -34,21 +30,17 @@ export class GameserverSaga {
     );
   };
 
-  @Saga()
-  gameServerFound = (events$: Observable<any>): Observable<ICommand> => {
-    return events$.pipe(
-      ofType(GameServerFoundEvent),
-      map(e => new CreateMatchCommand(e.url, e.info)),
-    );
-  };
-
-  @Saga()
-  matchCreated = (events$: Observable<any>): Observable<ICommand> => {
-    return events$.pipe(
-      ofType(MatchCreatedEvent),
-      map(e => new StartGameServerCommand(e.id, e.url, e.info)),
-    );
-  };
+  // @Saga()
+  // updateReceived = (events$: Observable<any>): Observable<ICommand> => {
+  //   return events$.pipe(
+  //     ofType(GameServerUpdateReceivedEvent),
+  //     map(e => new UpdateGameServerCommand(
+  //       e.url,
+  //       e.version,
+  //       e.running
+  //     )),
+  //   );
+  // };
 
   @Saga()
   reFindServer = (events$: Observable<any>): Observable<ICommand> => {

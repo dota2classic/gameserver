@@ -2,15 +2,14 @@ import { GameServerRepository } from 'gameserver/repository/game-server.reposito
 import { GameserverSaga } from 'gameserver/saga/gameserver.saga';
 import { FindGameServerHandler } from 'gameserver/command/FindGameServer/find-game-server.handler';
 import { UpdateGameServerHandler } from 'gameserver/command/UpdateGameServer/update-game-server.handler';
-import { CreateMatchHandler } from 'gameserver/command/CreateMatch/create-match.handler';
+import { GameServerSessionRepository } from 'gameserver/repository/game-server-session.repository';
+import { GameServerStoppedHandler } from 'gameserver/event-handler/game-server-stopped.handler';
 
-const CommandHandlers = [
-  FindGameServerHandler,
-  CreateMatchHandler,
-  UpdateGameServerHandler,
+const CommandHandlers = [FindGameServerHandler, UpdateGameServerHandler];
+const EventHandlers = [
+  GameServerStoppedHandler
 ];
-const EventHandlers = [];
-const Repositories = [GameServerRepository];
+const Repositories = [GameServerRepository, GameServerSessionRepository];
 const Services = [];
 const Sagas = [GameserverSaga];
 
