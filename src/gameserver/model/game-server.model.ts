@@ -4,7 +4,7 @@ import { GameServerFoundEvent } from 'gateway/events/game-server-found.event';
 
 export class GameServerModel extends AggregateRoot {
   public running: boolean = false;
-  public roomId?: string;
+  public matchID?: number;
 
   constructor(
     public readonly url: string,
@@ -13,8 +13,4 @@ export class GameServerModel extends AggregateRoot {
     super();
   }
 
-  attach(roomId: string) {
-    this.roomId = roomId;
-    this.apply(new GameServerFoundEvent(this.url, this.roomId, this.version));
-  }
 }
