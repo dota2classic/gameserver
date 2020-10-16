@@ -6,7 +6,7 @@ import { isDev, REDIS_URL } from 'env';
 import { GameServerDomain } from 'gameserver';
 import { CoreController } from 'core.controller';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { devDbConfig, prodDbConfig } from 'util/typeorm-config';
+import { devDbConfig, Entities, prodDbConfig } from 'util/typeorm-config';
 
 @Module({
   imports: [
@@ -14,6 +14,7 @@ import { devDbConfig, prodDbConfig } from 'util/typeorm-config';
     TypeOrmModule.forRoot(
       (isDev ? devDbConfig : prodDbConfig) as TypeOrmModuleOptions,
     ),
+    TypeOrmModule.forFeature(Entities),
     ClientsModule.register([
       {
         name: 'QueryCore',

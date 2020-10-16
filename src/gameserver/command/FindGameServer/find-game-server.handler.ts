@@ -17,33 +17,33 @@ export class FindGameServerHandler
   ) {}
 
   async execute(command: FindGameServerCommand) {
-    const gs = await this.gsRepository.find(command.version);
+    const gs = await this.gsRepository.find(command.matchInfo.version);
 
     if (gs) {
       //
+      gs.roomId = command.matchInfo.roomId;
+      await this.gsRepository.save(gs.url, gs)
       this.ebus.publish(
-        new GameServerFoundEvent(gs.url, command.roomId, command.version, command.mode),
+        new GameServerFoundEvent(
+          gs.url,
+          command.matchInfo
+        ),
       );
     } else {
       if (command.tries < 5) {
         // we need to schedule new find
         this.ebus.publish(
           new GameServerNotFoundEvent(
-            command.roomId,
-            command.version,
-            command.mode,
-            command.radiant,
-            command.dire,
-            command.averageMMR,
+            command.matchInfo,
             command.tries,
           ),
         );
       } else {
         this.ebus.publish(
           new GameServerFindFailedEvent(
-            command.roomId,
-            command.version,
-            command.mode,
+            command.matchInfo.roomId,
+            command.matchInfo.version,
+            command.matchInfo.mode,
           ),
         );
       }

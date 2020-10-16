@@ -1,6 +1,8 @@
-import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
+import { MatchInfo } from 'gateway/events/room-ready.event';
 
 export class CreateMatchCommand {
-  constructor(public readonly mode: MatchmakingMode, public readonly url: string) {
-  }
+  constructor(
+    public readonly url: string,
+    public readonly info: MatchInfo
+  ) {}
 }

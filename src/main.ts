@@ -7,6 +7,7 @@ import { Transport } from '@nestjs/microservices';
 import { inspect } from 'util';
 import { Subscriber } from 'rxjs';
 import { Logger } from '@nestjs/common';
+import { Repository } from 'typeorm';
 
 export function prepareModels(publisher: EventPublisher) {
   publisher.mergeClassContext(GameServerModel);
