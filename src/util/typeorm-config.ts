@@ -1,4 +1,5 @@
 import { MatchEntity } from 'gameserver/model/match.entity';
+import { DB_HOST, DB_PASSWORD, DB_USERNAME } from 'env';
 
 export const Entities = [
   MatchEntity
@@ -16,21 +17,22 @@ export const devDbConfig: any = {
   keepConnectionAlive: true,
 };
 
+
 export const testDbConfig: any = {
   type: 'sqlite',
   database: ':memory:',
   entities: Entities,
   synchronize: true,
-  keepConnectionAlive: true,
+  keepConnectionAlive: true
 };
 
 export const prodDbConfig: any = {
   type: 'postgres',
   database: 'postgres',
-  host: 'gameserver-db',
-  port: 5400,
-  username: 'postgres',
-  password: 'tododododoood',
+  host: DB_HOST(),
+  port: 5432,
+  username: DB_USERNAME(),
+  password: DB_PASSWORD,
   entities: Entities,
   synchronize: true,
 
