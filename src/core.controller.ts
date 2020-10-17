@@ -6,8 +6,9 @@ import { Constructor, EventBus } from '@nestjs/cqrs';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerStartedEvent } from 'gateway/events/game-server-started.event';
 import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
+import { GameSessionUpdatedEvent } from 'gameserver/event/game-session-updated.event';
 
-export enum GameState {
+export enum Dota_GameState {
   DOTA_GAMERULES_STATE_INIT = 0,
   DOTA_GAMERULES_STATE_WAIT_FOR_PLAYERS_TO_LOAD = 1,
   DOTA_GAMERULES_STATE_CUSTOM_GAME_SETUP = 2,
@@ -23,9 +24,8 @@ export enum GameState {
 class UpdateServerDTO {
   constructor(
     public readonly url: string,
-    public readonly state: GameState,
+    public readonly state: Dota_GameState,
     public readonly matchId: number,
-    public readonly mode: MatchmakingMode,
   ) {}
 }
 
@@ -41,14 +41,11 @@ export class CoreController {
   }
   @EventPattern(RoomReadyEvent.name)
   async RoomReadyEvent(data: RoomReadyEvent) {
-    console.log(`Room readY????`);
     this.event(RoomReadyEvent, data);
   }
 
-
   @EventPattern(GameServerStartedEvent.name)
   async GameServerStartedEvent(data: GameServerStartedEvent) {
-    console.log(`SERVER STARTED YAHOO`);
     this.event(GameServerStartedEvent, data);
   }
 
@@ -57,8 +54,8 @@ export class CoreController {
     this.event(GameServerStoppedEvent, data);
   }
 
-  @Post('server_update')
-  async updateGameServer(@Body() dto: UpdateServerDTO) {
-
+  @EventPattern(GameSessionUpdatedEvent.name)
+  async GameSessionUpdatedEvent(data: GameSessionUpdatedEvent) {
+    this.event(GameSessionUpdatedEvent, data);
   }
 }
