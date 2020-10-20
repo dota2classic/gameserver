@@ -8,6 +8,6 @@ export class GameSessionFinishedHandler
   constructor(private readonly ebus: EventBus) {}
 
   async handle(event: GameSessionFinishedEvent) {
-    this.ebus.publish(new MatchFinishedEvent(event.matchId));
+    this.ebus.publish(new MatchFinishedEvent(event.matchId, event.info));
   }
 }
