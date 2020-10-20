@@ -3,17 +3,18 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 @Entity()
 export class MatchEntity {
-
   @PrimaryGeneratedColumn()
   id!: number;
-
 
   @Column()
   started: boolean;
 
-  @Column()
-  server: string
+  @Column({ default: true })
+  finished: boolean;
 
   @Column()
-  mode: MatchmakingMode
+  server: string;
+
+  @Column()
+  mode: MatchmakingMode;
 }
