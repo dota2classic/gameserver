@@ -7,6 +7,7 @@ import { GameServerStoppedHandler } from 'gameserver/event-handler/game-server-s
 import { GameServerDiscoveredHandler } from 'gameserver/event-handler/game-server-discovered.event';
 import { GameServerStartedHandler } from 'gameserver/event-handler/game-server-started.handler';
 import { GameServerNotStartedHandler } from 'gameserver/event-handler/game-server-not-started.handler';
+import { GameSessionFinishedHandler } from 'gameserver/event-handler/game-session-finished.handler';
 
 const CommandHandlers = [FindGameServerHandler, UpdateGameServerHandler];
 const EventHandlers = [
@@ -14,6 +15,7 @@ const EventHandlers = [
   GameServerDiscoveredHandler,
   GameServerStartedHandler,
   GameServerNotStartedHandler,
+  GameSessionFinishedHandler
 ];
 const Repositories = [GameServerRepository, GameServerSessionRepository];
 const Services = [];

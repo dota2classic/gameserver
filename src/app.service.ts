@@ -6,6 +6,7 @@ import { GameSessionCreatedEvent } from 'gateway/events/game-session-created.eve
 import { DiscoveryRequestedEvent } from 'gateway/events/discovery-requested.event';
 import { MatchStartedEvent } from 'gateway/events/match-started.event';
 import { MatchCancelledEvent } from 'gateway/events/match-cancelled.event';
+import { MatchFinishedEvent } from 'gateway/events/match-finished.event';
 
 @Injectable()
 export class AppService {
@@ -24,6 +25,7 @@ export class AppService {
       DiscoveryRequestedEvent,
       MatchStartedEvent,
       MatchCancelledEvent,
+      MatchFinishedEvent
     ];
     this.ebus
       .pipe(ofType(...publicEvents))
