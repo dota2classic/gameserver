@@ -4,7 +4,7 @@ import { RoomReadyEvent } from 'gateway/events/room-ready.event';
 import { inspect } from 'util';
 import { Constructor, EventBus } from '@nestjs/cqrs';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { GameServerStartedEvent } from 'gateway/events/game-server-started.event';
+import { GameServerStartedEvent, GameServerNotStartedEvent } from 'gateway/events/game-server-started.event';
 import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
 import { GameSessionUpdatedEvent } from 'gameserver/event/game-session-updated.event';
 import { GameServerDiscoveredEvent } from 'gateway/events/game-server-discovered.event';
@@ -48,6 +48,11 @@ export class CoreController {
   @EventPattern(GameServerStartedEvent.name)
   async GameServerStartedEvent(data: GameServerStartedEvent) {
     this.event(GameServerStartedEvent, data);
+  }
+
+  @EventPattern(GameServerNotStartedEvent.name)
+  async GameServerNotStartedEvent(data: GameServerNotStartedEvent) {
+    this.event(GameServerNotStartedEvent, data);
   }
 
   @EventPattern(GameServerStoppedEvent.name)

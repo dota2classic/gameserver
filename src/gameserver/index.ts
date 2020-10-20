@@ -5,11 +5,15 @@ import { UpdateGameServerHandler } from 'gameserver/command/UpdateGameServer/upd
 import { GameServerSessionRepository } from 'gameserver/repository/game-server-session.repository';
 import { GameServerStoppedHandler } from 'gameserver/event-handler/game-server-stopped.handler';
 import { GameServerDiscoveredHandler } from 'gameserver/event-handler/game-server-discovered.event';
+import { GameServerStartedHandler } from 'gameserver/event-handler/game-server-started.handler';
+import { GameServerNotStartedHandler } from 'gameserver/event-handler/game-server-not-started.handler';
 
 const CommandHandlers = [FindGameServerHandler, UpdateGameServerHandler];
 const EventHandlers = [
   GameServerStoppedHandler,
-  GameServerDiscoveredHandler
+  GameServerDiscoveredHandler,
+  GameServerStartedHandler,
+  GameServerNotStartedHandler,
 ];
 const Repositories = [GameServerRepository, GameServerSessionRepository];
 const Services = [];
