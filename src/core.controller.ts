@@ -7,6 +7,7 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerStartedEvent } from 'gateway/events/game-server-started.event';
 import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
 import { GameSessionUpdatedEvent } from 'gameserver/event/game-session-updated.event';
+import { GameServerDiscoveredEvent } from 'gateway/events/game-server-discovered.event';
 
 export enum Dota_GameState {
   DOTA_GAMERULES_STATE_INIT = 0,
@@ -57,5 +58,10 @@ export class CoreController {
   @EventPattern(GameSessionUpdatedEvent.name)
   async GameSessionUpdatedEvent(data: GameSessionUpdatedEvent) {
     this.event(GameSessionUpdatedEvent, data);
+  }
+
+  @EventPattern(GameServerDiscoveredEvent.name)
+  async GameServerDiscoveredEvent(data: GameServerDiscoveredEvent) {
+    this.event(GameServerDiscoveredEvent, data);
   }
 }

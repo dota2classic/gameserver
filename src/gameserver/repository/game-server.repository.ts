@@ -12,7 +12,6 @@ export class GameServerRepository extends RuntimeRepository<
 
   constructor(eventPublisher: EventPublisher) {
     super(eventPublisher);
-    this.save("glory.dota2classic.ru:27015", new GameServerModel("glory.dota2classic.ru:27015", Dota2Version.Dota_681))
   }
 
   async find(version: Dota2Version) {

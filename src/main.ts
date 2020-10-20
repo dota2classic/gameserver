@@ -7,6 +7,8 @@ import { Transport } from '@nestjs/microservices';
 import { inspect } from 'util';
 import { Subscriber } from 'rxjs';
 import { Logger } from '@nestjs/common';
+import { DiscoveryRequestedEvent } from 'gateway/events/discovery-requested.event';
+import { wait } from 'util/wait';
 
 export function prepareModels(publisher: EventPublisher) {
   publisher.mergeClassContext(GameServerModel);
@@ -41,6 +43,7 @@ async function bootstrap() {
     }),
   );
 
+
   cbus._subscribe(
     new Subscriber<any>(e => {
       clogger.log(
@@ -49,5 +52,9 @@ async function bootstrap() {
       );
     }),
   );
+
+
+  await wait(500)
+  ebus.publish(new DiscoveryRequestedEvent(Math.random()))
 }
 bootstrap();

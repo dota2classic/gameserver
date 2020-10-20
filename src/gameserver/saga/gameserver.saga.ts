@@ -6,6 +6,7 @@ import { GameServerNotFoundEvent } from 'gateway/events/game-server-not-found.ev
 import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
 import { MatchInfo, RoomReadyEvent } from 'gateway/events/room-ready.event';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
+import { GameSessionCreatedEvent } from 'gateway/events/game-session-created.event';
 
 @Injectable()
 export class GameserverSaga {
@@ -51,4 +52,13 @@ export class GameserverSaga {
       map(e => new FindGameServerCommand(e.info, e.tries + 1)),
     );
   };
+
+  //
+  // @Saga()
+  // sessionCreated = (events$: Observable<any>): Observable<ICommand> => {
+  //   return events$.pipe(
+  //     ofType(GameSessionCreatedEvent),
+  //     map(e => new FindGameServerCommand(e.info, e.tries + 1)),
+  //   );
+  // };
 }

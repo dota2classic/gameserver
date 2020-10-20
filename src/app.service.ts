@@ -3,6 +3,7 @@ import { EventBus, ofType } from '@nestjs/cqrs';
 import { ClientProxy } from '@nestjs/microservices';
 import { MatchCreatedEvent } from 'gameserver/event/match-created.event';
 import { GameSessionCreatedEvent } from 'gateway/events/game-session-created.event';
+import { DiscoveryRequestedEvent } from 'gateway/events/discovery-requested.event';
 
 @Injectable()
 export class AppService {
@@ -17,7 +18,8 @@ export class AppService {
     } catch (e) {}
 
     const publicEvents: any[] = [
-      GameSessionCreatedEvent
+      GameSessionCreatedEvent,
+      DiscoveryRequestedEvent
     ];
     this.ebus
       .pipe(ofType(...publicEvents))
