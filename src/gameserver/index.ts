@@ -10,6 +10,7 @@ import { GameServerNotStartedHandler } from 'gameserver/event-handler/game-serve
 import { GameSessionFinishedHandler } from 'gameserver/event-handler/game-session-finished.handler';
 import { MatchStartedHandler } from 'gameserver/event-handler/match-started.handler';
 import { MatchFinishedHandler } from 'gameserver/event-handler/match-finished.handler';
+import { GameResultsHandler } from 'gameserver/event-handler/game-results.handler';
 
 const CommandHandlers = [FindGameServerHandler, UpdateGameServerHandler];
 const EventHandlers = [
@@ -21,7 +22,9 @@ const EventHandlers = [
 
 
   MatchStartedHandler,
-  MatchFinishedHandler
+  MatchFinishedHandler,
+
+  GameResultsHandler
 ];
 const Repositories = [GameServerRepository, GameServerSessionRepository];
 const Services = [];

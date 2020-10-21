@@ -4,10 +4,14 @@ import { RoomReadyEvent } from 'gateway/events/room-ready.event';
 import { inspect } from 'util';
 import { Constructor, EventBus } from '@nestjs/cqrs';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { GameServerStartedEvent, GameServerNotStartedEvent } from 'gateway/events/game-server-started.event';
+import {
+  GameServerStartedEvent,
+  GameServerNotStartedEvent,
+} from 'gateway/events/game-server-started.event';
 import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
 import { GameSessionUpdatedEvent } from 'gameserver/event/game-session-updated.event';
 import { GameServerDiscoveredEvent } from 'gateway/events/game-server-discovered.event';
+import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
 
 export enum Dota_GameState {
   DOTA_GAMERULES_STATE_INIT = 0,
@@ -68,5 +72,10 @@ export class CoreController {
   @EventPattern(GameServerDiscoveredEvent.name)
   async GameServerDiscoveredEvent(data: GameServerDiscoveredEvent) {
     this.event(GameServerDiscoveredEvent, data);
+  }
+
+  @EventPattern(GameResultsEvent.name)
+  async GameResultsEvent(data: GameResultsEvent) {
+    this.event(GameResultsEvent, data);
   }
 }

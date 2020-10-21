@@ -1,8 +1,12 @@
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { DB_HOST, DB_PASSWORD, DB_USERNAME } from 'env';
+import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
+import Match from 'gameserver/entity/Match';
 
 export const Entities = [
-  MatchEntity
+  MatchEntity,
+  Match,
+  PlayerInMatch
 ]
 export const devDbConfig: any = {
   type: 'postgres',
