@@ -7,6 +7,7 @@ import { GameServerDomain } from 'gameserver';
 import { CoreController } from 'core.controller';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { devDbConfig, Entities, prodDbConfig } from 'util/typeorm-config';
+import { QueryController } from 'query.controller';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { devDbConfig, Entities, prodDbConfig } from 'util/typeorm-config';
       },
     ]),
   ],
-  controllers: [CoreController],
+  controllers: [CoreController, QueryController],
   providers: [AppService, ...GameServerDomain],
 })
 export class AppModule {}
