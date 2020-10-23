@@ -11,6 +11,7 @@ import { GameSessionFinishedHandler } from 'gameserver/event-handler/game-sessio
 import { MatchStartedHandler } from 'gameserver/event-handler/match-started.handler';
 import { MatchFinishedHandler } from 'gameserver/event-handler/match-finished.handler';
 import { GameResultsHandler } from 'gameserver/event-handler/game-results.handler';
+import { GetSessionByUserHandler } from 'gameserver/query/get-session-by-user.handler';
 
 const CommandHandlers = [FindGameServerHandler, UpdateGameServerHandler];
 const EventHandlers = [
@@ -36,4 +37,5 @@ export const GameServerDomain = [
   ...Repositories,
   ...Services,
   ...Sagas,
+  GetSessionByUserHandler
 ];

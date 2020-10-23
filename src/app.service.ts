@@ -27,6 +27,7 @@ export class AppService {
       MatchCancelledEvent,
       MatchFinishedEvent
     ];
+
     this.ebus
       .pipe(ofType(...publicEvents))
       .subscribe(t => this.redisEventQueue.emit(t.constructor.name, t));
