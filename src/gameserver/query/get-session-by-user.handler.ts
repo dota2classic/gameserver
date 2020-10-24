@@ -1,5 +1,5 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { Logger } from '@nestjs/common';
+import { Logger, Type } from '@nestjs/common';
 import { GetSessionByUserQuery } from 'gateway/queries/GetSessionByUser/get-session-by-user.query';
 import { GetSessionByUserQueryResult } from 'gateway/queries/GetSessionByUser/get-session-by-user-query.result';
 import { GameServerSessionRepository } from 'gameserver/repository/game-server-session.repository';

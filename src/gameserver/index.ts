@@ -13,6 +13,7 @@ import { MatchFinishedHandler } from 'gameserver/event-handler/match-finished.ha
 import { GameResultsHandler } from 'gameserver/event-handler/game-results.handler';
 import { GetSessionByUserHandler } from 'gameserver/query/get-session-by-user.handler';
 import { ProcessRankedMatchHandler } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.handler';
+import { GetPlayerInfoHandler } from 'gameserver/query/get-player-info.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -31,6 +32,8 @@ const EventHandlers = [
 
   GameResultsHandler,
 ];
+
+const QueryHandlers = [GetPlayerInfoHandler, GetSessionByUserHandler];
 const Repositories = [GameServerRepository, GameServerSessionRepository];
 const Services = [];
 const Sagas = [GameserverSaga];
@@ -41,5 +44,5 @@ export const GameServerDomain = [
   ...Repositories,
   ...Services,
   ...Sagas,
-  GetSessionByUserHandler,
+  ...QueryHandlers,
 ];

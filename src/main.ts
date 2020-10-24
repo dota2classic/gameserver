@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { CommandBus, EventBus, EventPublisher } from '@nestjs/cqrs';
+import { CommandBus, EventBus, EventPublisher, QueryBus } from '@nestjs/cqrs';
 import { GameServerModel } from 'gameserver/model/game-server.model';
 import { REDIS_URL } from 'env';
 import { Transport } from '@nestjs/microservices';
@@ -34,15 +34,24 @@ async function bootstrap() {
 
   const ebus = app.get(EventBus);
   const cbus = app.get(CommandBus);
+  const qbus = app.get(QueryBus);
 
   const clogger = new Logger('CommandLogger');
   const elogger = new Logger('EventLogger');
+  const qlogger = new Logger('EventLogger');
 
   ebus._subscribe(
     new Subscriber<any>(e => {
       elogger.log(`${inspect(e)}`);
     }),
   );
+
+  qbus._subscribe(
+    new Subscriber<any>(e => {
+      qlogger.log(`${inspect(e)}`);
+    }),
+  );
+
 
 
   cbus._subscribe(
