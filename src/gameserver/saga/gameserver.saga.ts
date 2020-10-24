@@ -6,7 +6,10 @@ import { GameServerNotFoundEvent } from 'gateway/events/game-server-not-found.ev
 import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
 import { MatchInfo, RoomReadyEvent } from 'gateway/events/room-ready.event';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
-import { GameSessionCreatedEvent } from 'gateway/events/game-session-created.event';
+import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
+import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
+import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
+import { PlayerId } from 'gateway/shared-types/player-id';
 
 @Injectable()
 export class GameserverSaga {
@@ -50,6 +53,26 @@ export class GameserverSaga {
       filter(t => t.tries < 5),
       delay(10_000), // let's wait 10 secs for now
       map(e => new FindGameServerCommand(e.info, e.tries + 1)),
+    );
+  };
+
+  @Saga()
+  processRanked = (events$: Observable<any>): Observable<ICommand> => {
+    return events$.pipe(
+      ofType(GameResultsEvent),
+      filter(t => t.type === MatchmakingMode.RANKED),
+      map(e => {
+        const winnerTeam = e.radiantWin ? 2 : 3;
+
+        const losers = e.players
+          .filter(p => p.team !== winnerTeam)
+          .map(t => new PlayerId(t.steam_id));
+        const winners = e.players
+          .filter(p => p.team !== winnerTeam)
+          .map(t => new PlayerId(t.steam_id));
+
+        return new ProcessRankedMatchCommand(winners, losers);
+      }),
     );
   };
 

@@ -22,7 +22,7 @@ import { QueryController } from 'query.controller';
         transport: Transport.REDIS,
         options: {
           url: REDIS_URL(),
-          retryAttempts: 10,
+          retryAttempts: Infinity,
           retryDelay: 5000,
         },
       },

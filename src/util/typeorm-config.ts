@@ -2,8 +2,14 @@ import { MatchEntity } from 'gameserver/model/match.entity';
 import { DB_HOST, DB_PASSWORD, DB_USERNAME } from 'env';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import Match from 'gameserver/entity/Match';
+import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
+import { GameSeason } from 'gameserver/entity/GameSeason';
 
 export const Entities = [
+  GameSeason,
+  VersionPlayer,
+
+
   MatchEntity,
   Match,
   PlayerInMatch
