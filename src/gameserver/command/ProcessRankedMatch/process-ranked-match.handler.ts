@@ -3,7 +3,7 @@ import { Logger } from '@nestjs/common';
 import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MoreThan, Repository } from 'typeorm';
+import { LessThanOrEqual, MoreThan, Repository } from 'typeorm';
 import { GameSeason } from 'gameserver/entity/GameSeason';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
@@ -27,7 +27,7 @@ export class ProcessRankedMatchHandler
     // find latest season which start_timestamp > now
     const currentSeason = await this.gameSeasonRepository.findOne({
       where: {
-        start_timestamp: MoreThan(new Date()),
+        start_timestamp: LessThanOrEqual(new Date()),
       },
       order: {
         start_timestamp: 'DESC',

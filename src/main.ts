@@ -9,6 +9,8 @@ import { Subscriber } from 'rxjs';
 import { Logger } from '@nestjs/common';
 import { DiscoveryRequestedEvent } from 'gateway/events/discovery-requested.event';
 import { wait } from 'util/wait';
+import { construct } from 'gateway/util/construct';
+import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
 
 export function prepareModels(publisher: EventPublisher) {
   publisher.mergeClassContext(GameServerModel);
@@ -63,6 +65,44 @@ async function bootstrap() {
     }),
   );
 
+
+  // ebus.publish(construct(GameResultsEvent, {
+  //     server: 'glory.dota2classic.ru:27045',
+  //     radiantWin: false,
+  //     matchId: 62,
+  //     type: 0,
+  //     duration: 6,
+  //     timestamp: 1603636676,
+  //     players: [
+  //       {
+  //         hero: 'npc_dota_hero_brewmaster',
+  //         gpm: 141,
+  //         team: 3,
+  //         deaths: 0,
+  //         items: [],
+  //         denies: 0,
+  //         kills: 0,
+  //         level: 1,
+  //         xpm: 60,
+  //         assists: 0,
+  //         last_hits: 0
+  //       },
+  //       {
+  //         hero: 'npc_dota_hero_furion',
+  //         gpm: 2,
+  //         team: 2,
+  //         deaths: 2,
+  //         items: [],
+  //         denies: 1,
+  //         kills: 0,
+  //         level: 1,
+  //         xpm: 0,
+  //         assists: 0,
+  //         last_hits: 0
+  //       }
+  //     ]
+  //   }
+  // ))
 
   await wait(500)
   ebus.publish(new DiscoveryRequestedEvent(Math.random()))
