@@ -37,7 +37,7 @@ export default class Match {
   )
   players!: PlayerInMatch[];
 
-  @Column()
+  @Column({ nullable: true })
   server: string;
 
 }

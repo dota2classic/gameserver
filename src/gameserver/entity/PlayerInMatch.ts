@@ -42,6 +42,9 @@ export default class PlayerInMatch {
   @Column('int', { default: 0 })
   xpm: number = 0;
 
+  @Column({ default: false })
+  abandoned: boolean;
+
   @Column('int', { default: 0 })
   last_hits: number = 0;
 

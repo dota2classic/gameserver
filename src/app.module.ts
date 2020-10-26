@@ -8,6 +8,8 @@ import { CoreController } from 'core.controller';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { devDbConfig, Entities, prodDbConfig } from 'util/typeorm-config';
 import { QueryController } from 'query.controller';
+import { RestController } from 'rest/rest.controller';
+import { Mapper } from 'rest/mapper';
 
 @Module({
   imports: [
@@ -28,7 +30,7 @@ import { QueryController } from 'query.controller';
       },
     ]),
   ],
-  controllers: [CoreController, QueryController],
-  providers: [AppService, ...GameServerDomain],
+  controllers: [CoreController, QueryController, RestController],
+  providers: [AppService, Mapper, ...GameServerDomain],
 })
 export class AppModule {}

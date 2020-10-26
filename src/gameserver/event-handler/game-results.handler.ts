@@ -6,7 +6,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MatchEntity } from 'gameserver/model/match.entity';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 
-
 @EventsHandler(GameResultsEvent)
 export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
   constructor(
@@ -33,17 +32,14 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
     m.server = event.server;
     await this.matchRepository.save(m);
 
-
     const pims = event.players.map(async t => {
       const pim = new PlayerInMatch();
-
 
       pim.match = m;
       // kda
       pim.kills = t.kills;
       pim.deaths = t.deaths;
       pim.assists = t.assists;
-
 
       // creeps
       pim.denies = t.denies;
@@ -53,17 +49,16 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
       pim.gpm = t.gpm;
       pim.xpm = t.xpm;
 
-      pim.items = t.items.join(",")
-      pim.level = t.level;
-      pim.playerId = t.steam_id
-      pim.team = t.team
+      pim.abandoned = t.abandoned;
 
-      return this.playerInMatchRepository.save(pim)
+      pim.items = t.items.join(',');
+      pim.level = t.level;
+      pim.playerId = t.steam_id;
+      pim.team = t.team;
+
+      return this.playerInMatchRepository.save(pim);
     });
 
-    await Promise.all(pims)
-
-
-
+    await Promise.all(pims);
   }
 }
