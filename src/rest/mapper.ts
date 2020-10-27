@@ -32,5 +32,8 @@ export class Mapper {
     mode: match.type,
     radiant: match.players.filter(t => t.team === 2).map(this.mapPlayerInMatch),
     dire: match.players.filter(t => t.team === 3).map(this.mapPlayerInMatch),
+    winner: match.radiant_win ? 2 : 3,
+    duration: match.duration,
+    timestamp: match.timestamp
   });
 }

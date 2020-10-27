@@ -6,6 +6,9 @@ export class MatchDto {
   mode: MatchmakingMode;
   radiant: PlayerInMatchDto[];
   dire: PlayerInMatchDto[];
+  winner: number;
+  duration: number;
+  timestamp: string;
 }
 
 export class PlayerInMatchDto {
