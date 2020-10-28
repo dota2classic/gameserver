@@ -2,11 +2,11 @@ import { Controller, Get, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Mapper } from 'rest/mapper';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThanOrEqual, Repository } from 'typeorm';
+import { LessThanOrEqual, MoreThan, Repository } from 'typeorm';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { GameSeason } from 'gameserver/entity/GameSeason';
-import { LeaderboardEntryDto } from 'rest/dto/player.dto';
+import { LeaderboardEntryDto, PlayerSummaryDto } from 'rest/dto/player.dto';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 @Controller('player')
@@ -22,7 +22,31 @@ export class PlayerController {
     private readonly gameSeasonRepository: Repository<GameSeason>,
   ) {}
 
-  @Get('/:version/leaderboard')
+  @Get('/summary/:version/:id')
+  async playerSummary(
+    @Param('version') version: Dota2Version,
+    @Param('id') steam_id: Dota2Version,
+  ): Promise<PlayerSummaryDto> {
+    const p = await this.versionPlayerRepository.findOne({
+      steam_id,
+      version,
+    });
+
+    const rank = await this.versionPlayerRepository.count({
+      where: {
+        version,
+        mmr: MoreThan(p.mmr),
+      },
+    });
+
+    return {
+      mmr: p.mmr,
+      steam_id: p.steam_id,
+      rank: rank + 1,
+    };
+  }
+
+  @Get('/leaderboard/:version')
   async leaderboard(
     @Param('version') version: Dota2Version,
   ): Promise<LeaderboardEntryDto[]> {
