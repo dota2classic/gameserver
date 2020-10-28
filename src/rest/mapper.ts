@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import Match from 'gameserver/entity/Match';
 import { MatchDto, PlayerInMatchDto } from 'rest/dto/match.dto';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
+import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
+import { LeaderboardEntryDto } from 'rest/dto/player.dto';
 
 @Injectable()
 export class Mapper {
@@ -34,6 +36,11 @@ export class Mapper {
     dire: match.players.filter(t => t.team === 3).map(this.mapPlayerInMatch),
     winner: match.radiant_win ? 2 : 3,
     duration: match.duration,
-    timestamp: match.timestamp
+    timestamp: match.timestamp,
+  });
+
+  public mapLeaderboardEntry = (it: VersionPlayer): LeaderboardEntryDto => ({
+    steam_id: it.steam_id,
+    mmr: it.mmr,
   });
 }

@@ -9,7 +9,7 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 @Controller('match')
 @ApiTags('match')
-export class RestController {
+export class MatchController {
   constructor(
     private readonly mapper: Mapper,
     @InjectRepository(Match)
