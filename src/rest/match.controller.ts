@@ -102,7 +102,10 @@ export class MatchController {
       .createQueryBuilder('pim')
       .innerJoinAndSelect('pim.match', 'm')
       .innerJoinAndSelect('m.players', 'players')
-      .where(`pim.playerId = '${steam_id}'`);
+      .where(`pim.playerId = '${steam_id}'`)
+      .orderBy("m.timestamp", "DESC")
+      .take(perPage)
+      .skip(perPage * page);
 
     if (mode !== undefined) {
       query.andWhere(`m.type = :mode`, { mode });
