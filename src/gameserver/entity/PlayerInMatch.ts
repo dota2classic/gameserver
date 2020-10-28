@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import Match from './Match';
 
 @Entity()
@@ -16,6 +16,7 @@ export default class PlayerInMatch {
     type => Match,
     match => match.players,
   )
+  @JoinColumn()
   match!: Match;
 
   @Column('int')
