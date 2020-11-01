@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { CommandBus, EventBus, EventPublisher, QueryBus } from '@nestjs/cqrs';
 import { GameServerModel } from 'gameserver/model/game-server.model';
-import { REDIS_URL } from 'env';
+import { REDIS_PASSWORD, REDIS_URL } from 'env';
 import { Transport } from '@nestjs/microservices';
 import { inspect } from 'util';
 import { Subscriber } from 'rxjs';
@@ -23,6 +23,7 @@ async function bootstrap() {
       url: REDIS_URL(),
       retryAttempts: Infinity,
       retryDelay: 5000,
+      password: REDIS_PASSWORD()
     },
   });
 

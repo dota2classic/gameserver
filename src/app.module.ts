@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppService } from 'app.service';
 import { CqrsModule } from '@nestjs/cqrs';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { isDev, REDIS_URL } from 'env';
+import { isDev, REDIS_PASSWORD, REDIS_URL } from 'env';
 import { GameServerDomain } from 'gameserver';
 import { CoreController } from 'core.controller';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
@@ -26,6 +26,7 @@ import { PlayerController } from 'rest/player.controller';
         options: {
           url: REDIS_URL(),
           retryAttempts: Infinity,
+          password: REDIS_PASSWORD(),
           retryDelay: 5000,
         },
       },
