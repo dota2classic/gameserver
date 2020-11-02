@@ -18,14 +18,16 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
   ) {}
 
   async handle(event: GameResultsEvent) {
-    const mInfo = await this.matchRepository.findOne({
+    const mInfo = await this.matchEntityRepository.findOne({
       id: event.matchId,
     });
+
+
     if (!mInfo) return;
 
     const m = new Match();
     m.id = mInfo.id;
-    m.timestamp = event.timestamp.toString();
+    m.timestamp = new Date(event.timestamp * 1000).toUTCString();
     m.type = event.type;
     m.duration = event.duration;
     m.radiant_win = event.radiantWin;
@@ -55,6 +57,7 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
       pim.level = t.level;
       pim.playerId = t.steam_id;
       pim.team = t.team;
+      pim.hero = t.hero;
 
       return this.playerInMatchRepository.save(pim);
     });
