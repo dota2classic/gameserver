@@ -8,6 +8,9 @@ import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { GameSeason } from 'gameserver/entity/GameSeason';
 import { LeaderboardEntryDto, PlayerSummaryDto } from 'rest/dto/player.dto';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
+import { CommandBus } from '@nestjs/cqrs';
+import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
+import { PlayerId } from 'gateway/shared-types/player-id';
 
 @Controller('player')
 @ApiTags('player')
@@ -20,6 +23,7 @@ export class PlayerController {
     private readonly versionPlayerRepository: Repository<VersionPlayer>,
     @InjectRepository(GameSeason)
     private readonly gameSeasonRepository: Repository<GameSeason>,
+    private readonly cbus: CommandBus
   ) {}
 
   @Get('/summary/:version/:id')
@@ -27,6 +31,10 @@ export class PlayerController {
     @Param('version') version: Dota2Version,
     @Param('id') steam_id: Dota2Version,
   ): Promise<PlayerSummaryDto> {
+
+
+    await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
+
     const p = await this.versionPlayerRepository.findOne({
       steam_id,
       version,

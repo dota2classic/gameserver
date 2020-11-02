@@ -14,11 +14,13 @@ import { GameResultsHandler } from 'gameserver/event-handler/game-results.handle
 import { GetSessionByUserHandler } from 'gameserver/query/get-session-by-user.handler';
 import { ProcessRankedMatchHandler } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.handler';
 import { GetPlayerInfoHandler } from 'gameserver/query/get-player-info.handler';
+import { MakeSureExistsHandler } from 'gameserver/command/MakeSureExists/make-sure-exists.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
   UpdateGameServerHandler,
   ProcessRankedMatchHandler,
+  MakeSureExistsHandler
 ];
 const EventHandlers = [
   GameServerStoppedHandler,
