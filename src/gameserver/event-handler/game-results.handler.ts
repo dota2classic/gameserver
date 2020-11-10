@@ -22,7 +22,6 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
       id: event.matchId,
     });
 
-
     if (!mInfo) return;
 
     const m = new Match();
@@ -34,7 +33,8 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
     m.server = event.server;
     await this.matchRepository.save(m);
 
-    const pims = event.players.map(async t => {
+    for (let i = 0; i < event.players.length; i++) {
+      const t = event.players[i];
       const pim = new PlayerInMatch();
 
       pim.match = m;
@@ -59,9 +59,7 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
       pim.team = t.team;
       pim.hero = t.hero;
 
-      return this.playerInMatchRepository.save(pim);
-    });
-
-    await Promise.all(pims);
+      await this.playerInMatchRepository.save(pim);
+    }
   }
 }
