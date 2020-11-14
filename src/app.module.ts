@@ -11,6 +11,7 @@ import { QueryController } from 'query.controller';
 import { MatchController } from 'rest/match.controller';
 import { Mapper } from 'rest/mapper';
 import { PlayerController } from 'rest/player.controller';
+import { InfoController } from 'rest/info.controller';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { PlayerController } from 'rest/player.controller';
     QueryController,
     MatchController,
     PlayerController,
+    InfoController
   ],
   providers: [AppService, Mapper, ...GameServerDomain],
 })

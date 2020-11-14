@@ -4,6 +4,8 @@ import { MatchDto, PlayerInMatchDto } from 'rest/dto/match.dto';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { LeaderboardEntryDto } from 'rest/dto/player.dto';
+import { GameServerModel } from 'gameserver/model/game-server.model';
+import { GameServerDto } from 'rest/dto/info.dto';
 
 @Injectable()
 export class Mapper {
@@ -43,4 +45,10 @@ export class Mapper {
     steam_id: it.steam_id,
     mmr: it.mmr,
   });
+
+
+  public mapGameServer = (it: GameServerModel): GameServerDto => ({
+    url: it.url,
+    version: it.version
+  })
 }
