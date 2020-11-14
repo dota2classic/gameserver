@@ -5,7 +5,8 @@ import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { LeaderboardEntryDto } from 'rest/dto/player.dto';
 import { GameServerModel } from 'gameserver/model/game-server.model';
-import { GameServerDto } from 'rest/dto/info.dto';
+import { GameServerDto, GameSessionDto } from 'rest/dto/info.dto';
+import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
 
 @Injectable()
 export class Mapper {
@@ -46,9 +47,18 @@ export class Mapper {
     mmr: it.mmr,
   });
 
-
   public mapGameServer = (it: GameServerModel): GameServerDto => ({
     url: it.url,
-    version: it.version
-  })
+    version: it.version,
+  });
+
+  public mapGameSession = (it: GameServerSessionModel): GameSessionDto => ({
+    url: it.url,
+    matchId: it.matchId,
+    info: {
+      ...it.info,
+      radiant: it.info.radiant.map(t => t.value),
+      dire: it.info.dire.map(t => t.value),
+    },
+  });
 }
