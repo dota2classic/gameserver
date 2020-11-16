@@ -50,10 +50,17 @@ export class ProcessRankedMatchHandler
       steam_id: pid.value,
     });
 
+    console.log(
+      `Changing mmr for ${pid.value}. Winner: ${winner}. Season: ${season.id}`,
+    );
+
     let mmrChange = cb < 10 ? 100 : 25;
     mmrChange = winner ? +mmrChange : -mmrChange;
     plr.mmr += mmrChange;
+    console.log(`MMR change: ${mmrChange}. New mmr: ${plr.mmr}`);
     await this.versionPlayerRepository.save(plr);
+    console.log(`Saved.`);
+
   }
 
   private async getCalibrationGamesPlayed(season: GameSeason, pid: PlayerId) {
