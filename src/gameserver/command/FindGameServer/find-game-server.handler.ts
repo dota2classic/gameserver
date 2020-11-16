@@ -53,6 +53,7 @@ export class FindGameServerHandler
     m.server = gs.url;
     m.mode = command.matchInfo.mode;
     m.started = false;
+    m.finished = false;
 
     await this.matchEntityRepository.save(m);
 
