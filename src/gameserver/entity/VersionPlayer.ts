@@ -10,5 +10,5 @@ export class VersionPlayer {
   version: Dota2Version;
 
   @Column()
-  mmr: number = 3000;
+  mmr: number = 2000;
 }

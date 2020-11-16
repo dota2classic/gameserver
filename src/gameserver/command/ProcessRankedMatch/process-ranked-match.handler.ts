@@ -51,16 +51,15 @@ export class ProcessRankedMatchHandler
     });
 
     console.log(
-      `Changing mmr for ${pid.value}. Winner: ${winner}. Season: ${season.id}`,
+      `Changing mmr for ${pid.value}. MMR: ${plr.mmr} Winner: ${winner}. Season: ${season.id}. CB: ${cb}`,
     );
 
     let mmrChange = cb < 10 ? 100 : 25;
     mmrChange = winner ? +mmrChange : -mmrChange;
-    plr.mmr += mmrChange;
-    console.log(`MMR change: ${mmrChange}. New mmr: ${plr.mmr}`);
-    await this.versionPlayerRepository.save(plr);
-    console.log(`Saved.`);
 
+    plr.mmr = plr.mmr + mmrChange;
+    await this.versionPlayerRepository.save(plr);
+    console.log(`MMR change: ${mmrChange}. New mmr: ${plr.mmr}`);
   }
 
   private async getCalibrationGamesPlayed(season: GameSeason, pid: PlayerId) {
