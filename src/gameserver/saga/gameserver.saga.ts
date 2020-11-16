@@ -68,7 +68,7 @@ export class GameserverSaga {
           .filter(p => p.team !== winnerTeam)
           .map(t => new PlayerId(t.steam_id));
         const winners = e.players
-          .filter(p => p.team !== winnerTeam)
+          .filter(p => p.team === winnerTeam)
           .map(t => new PlayerId(t.steam_id));
 
         return new ProcessRankedMatchCommand(winners, losers);
