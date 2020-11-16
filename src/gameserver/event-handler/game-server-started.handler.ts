@@ -9,16 +9,12 @@ export class GameServerStartedHandler
   constructor(private readonly ebus: EventBus) {}
 
   async handle(event: GameServerStartedEvent) {
-    setTimeout(
-      () =>
-        this.ebus.publish(
-          new MatchStartedEvent(
-            event.matchId,
-            event.info,
-            new GameServerInfo(event.url),
-          ),
-        ),
-      5000,
-    );
+    this.ebus.publish(
+      new MatchStartedEvent(
+        event.matchId,
+        event.info,
+        new GameServerInfo(event.url),
+      ),
+    )
   }
 }
