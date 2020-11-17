@@ -14,7 +14,10 @@ export class PlayerService {
     private readonly gsService: GameServerService,
   ) {}
 
-  public async getRank(version: Dota2Version, steam_id: string): Promise<number> {
+  public async getRank(
+    version: Dota2Version,
+    steam_id: string,
+  ): Promise<number> {
     const p = await this.versionPlayerRepository.findOne({
       steam_id,
       version,
@@ -22,7 +25,7 @@ export class PlayerService {
 
     const season = await this.gsService.getCurrentSeason(version);
 
-    return await this.versionPlayerRepository.query(`
+    const rank = await this.versionPlayerRepository.query(`
         with players as (select p.steam_id, p.mmr, count(pim) as games
                  from version_player p
                           left outer join player_in_match pim
@@ -34,6 +37,8 @@ export class PlayerService {
         from players p
         where p.mmr > ${p.mmr}
         and p.games > 0
-`)
+`);
+
+    return parseInt(rank[0].count);
   }
 }
