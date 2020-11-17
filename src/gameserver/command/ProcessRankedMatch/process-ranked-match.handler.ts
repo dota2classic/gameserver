@@ -44,13 +44,15 @@ export class ProcessRankedMatchHandler
     );
     const plr = await this.versionPlayerRepository.findOneOrFail({
       version: season.version,
-      steam_id: pid.value
+      steam_id: pid.value,
     });
-
-
 
     const mmrChange = Math.round(
       ProcessRankedMatchHandler.computeMMRChange(cb, winner),
+    );
+
+    this.logger.log(
+      `Updating MMR for ${plr.steam_id}. Now: ${plr.mmr}, change: ${mmrChange}`,
     );
 
     // console.log(
@@ -61,6 +63,7 @@ export class ProcessRankedMatchHandler
 
     plr.mmr = plr.mmr + mmrChange;
     await this.versionPlayerRepository.save(plr);
+    this.logger.log(`Saved mmr for ${plr.steam_id} successfully`);
   }
 
   private static computeMMRChange(cbGame: number, win: boolean): number {
