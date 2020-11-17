@@ -11,6 +11,8 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { CommandBus } from '@nestjs/cqrs';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import { PlayerId } from 'gateway/shared-types/player-id';
+import { GameServerService } from 'gameserver/gameserver.service';
+import { PlayerService } from 'rest/service/player.service';
 
 @Controller('player')
 @ApiTags('player')
@@ -23,15 +25,16 @@ export class PlayerController {
     private readonly versionPlayerRepository: Repository<VersionPlayer>,
     @InjectRepository(GameSeason)
     private readonly gameSeasonRepository: Repository<GameSeason>,
-    private readonly cbus: CommandBus
+    private readonly cbus: CommandBus,
+    private readonly gsService: GameServerService,
+    private readonly playerService: PlayerService
   ) {}
 
   @Get('/summary/:version/:id')
   async playerSummary(
     @Param('version') version: Dota2Version,
-    @Param('id') steam_id: Dota2Version,
+    @Param('id') steam_id: string,
   ): Promise<PlayerSummaryDto> {
-
 
     await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
 
@@ -40,12 +43,7 @@ export class PlayerController {
       version,
     });
 
-    const rank = await this.versionPlayerRepository.count({
-      where: {
-        version,
-        mmr: MoreThan(p.mmr),
-      },
-    });
+    const rank = await this.playerService.getRank(version, steam_id)
 
     return {
       mmr: p.mmr,
@@ -58,14 +56,7 @@ export class PlayerController {
   async leaderboard(
     @Param('version') version: Dota2Version,
   ): Promise<LeaderboardEntryDto[]> {
-    const currentSeason = await this.gameSeasonRepository.findOne({
-      where: {
-        start_timestamp: LessThanOrEqual(new Date()),
-      },
-      order: {
-        start_timestamp: 'DESC',
-      },
-    });
+    const currentSeason = await this.gsService.getCurrentSeason(version);
 
     const calibrationGames = 1;
 

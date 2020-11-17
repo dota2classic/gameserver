@@ -12,6 +12,7 @@ import { MatchController } from 'rest/match.controller';
 import { Mapper } from 'rest/mapper';
 import { PlayerController } from 'rest/player.controller';
 import { InfoController } from 'rest/info.controller';
+import { PlayerService } from 'rest/service/player.service';
 
 @Module({
   imports: [
@@ -40,6 +41,6 @@ import { InfoController } from 'rest/info.controller';
     PlayerController,
     InfoController
   ],
-  providers: [AppService, Mapper, ...GameServerDomain],
+  providers: [AppService, PlayerService, Mapper, ...GameServerDomain],
 })
 export class AppModule {}
