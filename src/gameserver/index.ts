@@ -15,6 +15,7 @@ import { GetSessionByUserHandler } from 'gameserver/query/get-session-by-user.ha
 import { ProcessRankedMatchHandler } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.handler';
 import { GetPlayerInfoHandler } from 'gameserver/query/get-player-info.handler';
 import { MakeSureExistsHandler } from 'gameserver/command/MakeSureExists/make-sure-exists.handler';
+import { GameServerService } from 'gameserver/gameserver.service';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -37,7 +38,9 @@ const EventHandlers = [
 
 const QueryHandlers = [GetPlayerInfoHandler, GetSessionByUserHandler];
 const Repositories = [GameServerRepository, GameServerSessionRepository];
-const Services = [];
+const Services = [
+  GameServerService
+];
 const Sagas = [GameserverSaga];
 
 export const GameServerDomain = [
@@ -47,4 +50,5 @@ export const GameServerDomain = [
   ...Services,
   ...Sagas,
   ...QueryHandlers,
+
 ];

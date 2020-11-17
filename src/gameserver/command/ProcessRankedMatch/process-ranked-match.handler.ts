@@ -3,11 +3,12 @@ import { Logger } from '@nestjs/common';
 import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThanOrEqual, MoreThan, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { GameSeason } from 'gameserver/entity/GameSeason';
 import { PlayerId } from 'gateway/shared-types/player-id';
-import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
+import { GameServerService } from 'gameserver/gameserver.service';
+import { Dota2Version } from 'gateway/shared-types/dota2version';
 
 @CommandHandler(ProcessRankedMatchCommand)
 export class ProcessRankedMatchHandler
@@ -17,22 +18,14 @@ export class ProcessRankedMatchHandler
   constructor(
     @InjectRepository(VersionPlayer)
     private readonly versionPlayerRepository: Repository<VersionPlayer>,
-    @InjectRepository(GameSeason)
-    private readonly gameSeasonRepository: Repository<GameSeason>,
-    @InjectRepository(PlayerInMatch)
-    private readonly playerInMatchRepository: Repository<PlayerInMatch>,
+    private readonly gameServerService: GameServerService,
   ) {}
 
   async execute(command: ProcessRankedMatchCommand) {
     // find latest season which start_timestamp > now
-    const currentSeason = await this.gameSeasonRepository.findOne({
-      where: {
-        start_timestamp: LessThanOrEqual(new Date()),
-      },
-      order: {
-        start_timestamp: 'DESC',
-      },
-    });
+    const currentSeason = await this.gameServerService.getCurrentSeason(
+      Dota2Version.Dota_681,
+    );
 
     await Promise.all(
       command.winners.map(t => this.changeMMR(currentSeason, t, true)),
@@ -44,46 +37,47 @@ export class ProcessRankedMatchHandler
   }
 
   private async changeMMR(season: GameSeason, pid: PlayerId, winner: boolean) {
-    const cb = await this.getCalibrationGamesPlayed(season, pid);
+    const cb = await this.gameServerService.getGamesPlayed(
+      season,
+      pid,
+      MatchmakingMode.RANKED,
+    );
     const plr = await this.versionPlayerRepository.findOne({
       version: season.version,
       steam_id: pid.value,
     });
 
-    console.log(
-      `Changing mmr for ${pid.value}. MMR: ${plr.mmr} Winner: ${winner}. Season: ${season.id}. CB: ${cb}`,
-    );
-
-    let mmrChange = cb < 10 ? 100 : 25;
-    mmrChange = winner ? +mmrChange : -mmrChange;
+    const mmrChange = ProcessRankedMatchHandler.computeMMRChange(cb, winner);
 
     plr.mmr = plr.mmr + mmrChange;
     await this.versionPlayerRepository.save(plr);
-    console.log(`MMR change: ${mmrChange}. New mmr: ${plr.mmr}`);
   }
 
-  private async getCalibrationGamesPlayed(season: GameSeason, pid: PlayerId) {
-    let plr = await this.versionPlayerRepository.findOne({
-      version: season.version,
-      steam_id: pid.value,
-    });
-    if (!plr) {
-      plr = new VersionPlayer();
-      plr.steam_id = pid.value;
-      plr.version = season.version;
-      plr.mmr = 3000;
-      await this.versionPlayerRepository.save(plr);
-      return 0;
-    } else {
-      return this.playerInMatchRepository.count({
-        where: {
-          playerId: plr.steam_id,
-          match: {
-            type: MatchmakingMode.RANKED,
-            timestamp: MoreThan(season.start_timestamp),
-          },
-        },
-      });
+  private static computeMMRChange(cbGame: number, win: boolean): number {
+    let baseMMR;
+
+    // total calibration games
+    const cbGames = 10;
+
+    // if we're over calibration game limit, we go ±25 mmr
+    if (cbGame > cbGame) {
+      return 25;
     }
+
+    // first 3 games are kind and 50± mmr only
+    const offset = 3;
+
+    const offsetContext = cbGames - offset;
+
+    // if in "kind" games 50 mmr
+    if (cbGame < offset) {
+      baseMMR = 50;
+    } else {
+      // gradually reducing mmr
+      const component = Math.exp((offsetContext - cbGame) / offsetContext);
+      baseMMR = component * 100;
+    }
+
+    return win ? baseMMR : -baseMMR;
   }
 }

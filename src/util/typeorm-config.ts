@@ -4,6 +4,7 @@ import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import Match from 'gameserver/entity/Match';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { GameSeason } from 'gameserver/entity/GameSeason';
+import { TypeOrmModuleOptions } from '@nestjs/typeorm/dist/interfaces/typeorm-options.interface';
 
 export const Entities = [
   GameSeason,
@@ -28,12 +29,14 @@ export const devDbConfig: any = {
 };
 
 
-export const testDbConfig: any = {
+export const testDbConfig: TypeOrmModuleOptions = {
   type: 'sqlite',
   database: ':memory:',
   entities: Entities,
   synchronize: true,
-  keepConnectionAlive: true
+  keepConnectionAlive: true,
+  dropSchema: true
+
 };
 
 export const prodDbConfig: any = {
