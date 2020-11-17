@@ -47,7 +47,7 @@ export class ProcessRankedMatchHandler
       steam_id: pid.value,
     });
 
-    const mmrChange = ProcessRankedMatchHandler.computeMMRChange(cb, winner);
+    const mmrChange = Math.round(ProcessRankedMatchHandler.computeMMRChange(cb, winner));
 
     plr.mmr = plr.mmr + mmrChange;
     await this.versionPlayerRepository.save(plr);
