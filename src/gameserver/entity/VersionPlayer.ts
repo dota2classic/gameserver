@@ -9,6 +9,9 @@ export class VersionPlayer {
   @PrimaryColumn()
   version: Dota2Version;
 
-  @Column()
-  mmr: number = 2000;
+  @Column({ default: VersionPlayer.STARTING_MMR})
+  mmr: number = VersionPlayer.STARTING_MMR;
+
+
+  public static STARTING_MMR = 2000;
 }

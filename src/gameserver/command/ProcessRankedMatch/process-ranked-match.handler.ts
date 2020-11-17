@@ -42,12 +42,22 @@ export class ProcessRankedMatchHandler
       pid,
       MatchmakingMode.RANKED,
     );
-    const plr = await this.versionPlayerRepository.findOne({
+    const plr = await this.versionPlayerRepository.findOneOrFail({
       version: season.version,
-      steam_id: pid.value,
+      steam_id: pid.value
     });
 
-    const mmrChange = Math.round(ProcessRankedMatchHandler.computeMMRChange(cb, winner));
+
+
+    const mmrChange = Math.round(
+      ProcessRankedMatchHandler.computeMMRChange(cb, winner),
+    );
+
+    // console.log(
+    //   `MMR Change for ${pid.value}: ${mmrChange}. Was ${
+    //     plr.mmr
+    //   } became ${plr.mmr + mmrChange}`,
+    // );
 
     plr.mmr = plr.mmr + mmrChange;
     await this.versionPlayerRepository.save(plr);

@@ -10,11 +10,10 @@ export const Entities = [
   GameSeason,
   VersionPlayer,
 
-
   MatchEntity,
   Match,
-  PlayerInMatch
-]
+  PlayerInMatch,
+];
 export const devDbConfig: any = {
   type: 'postgres',
   database: 'postgres',
@@ -28,15 +27,13 @@ export const devDbConfig: any = {
   keepConnectionAlive: true,
 };
 
-
 export const testDbConfig: TypeOrmModuleOptions = {
   type: 'sqlite',
   database: ':memory:',
   entities: Entities,
   synchronize: true,
   keepConnectionAlive: true,
-  dropSchema: true
-
+  dropSchema: true,
 };
 
 export const prodDbConfig: any = {

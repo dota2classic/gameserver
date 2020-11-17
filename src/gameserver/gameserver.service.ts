@@ -43,11 +43,12 @@ export class GameServerService {
       version: season.version,
       steam_id: pid.value,
     });
+
     if (!plr) {
       plr = new VersionPlayer();
       plr.steam_id = pid.value;
       plr.version = season.version;
-      plr.mmr = 3000;
+      plr.mmr = VersionPlayer.STARTING_MMR;
       await this.versionPlayerRepository.save(plr);
     }
 
