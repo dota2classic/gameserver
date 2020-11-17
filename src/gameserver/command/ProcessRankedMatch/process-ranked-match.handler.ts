@@ -48,7 +48,7 @@ export class ProcessRankedMatchHandler
     });
 
     const mmrChange = Math.round(
-      ProcessRankedMatchHandler.computeMMRChange(cb, winner),
+      this.computeMMRChange(plr.steam_id, cb, winner),
     );
 
     this.logger.log(
@@ -66,11 +66,23 @@ export class ProcessRankedMatchHandler
     this.logger.log(`Saved mmr for ${plr.steam_id} successfully`);
   }
 
-  private static computeMMRChange(cbGame: number, win: boolean): number {
+  private computeMMRChange(
+    steam_id: string,
+    cbGame: number,
+    win: boolean,
+  ): number {
     let baseMMR;
 
+
+
+    // ffs
+    return win ? 25 : -25;
     // total calibration games
     const cbGames = 10;
+
+    this.logger.log(
+      `${steam_id}, computing mmr change. GamesPlayed: ${cbGame}. Winner: ${win}`,
+    );
 
     // if we're over calibration game limit, we go ±25 mmr
     if (cbGame > cbGame) {
