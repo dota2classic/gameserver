@@ -5,12 +5,15 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerService } from 'gameserver/gameserver.service';
+import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 
 @Injectable()
 export class PlayerService {
   constructor(
     @InjectRepository(VersionPlayer)
     private readonly versionPlayerRepository: Repository<VersionPlayer>,
+    @InjectRepository(PlayerInMatch)
+    private readonly playerInMatchRepository: Repository<PlayerInMatch>,
     private readonly gsService: GameServerService,
   ) {}
 
@@ -40,5 +43,44 @@ export class PlayerService {
 `);
 
     return parseInt(rank[0].count);
+  }
+
+  public async gamesPlayed(
+    steam_id: string,
+    mode?: MatchmakingMode,
+  ): Promise<number> {
+    if (mode === undefined) {
+      return this.playerInMatchRepository.count({
+        playerId: steam_id,
+      });
+    }
+    return this.playerInMatchRepository.count({
+      where: {
+        match: {
+          type: mode,
+        },
+        playerId: steam_id,
+      },
+    });
+  }
+
+  async winrate(steam_id: string, mode: MatchmakingMode) {
+    const wins = (
+      await this.playerInMatchRepository.query(`
+select count(*) as wins
+from player_in_match pim
+         inner join match m on pim."matchId" = m.id
+where m.type = ${mode} and pim."playerSteamId" = '${steam_id}' and m.radiant_win = case pim.team when 2 then true else false end`)
+    )[0].wins;
+
+    const loss: number = (
+      await this.playerInMatchRepository.query(`
+select count(*) as wins
+from player_in_match pim
+         inner join match m on pim."matchId" = m.id
+where m.type = ${mode} and pim."playerSteamId" = '${steam_id}' and m.radiant_win != case pim.team when 2 then true else false end`)
+    )[0].wins;
+
+    return wins / loss;
   }
 }
