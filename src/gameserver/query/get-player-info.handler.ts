@@ -43,12 +43,14 @@ export class GetPlayerInfoHandler
     const rank = await this.playerService.getRank(command.version, command.playerId.value);
     const gamesPlayed = await this.playerService.gamesPlayed(command.playerId.value, MatchmakingMode.RANKED)
     const winrate = await this.playerService.winrate(command.playerId.value, MatchmakingMode.RANKED)
+    const bestHeroes = await this.playerService.heroStats(command.playerId.value)
 
 
     const summary = new PlayerOverviewSummary(
       gamesPlayed,
       winrate * 100,
-      rank
+      rank + 1,
+      bestHeroes.slice(0, 3).map(t => t.hero)
     )
 
     return new GetPlayerInfoQueryResult(

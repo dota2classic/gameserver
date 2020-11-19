@@ -7,6 +7,28 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerService } from 'gameserver/gameserver.service';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 
+export interface HeroStats {
+  playerSteamId: string;
+
+  gpm: number;
+
+  xpm: number;
+
+  kda: number;
+
+  games: number;
+
+  wins: number;
+
+  loss: number;
+
+  hero: string;
+
+  last_hits: number;
+
+  denies: number;
+}
+
 @Injectable()
 export class PlayerService {
   constructor(
@@ -54,14 +76,13 @@ export class PlayerService {
         playerId: steam_id,
       });
     }
-    return this.playerInMatchRepository.count({
-      where: {
-        match: {
-          type: mode,
-        },
-        playerId: steam_id,
-      },
-    });
+
+    return this.playerInMatchRepository
+      .createQueryBuilder('pim')
+      .innerJoin('pim.match', 'm')
+      .where('m.type = :mode', { mode })
+      .andWhere('pim.playerId = :steam_id', { steam_id })
+      .getCount();
   }
 
   async winrate(steam_id: string, mode: MatchmakingMode) {
@@ -70,17 +91,36 @@ export class PlayerService {
 select count(*) as wins
 from player_in_match pim
          inner join match m on pim."matchId" = m.id
-where m.type = ${mode} and pim."playerSteamId" = '${steam_id}' and m.radiant_win = case pim.team when 2 then true else false end`)
+where m.type = ${mode} and pim."playerId" = '${steam_id}' and m.radiant_win = case pim.team when 2 then true else false end`)
     )[0].wins;
 
-    const loss: number = (
+    const loss = (
       await this.playerInMatchRepository.query(`
 select count(*) as wins
 from player_in_match pim
          inner join match m on pim."matchId" = m.id
-where m.type = ${mode} and pim."playerSteamId" = '${steam_id}' and m.radiant_win != case pim.team when 2 then true else false end`)
+where m.type = ${mode} and pim."playerId" = '${steam_id}' and m.radiant_win != case pim.team when 2 then true else false end`)
     )[0].wins;
 
-    return wins / loss;
+    return parseInt(wins) / Math.max(1, parseInt(wins) + parseInt(loss));
+  }
+
+  async heroStats(steam_id: string): Promise<HeroStats[]> {
+    return await this.playerInMatchRepository.query(`
+select pim."playerSteamId",
+       CAST(avg(pim.gpm) as FLOAT)                                             as gpm,
+       CAST(avg(pim.xpm) as FLOAT)                                             as xpm,
+       avg(cast((pim.kills + pim.assists) as FLOAT) / greatest(pim.deaths, 1)) as kda,
+       CAST(count(*) as INT) as games,
+       avg(pim.last_hits) as last_hits,
+       avg(pim.denies) as denies,
+       sum(case (pim.team = (case match.radiant_win when true then 2 else 3 end)) when true then 1 else 0 end) as wins,
+       sum(case (pim.team = (case match.radiant_win when true then 2 else 3 end)) when true then 0 else 1 end) as loss,
+       pim.hero
+from player_in_match pim
+inner join match on "matchId" = match.id
+where pim."playerSteamId" = '${steam_id}' and match.type = 0
+group by pim.hero, pim."playerSteamId"
+`);
   }
 }
