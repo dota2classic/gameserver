@@ -107,7 +107,7 @@ where m.type = ${mode} and pim."playerId" = '${steam_id}' and m.radiant_win != c
 
   async heroStats(steam_id: string): Promise<HeroStats[]> {
     return await this.playerInMatchRepository.query(`
-select pim."playerSteamId",
+select pim."playerId",
        CAST(avg(pim.gpm) as FLOAT)                                             as gpm,
        CAST(avg(pim.xpm) as FLOAT)                                             as xpm,
        avg(cast((pim.kills + pim.assists) as FLOAT) / greatest(pim.deaths, 1)) as kda,
@@ -119,8 +119,8 @@ select pim."playerSteamId",
        pim.hero
 from player_in_match pim
 inner join match on "matchId" = match.id
-where pim."playerSteamId" = '${steam_id}' and match.type = 0
-group by pim.hero, pim."playerSteamId"
+where pim."playerId" = '${steam_id}' and match.type = 0
+group by pim.hero, pim."playerId"
 `);
   }
 }
