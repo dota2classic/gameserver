@@ -62,7 +62,7 @@ describe('ProcessRankedMatchHandler', () => {
         }),
       ).toEqual({
         steam_id: winners[i].value,
-        mmr: VersionPlayer.STARTING_MMR + 50,
+        mmr: VersionPlayer.STARTING_MMR + 25,
         version: Dota2Version.Dota_681,
       });
     }
@@ -74,7 +74,7 @@ describe('ProcessRankedMatchHandler', () => {
         }),
       ).toEqual({
         steam_id: losers[i].value,
-        mmr: VersionPlayer.STARTING_MMR - 50,
+        mmr: VersionPlayer.STARTING_MMR - 25,
         version: Dota2Version.Dota_681,
       });
     }
