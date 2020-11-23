@@ -5,6 +5,7 @@ import Match from 'gameserver/entity/Match';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { GameSeason } from 'gameserver/entity/GameSeason';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm/dist/interfaces/typeorm-options.interface';
+import { PlayerBan } from 'gameserver/entity/PlayerBan';
 
 export const Entities = [
   GameSeason,
@@ -13,6 +14,8 @@ export const Entities = [
   MatchEntity,
   Match,
   PlayerInMatch,
+
+  PlayerBan
 ];
 export const devDbConfig: any = {
   type: 'postgres',

@@ -1,6 +1,7 @@
 import { CommandBus, IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import {
+  BanStatus,
   GetPlayerInfoQueryResult,
   PlayerOverviewSummary,
 } from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
@@ -12,6 +13,7 @@ import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import { HeroStats, PlayerService } from 'rest/service/player.service';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
+import { PlayerBan } from 'gameserver/entity/PlayerBan';
 
 @QueryHandler(GetPlayerInfoQuery)
 export class GetPlayerInfoHandler
@@ -24,6 +26,8 @@ export class GetPlayerInfoHandler
     @InjectRepository(VersionPlayer)
     private readonly versionPlayerRepository: Repository<VersionPlayer>,
     private readonly cbus: CommandBus,
+    @InjectRepository(PlayerBan)
+    private readonly playerBanRepository: Repository<PlayerBan>,
     private readonly playerService: PlayerService,
   ) {}
 
@@ -77,12 +81,19 @@ export class GetPlayerInfoHandler
         .map(t => t.hero),
     );
 
+
+
+    const ban = await this.playerBanRepository.findOne({
+      steam_id: command.playerId.value
+    });
+
     return new GetPlayerInfoQueryResult(
       command.playerId,
       command.version,
       mmr,
       recentWinrate,
       summary,
+      ban?.asBanStatus() || BanStatus.NOT_BANNED
     );
   }
 }
