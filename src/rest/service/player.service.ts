@@ -123,4 +123,21 @@ where pim."playerId" = '${steam_id}' and match.type = 0
 group by pim.hero, pim."playerId"
 `);
   }
+
+  async winrateLastRankedGames(steam_id: string): Promise<number> {
+    const some: { is_win: boolean }[] = await this.playerInMatchRepository
+      .query(`
+    select (case when m.radiant_win then 2 else 3 end) = pims.team as is_win
+from match m inner join player_in_match pims on m.id = pims."matchId"
+where pims."playerId" = '${steam_id}' and m.type = ${MatchmakingMode.RANKED}
+order by m.timestamp DESC
+LIMIT 20;
+`);
+
+    const winCount = some.reduce((a, b) => a + (b.is_win ? 1 : 0), 0);
+
+    const recordCount = some.length;
+
+    return winCount / recordCount;
+  }
 }

@@ -61,7 +61,10 @@ export class GetPlayerInfoHandler
       command.playerId.value,
     );
 
-    const recentWinrate = winrate; // todo
+
+    const recentWinrate = await this.playerService.winrateLastRankedGames(
+      command.playerId.value
+    );
 
 
     const bestHeroScore = (it: HeroStats): number => {
