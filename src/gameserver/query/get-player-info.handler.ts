@@ -11,9 +11,10 @@ import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { Repository } from 'typeorm';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
-import { HeroStats, PlayerService } from 'rest/service/player.service';
+import {  PlayerService } from 'rest/service/player.service';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { PlayerBan } from 'gameserver/entity/PlayerBan';
+import { HeroStatsDto } from 'rest/dto/hero.dto';
 
 @QueryHandler(GetPlayerInfoQuery)
 export class GetPlayerInfoHandler
@@ -58,6 +59,7 @@ export class GetPlayerInfoHandler
       MatchmakingMode.RANKED,
     );
     const bestHeroes = await this.playerService.heroStats(
+      command.version,
       command.playerId.value,
     );
 
@@ -67,7 +69,7 @@ export class GetPlayerInfoHandler
     );
 
 
-    const bestHeroScore = (it: HeroStats): number => {
+    const bestHeroScore = (it: HeroStatsDto): number => {
       const wr = Number(it.wins) / Number(it.games);
       const gamesPlayed = Number(it.games);
       const avgKda = Number(it.kda);

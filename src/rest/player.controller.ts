@@ -2,7 +2,7 @@ import { Controller, Get, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Mapper } from 'rest/mapper';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThanOrEqual, MoreThan, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { GameSeason } from 'gameserver/entity/GameSeason';
@@ -13,6 +13,7 @@ import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-su
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { GameServerService } from 'gameserver/gameserver.service';
 import { PlayerService } from 'rest/service/player.service';
+import { HeroStatsDto, PlayerGeneralStatsDto } from 'rest/dto/hero.dto';
 
 @Controller('player')
 @ApiTags('player')
@@ -27,7 +28,7 @@ export class PlayerController {
     private readonly gameSeasonRepository: Repository<GameSeason>,
     private readonly cbus: CommandBus,
     private readonly gsService: GameServerService,
-    private readonly playerService: PlayerService
+    private readonly playerService: PlayerService,
   ) {}
 
   @Get('/summary/:version/:id')
@@ -35,7 +36,6 @@ export class PlayerController {
     @Param('version') version: Dota2Version,
     @Param('id') steam_id: string,
   ): Promise<PlayerSummaryDto> {
-
     await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
 
     const p = await this.versionPlayerRepository.findOne({
@@ -43,7 +43,7 @@ export class PlayerController {
       version,
     });
 
-    const rank = await this.playerService.getRank(version, steam_id)
+    const rank = await this.playerService.getRank(version, steam_id);
 
     return {
       mmr: p.mmr,
@@ -76,5 +76,25 @@ export class PlayerController {
 `);
 
     return leaderboard.map(this.mapper.mapLeaderboardEntry);
+  }
+
+  @Get(`/summary/general/:version/:id`)
+  async playerGeneralSummary(
+    @Param('version') version: Dota2Version,
+    @Param('id') steam_id: string,
+  ): Promise<PlayerGeneralStatsDto> {
+    await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
+
+    return await this.playerService.generalStats(version, steam_id);
+  }
+
+  @Get(`/summary/heroes/:version/:id`)
+  async playerHeroSummary(
+    @Param('version') version: Dota2Version,
+    @Param('id') steam_id: string,
+  ): Promise<HeroStatsDto[]> {
+    await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
+
+    return await this.playerService.heroStats(version, steam_id);
   }
 }

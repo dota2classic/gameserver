@@ -6,28 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerService } from 'gameserver/gameserver.service';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
-
-export interface HeroStats {
-  playerSteamId: string;
-
-  gpm: number;
-
-  xpm: number;
-
-  kda: number;
-
-  games: number;
-
-  wins: number;
-
-  loss: number;
-
-  hero: string;
-
-  last_hits: number;
-
-  denies: number;
-}
+import { HeroStatsDto, PlayerGeneralStatsDto } from 'rest/dto/hero.dto';
 
 @Injectable()
 export class PlayerService {
@@ -105,7 +84,10 @@ where m.type = ${mode} and pim."playerId" = '${steam_id}' and m.radiant_win != c
     return parseInt(wins) / Math.max(1, parseInt(wins) + parseInt(loss));
   }
 
-  async heroStats(steam_id: string): Promise<HeroStats[]> {
+  async heroStats(
+    version: Dota2Version,
+    steam_id: string,
+  ): Promise<HeroStatsDto[]> {
     return await this.playerInMatchRepository.query(`
 select pim."playerId",
        CAST(avg(pim.gpm) as FLOAT)                                             as gpm,
@@ -119,7 +101,7 @@ select pim."playerId",
        pim.hero
 from player_in_match pim
 inner join match on "matchId" = match.id
-where pim."playerId" = '${steam_id}' and match.type = 0
+where pim."playerId" = '${steam_id}' and (match.type = ${MatchmakingMode.RANKED} or match.type = ${MatchmakingMode.UNRANKED})
 group by pim.hero, pim."playerId"
 `);
   }
@@ -140,4 +122,41 @@ LIMIT 20;
 
     return winCount / recordCount;
   }
+
+  async generalStats(
+    version: Dota2Version,
+    steam_id: string,
+  ): Promise<PlayerGeneralStatsDto> {
+    const totalGames = await this.playerInMatchRepository.count({
+      playerId: steam_id,
+    });
+
+    const wins = (
+      await this.playerInMatchRepository.query(`
+select count(*) as wins
+from player_in_match pim
+         inner join match m on pim."matchId" = m.id
+where m.type = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and m.radiant_win = case pim.team when 2 then true else false end`)
+    )[0].wins;
+
+
+    const loss = (
+      await this.playerInMatchRepository.query(`
+select count(*) as wins
+from player_in_match pim
+         inner join match m on pim."matchId" = m.id
+where m.type = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and m.radiant_win != case pim.team when 2 then true else false end`)
+    )[0].wins;
+
+    return {
+      steam_id: steam_id,
+      games_played: parseInt(wins) + parseInt(loss),
+      games_played_all: totalGames,
+      wins: parseInt(wins),
+      loss: parseInt(loss),
+    };
+  }
+
+
+
 }
