@@ -16,6 +16,7 @@ import { ProcessRankedMatchHandler } from 'gameserver/command/ProcessRankedMatch
 import { GetPlayerInfoHandler } from 'gameserver/query/get-player-info.handler';
 import { MakeSureExistsHandler } from 'gameserver/command/MakeSureExists/make-sure-exists.handler';
 import { GameServerService } from 'gameserver/gameserver.service';
+import { PlayerBanHammeredHandler } from 'gameserver/event-handler/player-ban-hammered.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -34,6 +35,7 @@ const EventHandlers = [
   MatchFinishedHandler,
 
   GameResultsHandler,
+  PlayerBanHammeredHandler
 ];
 
 const QueryHandlers = [GetPlayerInfoHandler, GetSessionByUserHandler];
