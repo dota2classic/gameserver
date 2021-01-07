@@ -11,10 +11,11 @@ import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { Repository } from 'typeorm';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
-import {  PlayerService } from 'rest/service/player.service';
+import { PlayerService } from 'rest/service/player.service';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { PlayerBan } from 'gameserver/entity/PlayerBan';
 import { HeroStatsDto } from 'rest/dto/hero.dto';
+import { UNRANKED_GAMES_REQUIRED_FOR_RANKED } from 'gateway/shared-types/timings';
 
 @QueryHandler(GetPlayerInfoQuery)
 export class GetPlayerInfoHandler
@@ -44,8 +45,6 @@ export class GetPlayerInfoHandler
       })
     ).mmr;
 
-
-
     const rank = await this.playerService.getRank(
       command.version,
       command.playerId.value,
@@ -63,11 +62,9 @@ export class GetPlayerInfoHandler
       command.playerId.value,
     );
 
-
     const recentWinrate = await this.playerService.winrateLastRankedGames(
-      command.playerId.value
+      command.playerId.value,
     );
-
 
     const bestHeroScore = (it: HeroStatsDto): number => {
       const wr = Number(it.wins) / Number(it.games);
@@ -84,12 +81,21 @@ export class GetPlayerInfoHandler
         .sort((a, b) => bestHeroScore(b) - bestHeroScore(a))
         .slice(0, 3)
         .map(t => t.hero),
+      // if there are ranked games played already, this dude can play ranked
+      // otherwise we count unranked games left to play
+      gamesPlayed > 0
+        ? 0
+        : Math.max(
+            UNRANKED_GAMES_REQUIRED_FOR_RANKED -
+              (await this.playerService.getNonRankedGamesPlayed(
+                command.playerId.value,
+              )),
+            0,
+          ),
     );
 
-
-
     const ban = await this.playerBanRepository.findOne({
-      steam_id: command.playerId.value
+      steam_id: command.playerId.value,
     });
 
     return new GetPlayerInfoQueryResult(
@@ -98,7 +104,7 @@ export class GetPlayerInfoHandler
       mmr,
       recentWinrate,
       summary,
-      ban?.asBanStatus() || BanStatus.NOT_BANNED
+      ban?.asBanStatus() || BanStatus.NOT_BANNED,
     );
   }
 }

@@ -158,5 +158,14 @@ where m.type = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and 
   }
 
 
+  async getNonRankedGamesPlayed(steam_id: string): Promise<number> {
 
+    return this.playerInMatchRepository
+      .createQueryBuilder('pim')
+      .innerJoin('pim.match', 'm')
+      .where('pim.playerId = :steam_id', { steam_id })
+      .where('m.type = :mode', { mode: MatchmakingMode.UNRANKED })
+      .orWhere('m.type = :mode', { mode: MatchmakingMode.BOTS })
+      .getCount();
+  }
 }
