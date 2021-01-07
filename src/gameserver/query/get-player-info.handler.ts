@@ -49,7 +49,7 @@ export class GetPlayerInfoHandler
       command.version,
       command.playerId.value,
     );
-    const gamesPlayed = await this.playerService.gamesPlayed(
+    const rankedGamesPlayed = await this.playerService.gamesPlayed(
       command.playerId.value,
       MatchmakingMode.RANKED,
     );
@@ -74,7 +74,7 @@ export class GetPlayerInfoHandler
     };
 
     const summary = new PlayerOverviewSummary(
-      gamesPlayed,
+      rankedGamesPlayed,
       winrate * 100,
       rank + 1,
       bestHeroes
@@ -83,7 +83,7 @@ export class GetPlayerInfoHandler
         .map(t => t.hero),
       // if there are ranked games played already, this dude can play ranked
       // otherwise we count unranked games left to play
-      gamesPlayed > 0
+      rankedGamesPlayed > 0
         ? 0
         : Math.max(
             UNRANKED_GAMES_REQUIRED_FOR_RANKED -

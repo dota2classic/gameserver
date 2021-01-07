@@ -139,7 +139,6 @@ from player_in_match pim
 where m.type = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and m.radiant_win = case pim.team when 2 then true else false end`)
     )[0].wins;
 
-
     const loss = (
       await this.playerInMatchRepository.query(`
 select count(*) as wins
@@ -157,15 +156,17 @@ where m.type = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and 
     };
   }
 
-
   async getNonRankedGamesPlayed(steam_id: string): Promise<number> {
-
     return this.playerInMatchRepository
       .createQueryBuilder('pim')
       .innerJoin('pim.match', 'm')
       .where('pim.playerId = :steam_id', { steam_id })
-      .where('m.type = :mode', { mode: MatchmakingMode.UNRANKED })
-      .orWhere('m.type = :mode', { mode: MatchmakingMode.BOTS })
+      .andWhere('m.type = :mode or m.type = :mode2 or m.type = :mode3 or m.type = :mode4', {
+        mode: MatchmakingMode.UNRANKED,
+        mode2: MatchmakingMode.BOTS,
+        mode3: MatchmakingMode.DIRETIDE,
+        mode4: MatchmakingMode.SOLOMID,
+      })
       .getCount();
   }
 }

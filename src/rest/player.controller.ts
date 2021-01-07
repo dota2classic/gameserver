@@ -14,6 +14,7 @@ import { PlayerId } from 'gateway/shared-types/player-id';
 import { GameServerService } from 'gameserver/gameserver.service';
 import { PlayerService } from 'rest/service/player.service';
 import { HeroStatsDto, PlayerGeneralStatsDto } from 'rest/dto/hero.dto';
+import { UNRANKED_GAMES_REQUIRED_FOR_RANKED } from 'gateway/shared-types/timings';
 
 @Controller('player')
 @ApiTags('player')
@@ -43,12 +44,30 @@ export class PlayerController {
       version,
     });
 
+    const rankedGamesPlayed = await this.playerService.gamesPlayed(
+      steam_id,
+      MatchmakingMode.RANKED,
+    );
+
     const rank = await this.playerService.getRank(version, steam_id);
 
+    const unrankedGamesPlayed = await this.playerService.getNonRankedGamesPlayed(
+      steam_id,
+    );
+
+
+    console.log(unrankedGamesPlayed)
     return {
       mmr: p.mmr,
       steam_id: p.steam_id,
       rank: rank + 1,
+      newbieUnrankedGamesLeft: rankedGamesPlayed > 0
+        ? 0
+        : Math.max(
+            UNRANKED_GAMES_REQUIRED_FOR_RANKED -
+              (await this.playerService.getNonRankedGamesPlayed(steam_id)),
+            0,
+          ),
     };
   }
 

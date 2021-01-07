@@ -7,4 +7,5 @@ export class PlayerSummaryDto {
   mmr: number;
   steam_id: string;
   rank: number;
+  newbieUnrankedGamesLeft: number
 }
