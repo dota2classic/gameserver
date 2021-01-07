@@ -56,7 +56,7 @@ export class PlayerController {
     );
 
 
-    console.log(unrankedGamesPlayed)
+    console.log(unrankedGamesPlayed, "UGP")
     return {
       mmr: p.mmr,
       steam_id: p.steam_id,
