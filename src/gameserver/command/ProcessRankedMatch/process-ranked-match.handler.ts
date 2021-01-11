@@ -76,7 +76,7 @@ export class ProcessRankedMatchHandler
 
 
     // ffs
-    return win ? 25 : -25;
+    // return win ? 25 : -25;
     // total calibration games
     const cbGames = 10;
 
@@ -85,7 +85,7 @@ export class ProcessRankedMatchHandler
     );
 
     // if we're over calibration game limit, we go ±25 mmr
-    if (cbGame > cbGame) {
+    if (cbGame > cbGames) {
       return 25;
     }
 
