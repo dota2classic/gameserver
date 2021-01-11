@@ -86,7 +86,7 @@ export class ProcessRankedMatchHandler
 
     // if we're over calibration game limit, we go ±25 mmr
     if (cbGame > cbGames) {
-      return 25;
+      return win ? 25 : -25;
     }
 
     // first 3 games are kind and 50± mmr only
