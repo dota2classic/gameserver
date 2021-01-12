@@ -157,31 +157,19 @@ where m.type = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and 
   }
 
   async getNonRankedGamesPlayed(steam_id: string): Promise<number> {
-    console.log(steam_id)
-
-
-    console.log(this.playerInMatchRepository
-      .createQueryBuilder('pim')
-      .innerJoin('pim.match', 'm')
-      .where('pim.playerId = :steam_id', { steam_id })
-      .andWhere('m.type = :mode or m.type = :mode2 or m.type = :mode3 or m.type = :mode4', {
-        mode: MatchmakingMode.UNRANKED,
-        mode2: MatchmakingMode.BOTS,
-        mode3: MatchmakingMode.DIRETIDE,
-        mode4: MatchmakingMode.SOLOMID,
-      })
-      .getSql())
-
     return this.playerInMatchRepository
       .createQueryBuilder('pim')
       .innerJoin('pim.match', 'm')
       .where('pim.playerId = :steam_id', { steam_id })
-      .andWhere('(m.type = :mode or m.type = :mode2 or m.type = :mode3 or m.type = :mode4)', {
-        mode: MatchmakingMode.UNRANKED,
-        mode2: MatchmakingMode.BOTS,
-        mode3: MatchmakingMode.DIRETIDE,
-        mode4: MatchmakingMode.SOLOMID,
-      })
+      .andWhere(
+        '(m.type = :mode or m.type = :mode2 or m.type = :mode3 or m.type = :mode4)',
+        {
+          mode: MatchmakingMode.UNRANKED,
+          mode2: MatchmakingMode.BOTS,
+          mode3: MatchmakingMode.DIRETIDE,
+          mode4: MatchmakingMode.SOLOMID,
+        },
+      )
       .getCount();
   }
 }

@@ -30,7 +30,6 @@ export class FindGameServerHandler
       command.matchInfo.version,
     );
 
-    console.log(gs, `a?`, command.matchInfo.version)
     if (!gs) {
       if (command.tries < 5) {
         // we need to schedule new find

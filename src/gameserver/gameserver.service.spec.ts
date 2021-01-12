@@ -11,8 +11,9 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { MatchEntity } from 'gameserver/model/match.entity';
 
-const THIS_SEASON_TIMESTAMP = new Date('2020-08-31 20:00:00.000000');
-const THIS_SEASON_ID = 2;
+// const THIS_SEASON_TIMESTAMP = new Date('2020-08-31 20:00:00.000000');
+const THIS_SEASON_TIMESTAMP = new Date('2021-01-12 21:00:00.000000');
+const THIS_SEASON_ID = 3;
 
 export const randomUser = () => {
   return user(`[U:1:${Math.round(Math.random() * 1000000)}]`);
@@ -61,10 +62,17 @@ describe('GameserverService', () => {
     await seasonRep.save(gs1);
 
     const gs2 = new GameSeason();
-    gs2.id = THIS_SEASON_ID;
-    gs2.start_timestamp = THIS_SEASON_TIMESTAMP;
+    gs2.id = 2;
+    gs2.start_timestamp = new Date('2020-08-31 20:00:00.000000');
     gs2.version = Dota2Version.Dota_681;
     await seasonRep.save(gs2);
+
+    const gs3 = new GameSeason();
+    gs3.id = THIS_SEASON_ID;
+    gs3.start_timestamp = THIS_SEASON_TIMESTAMP;
+    gs3.version = Dota2Version.Dota_681;
+    await seasonRep.save(gs3);
+
 
     for (let i = 0; i < 5; i++) {
       const me = new MatchEntity();
