@@ -27,14 +27,12 @@ export class PlayerService {
       version,
     });
 
-    const season = await this.gsService.getCurrentSeason(version);
-
     const rank = await this.versionPlayerRepository.query(`
         with players as (select p.steam_id, p.mmr, count(pim) as games
                  from version_player p
                           left outer join player_in_match pim
                           inner join match m on pim."matchId" = m.id
-                                     on p.steam_id = pim."playerId" and m.timestamp > '${season.start_timestamp.toUTCString()}' and
+                                     on p.steam_id = pim."playerId" and m.timestamp >= 'now'::timestamp - '1 month'::interval and
                                         m.type = ${MatchmakingMode.RANKED}
                  group by p.steam_id, p.mmr)
         select count(*)

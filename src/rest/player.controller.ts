@@ -74,8 +74,6 @@ export class PlayerController {
   async leaderboard(
     @Param('version') version: Dota2Version,
   ): Promise<LeaderboardEntryDto[]> {
-    const currentSeason = await this.gsService.getCurrentSeason(version);
-
     const calibrationGames = 1;
 
     const leaderboard = await this.versionPlayerRepository.query(`
