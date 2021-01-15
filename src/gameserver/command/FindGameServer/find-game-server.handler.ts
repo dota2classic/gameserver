@@ -20,6 +20,10 @@ export class FindGameServerHandler
   constructor(
     private readonly gsRepository: GameServerRepository,
     private readonly gsSessionRepository: GameServerSessionRepository,
+    @InjectRepository(GameServerSessionModel)
+    private readonly gameServerSessionModelRepository: Repository<
+      GameServerSessionModel
+    >,
     private readonly ebus: EventBus,
     @InjectRepository(MatchEntity)
     private readonly matchEntityRepository: Repository<MatchEntity>,
@@ -56,9 +60,16 @@ export class FindGameServerHandler
 
     await this.matchEntityRepository.save(m);
 
-    const session = new GameServerSessionModel(gs.url, m.id, command.matchInfo);
-    await this.gsSessionRepository.save(session.url, session);
+    const session = new GameServerSessionModel();
+    session.url = gs.url;
 
-    this.ebus.publish(new GameSessionCreatedEvent(gs.url, m.id, command.matchInfo));
+    session.matchId = m.id;
+    session.matchInfoJson = command.matchInfo;
+
+    await this.gameServerSessionModelRepository.save(session);
+
+    this.ebus.publish(
+      new GameSessionCreatedEvent(gs.url, m.id, command.matchInfo),
+    );
   }
 }

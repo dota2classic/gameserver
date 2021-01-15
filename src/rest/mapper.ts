@@ -56,9 +56,9 @@ export class Mapper {
     url: it.url,
     matchId: it.matchId,
     info: {
-      ...it.info,
-      radiant: it.info.radiant.map(t => t.value),
-      dire: it.info.dire.map(t => t.value),
+      ...it.matchInfoJson,
+      radiant: it.matchInfoJson.radiant.map(t => t.value),
+      dire: it.matchInfoJson.dire.map(t => t.value),
     },
   });
 }

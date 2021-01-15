@@ -8,6 +8,7 @@ import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { GameServerRepository } from 'gameserver/repository/game-server.repository';
 import { GameServerDto, GameSessionDto } from 'rest/dto/info.dto';
 import { GameServerSessionRepository } from 'gameserver/repository/game-server-session.repository';
+import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
 
 @Controller('info')
 @ApiTags('info')
@@ -16,6 +17,10 @@ export class InfoController {
     private readonly mapper: Mapper,
     @InjectRepository(Match)
     private readonly matchRepository: Repository<Match>,
+    @InjectRepository(GameServerSessionModel)
+    private readonly gameServerSessionModelRepository: Repository<
+      GameServerSessionModel
+    >,
     @InjectRepository(PlayerInMatch)
     private readonly playerInMatchRepository: Repository<PlayerInMatch>,
     private readonly gsRep: GameServerRepository,
@@ -29,8 +34,8 @@ export class InfoController {
 
   @Get('game_sessions')
   public async gameSessions(): Promise<GameSessionDto[]> {
-    return this.gameSessionRepository
-      .all()
+    return this.gameServerSessionModelRepository
+      .find()
       .then(t => t.map(this.mapper.mapGameSession));
   }
 }
