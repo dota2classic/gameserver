@@ -59,5 +59,18 @@ export class FindGameServerHandler
     m.finished = false;
 
     await this.matchEntityRepository.save(m);
+
+
+    const session = new GameServerSessionModel();
+    session.url = gs.url;
+
+    session.matchId = m.id;
+    session.matchInfoJson = command.matchInfo;
+
+    await this.gameServerSessionModelRepository.save(session);
+
+    this.ebus.publish(
+      new GameSessionCreatedEvent(session.url, session.matchId, session.matchInfoJson),
+    );
   }
 }

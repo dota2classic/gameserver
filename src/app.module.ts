@@ -14,10 +14,12 @@ import { PlayerController } from 'rest/player.controller';
 import { InfoController } from 'rest/info.controller';
 import { PlayerService } from 'rest/service/player.service';
 import { SentryModule } from '@ntegral/nestjs-sentry';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
 
+    ScheduleModule.forRoot(),
     SentryModule.forRoot({
       dsn:
         "https://67345366524f4d0fb7d9be3a26d6d3f2@o435989.ingest.sentry.io/5529665",

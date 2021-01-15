@@ -20,17 +20,17 @@ export class GameServerStartedHandler
 
   async handle(event: GameServerStartedEvent) {
     // we create session only if match is started 4real
-    const session = new GameServerSessionModel();
-    session.url = event.url;
-
-    session.matchId = event.matchId;
-    session.matchInfoJson = event.info;
-
-    await this.gameServerSessionModelRepository.save(session);
-
-    this.ebus.publish(
-      new GameSessionCreatedEvent(event.url, event.matchId, event.info),
-    );
+    // const session = new GameServerSessionModel();
+    // session.url = event.url;
+    //
+    // session.matchId = event.matchId;
+    // session.matchInfoJson = event.info;
+    //
+    // await this.gameServerSessionModelRepository.save(session);
+    //
+    // this.ebus.publish(
+    //   new GameSessionCreatedEvent(event.url, event.matchId, event.info),
+    // );
 
     this.ebus.publish(
       new MatchStartedEvent(
