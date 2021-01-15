@@ -17,6 +17,9 @@ import { GetPlayerInfoHandler } from 'gameserver/query/get-player-info.handler';
 import { MakeSureExistsHandler } from 'gameserver/command/MakeSureExists/make-sure-exists.handler';
 import { GameServerService } from 'gameserver/gameserver.service';
 import { PlayerBanHammeredHandler } from 'gameserver/event-handler/player-ban-hammered.handler';
+import { outerQuery } from 'gateway/util/outerQuery';
+import { GameServerStatusQuery } from 'gateway/queries/GameServerStatus/game-server-status.query';
+import { ServerSessionSyncHandler } from 'gameserver/event-handler/server-session-sync.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -35,7 +38,10 @@ const EventHandlers = [
   MatchFinishedHandler,
 
   GameResultsHandler,
-  PlayerBanHammeredHandler
+  PlayerBanHammeredHandler,
+
+
+  ServerSessionSyncHandler
 ];
 
 const QueryHandlers = [GetPlayerInfoHandler, GetSessionByUserHandler];
@@ -52,5 +58,8 @@ export const GameServerDomain = [
   ...Services,
   ...Sagas,
   ...QueryHandlers,
+
+
+  outerQuery(GameServerStatusQuery, 'QueryCore')
 
 ];

@@ -13,6 +13,7 @@ import { GameSessionUpdatedEvent } from 'gameserver/event/game-session-updated.e
 import { GameServerDiscoveredEvent } from 'gateway/events/game-server-discovered.event';
 import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
 import { PlayerBanHammeredEvent } from 'gateway/events/bans/player-ban-hammered.event';
+import { ServerSessionSyncEvent } from 'gateway/events/gs/server-session-sync.event';
 
 export enum Dota_GameState {
   DOTA_GAMERULES_STATE_INIT = 0,
@@ -69,6 +70,12 @@ export class CoreController {
   async GameSessionUpdatedEvent(data: GameSessionUpdatedEvent) {
     this.event(GameSessionUpdatedEvent, data);
   }
+
+  @EventPattern(ServerSessionSyncEvent.name)
+  async ServerSessionSyncEvent(data: ServerSessionSyncEvent) {
+    this.event(ServerSessionSyncEvent, data);
+  }
+
 
   @EventPattern(GameServerDiscoveredEvent.name)
   async GameServerDiscoveredEvent(data: GameServerDiscoveredEvent) {

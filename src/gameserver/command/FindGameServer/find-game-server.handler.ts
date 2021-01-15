@@ -1,4 +1,4 @@
-import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventBus, ICommandHandler, QueryBus } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
 import { GameServerRepository } from 'gameserver/repository/game-server.repository';
@@ -10,7 +10,6 @@ import { GameServerSessionModel } from 'gameserver/model/game-server-session.mod
 import { InjectRepository } from '@nestjs/typeorm';
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { Repository } from 'typeorm';
-import { MatchCreatedEvent } from 'gameserver/event/match-created.event';
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
@@ -27,6 +26,7 @@ export class FindGameServerHandler
     private readonly ebus: EventBus,
     @InjectRepository(MatchEntity)
     private readonly matchEntityRepository: Repository<MatchEntity>,
+    private readonly qbus: QueryBus,
   ) {}
 
   async execute(command: FindGameServerCommand) {
@@ -59,17 +59,5 @@ export class FindGameServerHandler
     m.finished = false;
 
     await this.matchEntityRepository.save(m);
-
-    const session = new GameServerSessionModel();
-    session.url = gs.url;
-
-    session.matchId = m.id;
-    session.matchInfoJson = command.matchInfo;
-
-    await this.gameServerSessionModelRepository.save(session);
-
-    this.ebus.publish(
-      new GameSessionCreatedEvent(gs.url, m.id, command.matchInfo),
-    );
   }
 }
