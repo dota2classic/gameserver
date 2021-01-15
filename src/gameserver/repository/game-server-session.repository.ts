@@ -22,7 +22,9 @@ export class GameServerSessionRepository {
   async findFree(version: Dota2Version) {
     const compatible = await this.gameServerRepository.find(version);
     for (let i = 0; i < compatible.length; i++) {
-      const isBusy = await this.gameServerSessionModelRepository.findOne(compatible[i].url);
+      const isBusy = await this.gameServerSessionModelRepository.findOne({
+        url: compatible[i].url
+      });
       if (!isBusy) {
         return compatible[i];
       }
