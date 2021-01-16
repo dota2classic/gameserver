@@ -18,7 +18,7 @@ export class AppService {
     private readonly gsRepository: GameServerRepository,
   ) {}
 
-  @Cron('*/5 * * * * *')
+  @Cron('*/10 * * * * *')
   async actualizeServers() {
     // for all servers
     const all = await this.gsRepository.all();

@@ -30,9 +30,9 @@ export class ServerSessionSyncHandler
       newSession.matchInfoJson = event.info;
 
       await this.gameServerSessionModelRepository.save(newSession);
-      this.ebus.publish(
-        new GameSessionCreatedEvent(event.url, event.matchId, event.info),
-      );
+      // this.ebus.publish(
+      //   new GameSessionCreatedEvent(event.url, event.matchId, event.info),
+      // );
     }
   }
 }
