@@ -7,6 +7,7 @@ import { GameSeason } from 'gameserver/entity/GameSeason';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm/dist/interfaces/typeorm-options.interface';
 import { PlayerBan } from 'gameserver/entity/PlayerBan';
 import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
+import { GameServerModel } from 'gameserver/model/game-server.model';
 
 export const Entities = [
   GameSeason,
@@ -18,7 +19,8 @@ export const Entities = [
 
   PlayerBan,
 
-  GameServerSessionModel
+  GameServerSessionModel,
+  GameServerModel
 ];
 export const devDbConfig: any = {
   type: 'postgres',

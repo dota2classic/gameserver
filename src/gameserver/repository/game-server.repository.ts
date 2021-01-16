@@ -3,20 +3,24 @@ import { RuntimeRepository } from 'util/runtime-repository';
 import { Injectable } from '@nestjs/common';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { EventPublisher } from '@nestjs/cqrs';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
-export class GameServerRepository extends RuntimeRepository<
-  GameServerModel,
-  'url'
-> {
+export class GameServerRepository {
+  constructor(
+    eventPublisher: EventPublisher,
+    @InjectRepository(GameServerModel)
+    private readonly gameServerModelRepository: Repository<GameServerModel>,
+  ) {}
 
-  constructor(eventPublisher: EventPublisher) {
-    super(eventPublisher);
+  async find(version: Dota2Version): Promise<GameServerModel[]> {
+    return this.gameServerModelRepository.find({
+      version,
+    });
   }
 
-  async find(version: Dota2Version) {
-    return [...this.cache.values()].filter(
-      t => t.version === version,
-    );
+  async all() {
+    return this.gameServerModelRepository.find()
   }
 }

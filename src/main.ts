@@ -14,7 +14,7 @@ import { construct } from 'gateway/util/construct';
 import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
 
 export function prepareModels(publisher: EventPublisher) {
-  publisher.mergeClassContext(GameServerModel);
+  // publisher.mergeClassContext(GameServerModel);
 }
 
 async function bootstrap() {
