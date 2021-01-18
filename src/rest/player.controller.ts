@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { GameSeason } from 'gameserver/entity/GameSeason';
-import { LeaderboardEntryDto, PlayerSummaryDto } from 'rest/dto/player.dto';
+import { BanStatusDto, LeaderboardEntryDto, PlayerSummaryDto } from 'rest/dto/player.dto';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { CommandBus } from '@nestjs/cqrs';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
@@ -15,6 +15,8 @@ import { GameServerService } from 'gameserver/gameserver.service';
 import { PlayerService } from 'rest/service/player.service';
 import { HeroStatsDto, PlayerGeneralStatsDto } from 'rest/dto/hero.dto';
 import { UNRANKED_GAMES_REQUIRED_FOR_RANKED } from 'gateway/shared-types/timings';
+import { PlayerBan } from 'gameserver/entity/PlayerBan';
+import { BanStatus } from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
 
 @Controller('player')
 @ApiTags('player')
@@ -28,6 +30,8 @@ export class PlayerController {
     @InjectRepository(GameSeason)
     private readonly gameSeasonRepository: Repository<GameSeason>,
     private readonly cbus: CommandBus,
+    @InjectRepository(PlayerBan)
+    private readonly playerBanRepository: Repository<PlayerBan>,
     private readonly gsService: GameServerService,
     private readonly playerService: PlayerService,
   ) {}
@@ -55,18 +59,18 @@ export class PlayerController {
       steam_id,
     );
 
-
     return {
       mmr: p.mmr,
       steam_id: p.steam_id,
       rank: rank + 1,
-      newbieUnrankedGamesLeft: rankedGamesPlayed > 0
-        ? 0
-        : Math.max(
-            UNRANKED_GAMES_REQUIRED_FOR_RANKED -
-              (await this.playerService.getNonRankedGamesPlayed(steam_id)),
-            0,
-          ),
+      newbieUnrankedGamesLeft:
+        rankedGamesPlayed > 0
+          ? 0
+          : Math.max(
+              UNRANKED_GAMES_REQUIRED_FOR_RANKED -
+                (await this.playerService.getNonRankedGamesPlayed(steam_id)),
+              0,
+            ),
     };
   }
 
@@ -82,9 +86,7 @@ export class PlayerController {
       from version_player p
                left outer join player_in_match pim
                inner join match m on pim."matchId" = m.id
-                          on p.steam_id = pim."playerId" and m.timestamp >= 'now'::timestamp - '1 month'::interval and m.type = ${
-      MatchmakingMode.RANKED
-    }
+                          on p.steam_id = pim."playerId" and m.timestamp >= 'now'::timestamp - '1 month'::interval and m.type = ${MatchmakingMode.RANKED}
       
       group by p.steam_id, p.mmr
       having count(pim) >= ${calibrationGames}
@@ -112,5 +114,19 @@ export class PlayerController {
     await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
 
     return await this.playerService.heroStats(version, steam_id);
+  }
+
+  @Get(`/ban_info/:id`)
+  async banInfo(@Param('id') steam_id: string): Promise<BanStatusDto> {
+    const ban = await this.playerBanRepository.findOne({
+      steam_id: steam_id,
+    });
+
+    const res: BanStatus = ban?.asBanStatus() || BanStatus.NOT_BANNED;
+
+    return {
+      steam_id,
+      ...res,
+    };
   }
 }
