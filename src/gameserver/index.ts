@@ -18,6 +18,7 @@ import { MakeSureExistsHandler } from 'gameserver/command/MakeSureExists/make-su
 import { GameServerService } from 'gameserver/gameserver.service';
 import { PlayerBanHammeredHandler } from 'gameserver/event-handler/player-ban-hammered.handler';
 import { ServerSessionSyncHandler } from 'gameserver/event-handler/server-session-sync.handler';
+import { PlayerNotLoadedHandler } from 'gameserver/event-handler/player-not-loaded.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -39,6 +40,7 @@ const EventHandlers = [
   PlayerBanHammeredHandler,
 
   ServerSessionSyncHandler,
+  PlayerNotLoadedHandler
 ];
 
 const QueryHandlers = [GetPlayerInfoHandler, GetSessionByUserHandler];
