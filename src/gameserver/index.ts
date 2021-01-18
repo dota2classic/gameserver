@@ -19,6 +19,8 @@ import { GameServerService } from 'gameserver/gameserver.service';
 import { PlayerBanHammeredHandler } from 'gameserver/event-handler/player-ban-hammered.handler';
 import { ServerSessionSyncHandler } from 'gameserver/event-handler/server-session-sync.handler';
 import { PlayerNotLoadedHandler } from 'gameserver/event-handler/player-not-loaded.handler';
+import { RoomNotReadyHandler } from 'gameserver/event-handler/room-not-ready.handler';
+import { CrimeLogCreatedHandler } from 'gameserver/event-handler/crime-log-created.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -40,7 +42,10 @@ const EventHandlers = [
   PlayerBanHammeredHandler,
 
   ServerSessionSyncHandler,
-  PlayerNotLoadedHandler
+  PlayerNotLoadedHandler,
+  RoomNotReadyHandler,
+  CrimeLogCreatedHandler
+
 ];
 
 const QueryHandlers = [GetPlayerInfoHandler, GetSessionByUserHandler];

@@ -1,32 +1,33 @@
 import { EventBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
+import { RoomNotReadyEvent } from 'gateway/events/room-not-ready.event';
 import { PlayerBan } from 'gameserver/entity/PlayerBan';
+import { BanReason } from 'gateway/shared-types/ban';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BanReason } from 'gateway/shared-types/ban';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 
-@EventsHandler(PlayerNotLoadedEvent)
-export class PlayerNotLoadedHandler
-  implements IEventHandler<PlayerNotLoadedEvent> {
+@EventsHandler(RoomNotReadyEvent)
+export class RoomNotReadyHandler implements IEventHandler<RoomNotReadyEvent> {
   constructor(
     @InjectRepository(PlayerBan)
     private readonly playerBanRepository: Repository<PlayerBan>,
+    private readonly ebus: EventBus,
     @InjectRepository(PlayerCrimeLogEntity)
     private readonly playerCrimeLogEntityRepository: Repository<
       PlayerCrimeLogEntity
     >,
-    private readonly ebus: EventBus,
   ) {}
 
-  async handle(event: PlayerNotLoadedEvent) {
-    const crime = new PlayerCrimeLogEntity();
-    crime.steam_id = event.playerId.value;
-    crime.crime = BanReason.LOAD_FAILURE;
+  async handle(event: RoomNotReadyEvent) {
+    for (let i = 0; i < event.players.length; i++) {
+      const crime = new PlayerCrimeLogEntity();
+      crime.steam_id = event.players[i].value;
+      crime.crime = BanReason.GAME_DECLINE;
 
-    await this.playerCrimeLogEntityRepository.save(crime);
+      await this.playerCrimeLogEntityRepository.save(crime);
 
-    this.ebus.publish(new CrimeLogCreatedEvent(crime.id));
+      this.ebus.publish(new CrimeLogCreatedEvent(crime.id));
+    }
   }
 }

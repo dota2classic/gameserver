@@ -54,26 +54,26 @@ async function bootstrap() {
   const elogger = new Logger('EventLogger');
   const qlogger = new Logger('EventLogger');
 
-  ebus._subscribe(
-    new Subscriber<any>(e => {
-      elogger.log(`${inspect(e)}`);
-    }),
-  );
-
-  qbus._subscribe(
-    new Subscriber<any>(e => {
-      qlogger.log(`${inspect(e)}`);
-    }),
-  );
-
-  cbus._subscribe(
-    new Subscriber<any>(e => {
-      clogger.log(
-        `${inspect(e)}`,
-        // e.__proto__.constructor.name,
-      );
-    }),
-  );
+  // ebus._subscribe(
+  //   new Subscriber<any>(e => {
+  //     elogger.log(`${inspect(e)}`);
+  //   }),
+  // );
+  //
+  // qbus._subscribe(
+  //   new Subscriber<any>(e => {
+  //     qlogger.log(`${inspect(e)}`);
+  //   }),
+  // );
+  //
+  // cbus._subscribe(
+  //   new Subscriber<any>(e => {
+  //     clogger.log(
+  //       `${inspect(e)}`,
+  //       // e.__proto__.constructor.name,
+  //     );
+  //   }),
+  // );
 
   await wait(500);
   ebus.publish(new DiscoveryRequestedEvent(Math.random()));
