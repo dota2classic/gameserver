@@ -16,6 +16,7 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { PlayerBan } from 'gameserver/entity/PlayerBan';
 import { HeroStatsDto } from 'rest/dto/hero.dto';
 import { UNRANKED_GAMES_REQUIRED_FOR_RANKED } from 'gateway/shared-types/timings';
+import { cached } from 'util/method-cache';
 
 @QueryHandler(GetPlayerInfoQuery)
 export class GetPlayerInfoHandler
@@ -33,6 +34,8 @@ export class GetPlayerInfoHandler
     private readonly playerService: PlayerService,
   ) {}
 
+
+  @cached(300)
   async execute(
     command: GetPlayerInfoQuery,
   ): Promise<GetPlayerInfoQueryResult> {
