@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { CommandBus, EventBus, EventPublisher, QueryBus } from '@nestjs/cqrs';
+import { CommandBus, EventBus, EventPublisher, ofType, QueryBus } from '@nestjs/cqrs';
 import { REDIS_PASSWORD, REDIS_URL } from 'env';
 import { Transport } from '@nestjs/microservices';
 import { inspect } from 'util';
@@ -10,6 +10,9 @@ import { DiscoveryRequestedEvent } from 'gateway/events/discovery-requested.even
 import { wait } from 'util/wait';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ServerActualizationRequestedEvent } from 'gateway/events/gs/server-actualization-requested.event';
+import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
+import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
+import { ServerSessionSyncEvent } from 'gateway/events/gs/server-session-sync.event';
 
 export function prepareModels(publisher: EventPublisher) {
   // publisher.mergeClassContext(GameServerModel);
@@ -55,18 +58,23 @@ async function bootstrap() {
   ebus._subscribe(
     new Subscriber<any>(e => {
       if (e.constructor.name === ServerActualizationRequestedEvent.name) return;
+      if (e.constructor.name === ServerSessionSyncEvent.name) return;
+
       elogger.log(`${inspect(e)}`);
     }),
   );
 
-  qbus._subscribe(
-    new Subscriber<any>(e => {
-      qlogger.log(`${inspect(e)}`);
-    }),
-  );
+  // qbus._subscribe(
+  //   new Subscriber<any>(e => {
+  //     qlogger.log(`${inspect(e)}`);
+  //   }),
+  // );
 
-  cbus._subscribe(
+  cbus.pipe(
+    ofType(FindGameServerCommand)
+  )._subscribe(
     new Subscriber<any>(e => {
+      if (e.constructor.name === MakeSureExistsCommand.name) return;
       clogger.log(
         `${inspect(e)}`,
         // e.__proto__.constructor.name,
