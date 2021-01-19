@@ -1,7 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { CommandBus, EventBus, EventPublisher, QueryBus } from '@nestjs/cqrs';
-import { GameServerModel } from 'gameserver/model/game-server.model';
 import { REDIS_PASSWORD, REDIS_URL } from 'env';
 import { Transport } from '@nestjs/microservices';
 import { inspect } from 'util';
@@ -10,8 +9,7 @@ import { Logger } from '@nestjs/common';
 import { DiscoveryRequestedEvent } from 'gateway/events/discovery-requested.event';
 import { wait } from 'util/wait';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { construct } from 'gateway/util/construct';
-import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
+import { ServerActualizationRequestedEvent } from 'gateway/events/gs/server-actualization-requested.event';
 
 export function prepareModels(publisher: EventPublisher) {
   // publisher.mergeClassContext(GameServerModel);
@@ -25,7 +23,7 @@ async function bootstrap() {
       url: REDIS_URL(),
       retryAttempts: Infinity,
       retryDelay: 5000,
-      password: REDIS_PASSWORD()
+      password: REDIS_PASSWORD(),
     },
   });
 
@@ -56,6 +54,7 @@ async function bootstrap() {
 
   ebus._subscribe(
     new Subscriber<any>(e => {
+      if (e.constructor.name === ServerActualizationRequestedEvent.name) return;
       elogger.log(`${inspect(e)}`);
     }),
   );
@@ -78,9 +77,7 @@ async function bootstrap() {
   await wait(500);
 
   // todo uncomment
-  // ebus.publish(new DiscoveryRequestedEvent(Math.random()));
-
-
+  ebus.publish(new DiscoveryRequestedEvent(Math.random()));
 
   // ebus.publish(construct(GameResultsEvent, {
   //   server: 'glory.dota2classic.ru:27045',

@@ -1,4 +1,9 @@
-import { CommandHandler, EventBus, ICommandHandler, QueryBus } from '@nestjs/cqrs';
+import {
+  CommandHandler,
+  EventBus,
+  ICommandHandler,
+  QueryBus,
+} from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
 import { GameServerRepository } from 'gameserver/repository/game-server.repository';
@@ -16,11 +21,17 @@ import { timeout } from 'rxjs/operators';
 import { ServerNotRespondingEvent } from 'gameserver/event/server-not-responding.event';
 import { MatchCancelledEvent } from 'gateway/events/match-cancelled.event';
 import { inspect } from 'util';
+import { Subject } from 'rxjs';
+import { asyncMap } from 'rxjs-async-map';
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
   implements ICommandHandler<FindGameServerCommand> {
   private readonly logger = new Logger(FindGameServerHandler.name);
+
+  private pendingGamesPool: Subject<FindGameServerCommand> = new Subject<
+    FindGameServerCommand
+  >();
 
   constructor(
     private readonly gsRepository: GameServerRepository,
@@ -34,9 +45,17 @@ export class FindGameServerHandler
     private readonly matchEntityRepository: Repository<MatchEntity>,
     private readonly qbus: QueryBus,
     @Inject('QueryCore') private readonly redisEventQueue: ClientProxy,
-  ) {}
+  ) {
+    this.pendingGamesPool
+      .pipe(asyncMap(cmd => this.findServer(cmd), 1))
+      .subscribe();
+  }
 
   async execute(command: FindGameServerCommand) {
+    this.pendingGamesPool.next(command);
+  }
+
+  private async findServer(command: FindGameServerCommand) {
     const freeServerPool = await this.gsSessionRepository.getAllFree(
       command.matchInfo.version,
     );
@@ -52,7 +71,7 @@ export class FindGameServerHandler
     let i = 0;
     let foundServer: GameServerModel | undefined;
 
-    console.log("Free pool:", freeServerPool.length)
+    console.log('Free pool:', freeServerPool.length);
     while (i < freeServerPool.length) {
       const candidate = freeServerPool[i];
       const stackUrl = candidate.url;
@@ -62,7 +81,7 @@ export class FindGameServerHandler
             LaunchGameServerCommand.name,
             new LaunchGameServerCommand(candidate.url, m.id, command.matchInfo),
           )
-          .pipe(timeout(5000))
+          .pipe(timeout(10000))
           .toPromise();
 
         // we got req, now need to deci
@@ -71,12 +90,12 @@ export class FindGameServerHandler
           foundServer = candidate;
           break;
         } else {
-          console.log(req)
+          console.log(req);
           // server not launched for some reason
           // i guess we skip? just try next server
         }
       } catch (e) {
-        console.log("Sadkek?", e)
+        console.log('Sadkek?', e);
         // timeout means server is DEAD
         this.ebus.publish(new ServerNotRespondingEvent(stackUrl));
       }
@@ -84,7 +103,7 @@ export class FindGameServerHandler
       i++;
     }
 
-    console.log("So: ", inspect(foundServer))
+    console.log('So: ', inspect(foundServer));
 
     if (foundServer) {
       m.server = foundServer.url;

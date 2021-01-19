@@ -22,13 +22,13 @@ export class AppService {
   async actualizeServers() {
     // for all servers
     // todo uncomment
-    // const all = await this.gsRepository.all();
-    //
-    // await Promise.all(
-    //   all.map(async gs => {
-    //     await this.ebus.publish(new ServerActualizationRequestedEvent(gs.url));
-    //   }),
-    // );
+    const all = await this.gsRepository.all();
+
+    await Promise.all(
+      all.map(async gs => {
+        await this.ebus.publish(new ServerActualizationRequestedEvent(gs.url));
+      }),
+    );
   }
 
   async onApplicationBootstrap() {
