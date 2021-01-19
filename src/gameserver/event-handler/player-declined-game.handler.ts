@@ -18,12 +18,12 @@ export class PlayerDeclinedGameHandler
   ) {}
 
   async handle(event: PlayerDeclinedGameEvent) {
-    const crime = new PlayerCrimeLogEntity();
-    crime.steam_id = event.id.value;
-    crime.crime = BanReason.GAME_DECLINE;
-
-    await this.playerCrimeLogEntityRepository.save(crime);
-
-    this.ebus.publish(new CrimeLogCreatedEvent(crime.id));
+    // const crime = new PlayerCrimeLogEntity();
+    // crime.steam_id = event.id.value;
+    // crime.crime = BanReason.GAME_DECLINE;
+    //
+    // await this.playerCrimeLogEntityRepository.save(crime);
+    //
+    // this.ebus.publish(new CrimeLogCreatedEvent(crime.id));
   }
 }
