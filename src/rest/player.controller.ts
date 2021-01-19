@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { CacheTTL, Controller, Get, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Mapper } from 'rest/mapper';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -36,6 +36,8 @@ export class PlayerController {
     private readonly playerService: PlayerService,
   ) {}
 
+
+  @CacheTTL(120)
   @Get('/summary/:version/:id')
   async playerSummary(
     @Param('version') version: Dota2Version,
@@ -55,10 +57,6 @@ export class PlayerController {
 
     const rank = await this.playerService.getRank(version, steam_id);
 
-    const unrankedGamesPlayed = await this.playerService.getNonRankedGamesPlayed(
-      steam_id,
-    );
-
     return {
       mmr: p.mmr,
       steam_id: p.steam_id,
@@ -75,6 +73,7 @@ export class PlayerController {
   }
 
   @Get('/leaderboard/:version')
+  @CacheTTL(60 * 30)
   async leaderboard(
     @Param('version') version: Dota2Version,
   ): Promise<LeaderboardEntryDto[]> {
@@ -96,6 +95,7 @@ export class PlayerController {
     return leaderboard.map(this.mapper.mapLeaderboardEntry);
   }
 
+  @CacheTTL(120)
   @Get(`/summary/general/:version/:id`)
   async playerGeneralSummary(
     @Param('version') version: Dota2Version,
@@ -106,6 +106,7 @@ export class PlayerController {
     return await this.playerService.generalStats(version, steam_id);
   }
 
+  @CacheTTL(120)
   @Get(`/summary/heroes/:version/:id`)
   async playerHeroSummary(
     @Param('version') version: Dota2Version,

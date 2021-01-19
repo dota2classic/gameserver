@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { CacheModule, Module } from '@nestjs/common';
 import { AppService } from 'app.service';
 import { CqrsModule } from '@nestjs/cqrs';
 import { ClientsModule, Transport } from '@nestjs/microservices';
@@ -19,6 +19,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
 
+    CacheModule.register(),
     ScheduleModule.forRoot(),
     SentryModule.forRoot({
       dsn:
