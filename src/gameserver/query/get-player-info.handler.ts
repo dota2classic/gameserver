@@ -35,7 +35,7 @@ export class GetPlayerInfoHandler
   ) {}
 
 
-  @cached(300)
+  @cached(5)
   async execute(
     command: GetPlayerInfoQuery,
   ): Promise<GetPlayerInfoQueryResult> {

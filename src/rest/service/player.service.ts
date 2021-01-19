@@ -20,7 +20,7 @@ export class PlayerService {
   ) {}
 
 
-  @cached(500)
+  @cached(100)
   public async getRank(
     version: Dota2Version,
     steam_id: string,
@@ -47,7 +47,7 @@ export class PlayerService {
     return parseInt(rank[0].count);
   }
 
-  @cached(500)
+  @cached(100)
   public async gamesPlayed(
     steam_id: string,
     mode?: MatchmakingMode,
@@ -67,7 +67,7 @@ export class PlayerService {
   }
 
 
-  @cached(500)
+  @cached(100)
   async winrate(steam_id: string, mode: MatchmakingMode) {
     const wins = (
       await this.playerInMatchRepository.query(`
@@ -89,7 +89,7 @@ where m.type = ${mode} and pim."playerId" = '${steam_id}' and m.radiant_win != c
   }
 
 
-  @cached(500)
+  @cached(100)
   async heroStats(
     version: Dota2Version,
     steam_id: string,
@@ -112,7 +112,7 @@ group by pim.hero, pim."playerId"
 `);
   }
 
-  @cached(500)
+  @cached(100)
   async winrateLastRankedGames(steam_id: string): Promise<number> {
     const some: { is_win: boolean }[] = await this.playerInMatchRepository
       .query(`
@@ -130,7 +130,7 @@ LIMIT 20;
     return winCount / recordCount;
   }
 
-  @cached(500)
+  @cached(100)
   async generalStats(
     version: Dota2Version,
     steam_id: string,
