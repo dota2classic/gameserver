@@ -21,13 +21,14 @@ export class AppService {
   @Cron('*/10 * * * * *')
   async actualizeServers() {
     // for all servers
-    const all = await this.gsRepository.all();
-
-    await Promise.all(
-      all.map(async gs => {
-        await this.ebus.publish(new ServerActualizationRequestedEvent(gs.url));
-      }),
-    );
+    // todo uncomment
+    // const all = await this.gsRepository.all();
+    //
+    // await Promise.all(
+    //   all.map(async gs => {
+    //     await this.ebus.publish(new ServerActualizationRequestedEvent(gs.url));
+    //   }),
+    // );
   }
 
   async onApplicationBootstrap() {

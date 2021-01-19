@@ -17,4 +17,8 @@ export class MatchEntity {
 
   @Column()
   mode: MatchmakingMode;
+
+
+
+  static NOT_DECIDED_SERVER: string = "NOT_DECIDED_SERVER";
 }

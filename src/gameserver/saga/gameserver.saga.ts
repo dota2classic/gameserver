@@ -47,16 +47,6 @@ export class GameserverSaga {
   // };
 
   @Saga()
-  reFindServer = (events$: Observable<any>): Observable<ICommand> => {
-    return events$.pipe(
-      ofType(GameServerNotFoundEvent),
-      filter(t => t.tries < 5),
-      delay(10_000), // let's wait 10 secs for now
-      map(e => new FindGameServerCommand(e.info, e.tries + 1)),
-    );
-  };
-
-  @Saga()
   processRanked = (events$: Observable<any>): Observable<ICommand> => {
     return events$.pipe(
       ofType(GameResultsEvent),

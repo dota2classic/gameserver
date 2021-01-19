@@ -21,6 +21,7 @@ import { ServerSessionSyncHandler } from 'gameserver/event-handler/server-sessio
 import { PlayerNotLoadedHandler } from 'gameserver/event-handler/player-not-loaded.handler';
 import { CrimeLogCreatedHandler } from 'gameserver/event-handler/crime-log-created.handler';
 import { PlayerDeclinedGameHandler } from 'gameserver/event-handler/player-declined-game.handler';
+import { ServerNotRespondingHandler } from 'gameserver/event-handler/server-not-responding.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -44,7 +45,10 @@ const EventHandlers = [
   ServerSessionSyncHandler,
   PlayerNotLoadedHandler,
   PlayerDeclinedGameHandler,
-  CrimeLogCreatedHandler
+  CrimeLogCreatedHandler,
+
+
+  ServerNotRespondingHandler
 
 ];
 
