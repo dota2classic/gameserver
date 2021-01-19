@@ -7,6 +7,7 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerService } from 'gameserver/gameserver.service';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { HeroStatsDto, PlayerGeneralStatsDto } from 'rest/dto/hero.dto';
+import { cached } from 'util/method-cache';
 
 @Injectable()
 export class PlayerService {
@@ -18,6 +19,8 @@ export class PlayerService {
     private readonly gsService: GameServerService,
   ) {}
 
+
+  @cached(500)
   public async getRank(
     version: Dota2Version,
     steam_id: string,
@@ -44,6 +47,7 @@ export class PlayerService {
     return parseInt(rank[0].count);
   }
 
+  @cached(500)
   public async gamesPlayed(
     steam_id: string,
     mode?: MatchmakingMode,
@@ -62,6 +66,8 @@ export class PlayerService {
       .getCount();
   }
 
+
+  @cached(500)
   async winrate(steam_id: string, mode: MatchmakingMode) {
     const wins = (
       await this.playerInMatchRepository.query(`
@@ -82,6 +88,8 @@ where m.type = ${mode} and pim."playerId" = '${steam_id}' and m.radiant_win != c
     return parseInt(wins) / Math.max(1, parseInt(wins) + parseInt(loss));
   }
 
+
+  @cached(500)
   async heroStats(
     version: Dota2Version,
     steam_id: string,
@@ -104,6 +112,7 @@ group by pim.hero, pim."playerId"
 `);
   }
 
+  @cached(500)
   async winrateLastRankedGames(steam_id: string): Promise<number> {
     const some: { is_win: boolean }[] = await this.playerInMatchRepository
       .query(`
@@ -121,6 +130,7 @@ LIMIT 20;
     return winCount / recordCount;
   }
 
+  @cached(500)
   async generalStats(
     version: Dota2Version,
     steam_id: string,
