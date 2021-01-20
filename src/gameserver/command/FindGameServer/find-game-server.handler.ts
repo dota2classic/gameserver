@@ -23,6 +23,7 @@ import { MatchCancelledEvent } from 'gateway/events/match-cancelled.event';
 import { inspect } from 'util';
 import { Subject } from 'rxjs';
 import { asyncMap } from 'rxjs-async-map';
+import { KillServerRequestedEvent } from 'gateway/events/gs/kill-server-requested.event';
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
@@ -98,6 +99,8 @@ export class FindGameServerHandler
         console.log('Sadkek?', e);
         // timeout means server is DEAD
         this.ebus.publish(new ServerNotRespondingEvent(stackUrl));
+        // just to make sure server is dead
+        this.ebus.publish(new KillServerRequestedEvent(stackUrl))
       }
 
       i++;
