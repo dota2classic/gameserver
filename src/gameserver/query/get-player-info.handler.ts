@@ -101,11 +101,9 @@ export class GetPlayerInfoHandler
       steam_id: command.playerId.value,
     });
 
+    // const isBot = command.playerId.value.startsWith('[U:1:9510') || command.playerId.value.startsWith('[U:1:10629');
 
-    const isBot = command.playerId.value.startsWith('[U:1:9510');
 
-
-    const botBan = isBot && BanStatus.NOT_BANNED
 
     return new GetPlayerInfoQueryResult(
       command.playerId,
@@ -113,7 +111,7 @@ export class GetPlayerInfoHandler
       mmr,
       recentWinrate,
       summary,
-      botBan || ban?.asBanStatus() || BanStatus.NOT_BANNED,
+      ban?.asBanStatus() || BanStatus.NOT_BANNED,
     );
   }
 }
