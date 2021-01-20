@@ -81,7 +81,7 @@ export class FindGameServerHandler
             LaunchGameServerCommand.name,
             new LaunchGameServerCommand(candidate.url, m.id, command.matchInfo),
           )
-          .pipe(timeout(10000))
+          .pipe(timeout(15000))
           .toPromise();
 
         // we got req, now need to deci

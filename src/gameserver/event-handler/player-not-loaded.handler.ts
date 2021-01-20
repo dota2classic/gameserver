@@ -21,12 +21,12 @@ export class PlayerNotLoadedHandler
   ) {}
 
   async handle(event: PlayerNotLoadedEvent) {
-    const crime = new PlayerCrimeLogEntity();
-    crime.steam_id = event.playerId.value;
-    crime.crime = BanReason.LOAD_FAILURE;
-
-    await this.playerCrimeLogEntityRepository.save(crime);
-
-    this.ebus.publish(new CrimeLogCreatedEvent(crime.id));
+    // const crime = new PlayerCrimeLogEntity();
+    // crime.steam_id = event.playerId.value;
+    // crime.crime = BanReason.LOAD_FAILURE;
+    //
+    // await this.playerCrimeLogEntityRepository.save(crime);
+    //
+    // this.ebus.publish(new CrimeLogCreatedEvent(crime.id));
   }
 }
