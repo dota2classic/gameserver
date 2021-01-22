@@ -18,5 +18,12 @@ export class MmrChangeLogEntity {
   loserAverage: number;
 
   @Column()
+  mmrBefore: number;
+
+  @Column()
+  mmrAfter: number;
+
+
+  @Column()
   change: number
 }

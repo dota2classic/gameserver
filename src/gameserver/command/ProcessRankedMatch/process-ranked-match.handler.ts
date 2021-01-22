@@ -142,13 +142,19 @@ export class ProcessRankedMatchHandler
     //   } became ${plr.mmr + mmrChange}`,
     // );
 
-    const change = new MmrChangeLogEntity();
-    change.playerId = pid.value;
-    change.loserAverage = loserAverage;
-    change.winnerAverage = winnerAverage;
-    change.change = mmrChange;
-    change.winner = winner;
-    await this.mmrChangeLogEntityRepository.save(change);
+    try{
+      const change = new MmrChangeLogEntity();
+      change.playerId = pid.value;
+      change.loserAverage = Number(loserAverage);
+      change.winnerAverage = Number(winnerAverage);
+      change.change = Number(mmrChange);
+      change.winner = winner;
+      change.mmrBefore = Number(plr.mmr);
+      change.mmrAfter = Number(plr.mmr + mmrChange)
+      await this.mmrChangeLogEntityRepository.save(change);
+    }catch (e){
+      console.error(e)
+    }
 
     plr.mmr = plr.mmr + mmrChange;
     await this.versionPlayerRepository.save(plr);
