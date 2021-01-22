@@ -11,19 +11,19 @@ export class MmrChangeLogEntity {
   @Column()
   winner: boolean;
 
-  @Column()
+  @Column({ type: "float"})
   winnerAverage: number;
 
-  @Column()
+  @Column({ type: "float"})
   loserAverage: number;
 
-  @Column()
+  @Column({ type: "float"})
   mmrBefore: number;
 
-  @Column()
+  @Column({ type: "float"})
   mmrAfter: number;
 
 
-  @Column()
+  @Column({ type: "float"})
   change: number
 }
