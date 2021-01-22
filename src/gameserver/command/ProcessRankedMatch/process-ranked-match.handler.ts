@@ -9,6 +9,7 @@ import { PlayerId } from 'gateway/shared-types/player-id';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerService } from 'gameserver/gameserver.service';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
+import { MmrChangeLogEntity } from 'gameserver/entity/mmr-change-log.entity';
 
 @CommandHandler(ProcessRankedMatchCommand)
 export class ProcessRankedMatchHandler
@@ -22,6 +23,10 @@ export class ProcessRankedMatchHandler
     @InjectRepository(VersionPlayer)
     private readonly versionPlayerRepository: Repository<VersionPlayer>,
     private readonly gameServerService: GameServerService,
+    @InjectRepository(MmrChangeLogEntity)
+    private readonly mmrChangeLogEntityRepository: Repository<
+      MmrChangeLogEntity
+    >,
   ) {}
 
   public calculateMmrDeviation(
@@ -70,9 +75,12 @@ export class ProcessRankedMatchHandler
       )
     ).reduce((a, b) => a + b.mmr, 0);
 
+    const winnerAverage = winnerMMR / command.winners.length;
+    const loserAverage = loserMMR / command.losers.length;
+
     const diffDeviationFactor = this.calculateMmrDeviation(
-      winnerMMR / command.winners.length,
-      loserMMR / command.losers.length,
+      winnerAverage,
+      loserAverage,
     );
 
     await Promise.all(
@@ -82,6 +90,8 @@ export class ProcessRankedMatchHandler
           t,
           true,
           winnerMMR > loserMMR ? -diffDeviationFactor : diffDeviationFactor,
+          winnerAverage,
+          loserAverage,
         ),
       ),
     );
@@ -92,6 +102,8 @@ export class ProcessRankedMatchHandler
           t,
           false,
           winnerMMR > loserMMR ? diffDeviationFactor : -diffDeviationFactor,
+          winnerAverage,
+          loserAverage,
         ),
       ),
     );
@@ -103,6 +115,8 @@ export class ProcessRankedMatchHandler
     pid: PlayerId,
     winner: boolean,
     mmrDiff: number,
+    winnerAverage: number,
+    loserAverage: number,
   ) {
     const cb = await this.gameServerService.getGamesPlayed(
       season,
@@ -127,6 +141,14 @@ export class ProcessRankedMatchHandler
     //     plr.mmr
     //   } became ${plr.mmr + mmrChange}`,
     // );
+
+    const change = new MmrChangeLogEntity();
+    change.playerId = pid.value;
+    change.loserAverage = loserAverage;
+    change.winnerAverage = winnerAverage;
+    change.change = mmrChange;
+    change.winner = winner;
+    await this.mmrChangeLogEntityRepository.save(change);
 
     plr.mmr = plr.mmr + mmrChange;
     await this.versionPlayerRepository.save(plr);

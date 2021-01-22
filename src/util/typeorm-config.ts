@@ -9,6 +9,7 @@ import { PlayerBan } from 'gameserver/entity/PlayerBan';
 import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
 import { GameServerModel } from 'gameserver/model/game-server.model';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
+import { MmrChangeLogEntity } from 'gameserver/entity/mmr-change-log.entity';
 
 export const Entities = [
   GameSeason,
@@ -22,7 +23,10 @@ export const Entities = [
 
   GameServerSessionModel,
   GameServerModel,
-  PlayerCrimeLogEntity
+  PlayerCrimeLogEntity,
+
+
+  MmrChangeLogEntity
 ];
 export const devDbConfig: any = {
   type: 'postgres',
