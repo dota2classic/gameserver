@@ -64,11 +64,11 @@ async function bootstrap() {
     }),
   );
 
-  // qbus._subscribe(
-  //   new Subscriber<any>(e => {
-  //     qlogger.log(`${inspect(e)}`);
-  //   }),
-  // );
+  qbus._subscribe(
+    new Subscriber<any>(e => {
+      qlogger.log(`${inspect(e)}`);
+    }),
+  );
 
   cbus.pipe(
     ofType(FindGameServerCommand)

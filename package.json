@@ -33,6 +33,7 @@
     "@nestjs/typeorm": "^7.1.4",
     "@ntegral/nestjs-sentry": "^1.0.4",
     "cache-manager": "^3.4.0",
+    "cache-manager-redis": "^0.6.0",
     "dotenv": "^8.2.0",
     "pg": "^8.4.1",
     "redis": "^3.0.2",

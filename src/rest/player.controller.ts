@@ -89,7 +89,8 @@ export class PlayerController {
       
       group by p.steam_id, p.mmr
       having count(pim) >= ${calibrationGames}
-      order by p.mmr DESC;
+      order by p.mmr DESC
+      limit 1000;
 `);
 
     return leaderboard.map(this.mapper.mapLeaderboardEntry);

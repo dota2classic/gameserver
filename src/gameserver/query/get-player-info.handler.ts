@@ -31,11 +31,11 @@ export class GetPlayerInfoHandler
     private readonly cbus: CommandBus,
     @InjectRepository(PlayerBan)
     private readonly playerBanRepository: Repository<PlayerBan>,
-    private readonly playerService: PlayerService,
+    private readonly playerService: PlayerService
   ) {}
 
 
-  @cached(5)
+  @cached(5, GetPlayerInfoQuery.name)
   async execute(
     command: GetPlayerInfoQuery,
   ): Promise<GetPlayerInfoQueryResult> {
