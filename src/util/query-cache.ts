@@ -15,8 +15,8 @@ export class QueryCache<T, B> implements CacheMiddleware<T, B> {
 
     this.cache = caching({
       store: redisStore,
-      // host: host, // default value
-      host: '5.101.50.140', // default value
+      host: host, // default value
+      // host: '5.101.50.140', // default value
       port: 6379, // default value
       auth_pass: REDIS_PASSWORD(),
       db: 0,

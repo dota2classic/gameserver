@@ -15,11 +15,32 @@ export class ProcessRankedMatchHandler
   implements ICommandHandler<ProcessRankedMatchCommand> {
   private readonly logger = new Logger(ProcessRankedMatchHandler.name);
 
+  public static readonly AVERAGE_DIFF_CAP = 300;
+  public static readonly AVERAGE_DEVIATION_MAX = 20;
+
   constructor(
     @InjectRepository(VersionPlayer)
     private readonly versionPlayerRepository: Repository<VersionPlayer>,
     private readonly gameServerService: GameServerService,
   ) {}
+
+  public calculateMmrDeviation(
+    winnerAverageMmr: number,
+    loserAverageMmr: number,
+  ) {
+    const averageDiff = winnerAverageMmr - loserAverageMmr;
+
+    // how much to add to remove from winners and add to losers
+    return (
+      (ProcessRankedMatchHandler.AVERAGE_DEVIATION_MAX *
+        (averageDiff < 0 ? -1 : 1) *
+        Math.min(
+          Math.abs(averageDiff),
+          ProcessRankedMatchHandler.AVERAGE_DIFF_CAP,
+        )) /
+      ProcessRankedMatchHandler.AVERAGE_DIFF_CAP
+    );
+  }
 
   async execute(command: ProcessRankedMatchCommand) {
     // find latest season which start_timestamp > now
@@ -27,16 +48,62 @@ export class ProcessRankedMatchHandler
       Dota2Version.Dota_681,
     );
 
+    const winnerMMR = (
+      await Promise.all(
+        command.winners.map(t =>
+          this.versionPlayerRepository.findOne({
+            version: Dota2Version.Dota_681,
+            steam_id: t.value,
+          }),
+        ),
+      )
+    ).reduce((a, b) => a + b.mmr, 0);
+
+    const loserMMR = (
+      await Promise.all(
+        command.losers.map(t =>
+          this.versionPlayerRepository.findOne({
+            version: Dota2Version.Dota_681,
+            steam_id: t.value,
+          }),
+        ),
+      )
+    ).reduce((a, b) => a + b.mmr, 0);
+
+    const diffDeviationFactor = this.calculateMmrDeviation(
+      winnerMMR / command.winners.length,
+      loserMMR / command.losers.length,
+    );
+
     await Promise.all(
-      command.winners.map(t => this.changeMMR(currentSeason, t, true)),
+      command.winners.map(t =>
+        this.changeMMR(
+          currentSeason,
+          t,
+          true,
+          winnerMMR > loserMMR ? -diffDeviationFactor : diffDeviationFactor,
+        ),
+      ),
     );
     await Promise.all(
-      command.losers.map(t => this.changeMMR(currentSeason, t, false)),
+      command.losers.map(t =>
+        this.changeMMR(
+          currentSeason,
+          t,
+          false,
+          winnerMMR > loserMMR ? diffDeviationFactor : -diffDeviationFactor,
+        ),
+      ),
     );
     // let's keep it simple for now
   }
 
-  private async changeMMR(season: GameSeason, pid: PlayerId, winner: boolean) {
+  private async changeMMR(
+    season: GameSeason,
+    pid: PlayerId,
+    winner: boolean,
+    mmrDiff: number,
+  ) {
     const cb = await this.gameServerService.getGamesPlayed(
       season,
       pid,
@@ -48,7 +115,7 @@ export class ProcessRankedMatchHandler
     });
 
     const mmrChange = Math.round(
-      this.computeMMRChange(plr.steam_id, cb, winner),
+      this.computeMMRChange(plr.steam_id, cb, winner, mmrDiff),
     );
 
     this.logger.log(
@@ -66,14 +133,13 @@ export class ProcessRankedMatchHandler
     this.logger.log(`Saved mmr for ${plr.steam_id} successfully`);
   }
 
-  private computeMMRChange(
+  public computeMMRChange(
     steam_id: string,
     cbGame: number,
     win: boolean,
+    mmrDiff: number,
   ): number {
     let baseMMR;
-
-
 
     // ffs
     // return win ? 25 : -25;
@@ -86,7 +152,7 @@ export class ProcessRankedMatchHandler
 
     // if we're over calibration game limit, we go ±25 mmr
     if (cbGame > cbGames) {
-      return win ? 25 : -25;
+      return (win ? 25 : -25) + (win ? -mmrDiff : mmrDiff);
     }
 
     // first 3 games are kind and 50± mmr only
