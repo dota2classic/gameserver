@@ -19,7 +19,7 @@ export class AppService {
     private readonly gsRepository: GameServerRepository,
   ) {}
 
-  @Cron('*/10 * * * * *')
+  @Cron('*/30 * * * * *')
   async actualizeServers() {
     // for all servers
     // todo uncomment
@@ -28,6 +28,7 @@ export class AppService {
     await Promise.all(
       all.map(async gs => {
         await this.ebus.publish(new ServerActualizationRequestedEvent(gs.url));
+        await new Promise(r => setTimeout(r, 1000)) // spread them a little
       }),
     );
   }
