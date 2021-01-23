@@ -193,8 +193,7 @@ export class ProcessRankedMatchHandler
       baseMMR = 50;
     } else {
       // gradually reducing mmr
-      const component = Math.exp((offsetContext - cbGame) / offsetContext);
-      baseMMR = Math.round(component * 100);
+      baseMMR = 100;
     }
 
     return win ? baseMMR : -baseMMR;
