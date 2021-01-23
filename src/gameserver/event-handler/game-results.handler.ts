@@ -1,10 +1,12 @@
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { EventBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
 import Match from 'gameserver/entity/Match';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MatchEntity } from 'gameserver/model/match.entity';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
+import { GameSessionFinishedEvent } from 'gateway/events/game-session-finished.event';
+import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
 
 @EventsHandler(GameResultsEvent)
 export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
@@ -15,6 +17,11 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
     private readonly matchEntityRepository: Repository<MatchEntity>,
     @InjectRepository(PlayerInMatch)
     private readonly playerInMatchRepository: Repository<PlayerInMatch>,
+    @InjectRepository(GameServerSessionModel)
+    private readonly gameServerSessionModelRepository: Repository<
+      GameServerSessionModel
+    >,
+    private readonly ebus: EventBus,
   ) {}
 
   async handle(event: GameResultsEvent) {
@@ -60,6 +67,20 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
       pim.hero = t.hero;
 
       await this.playerInMatchRepository.save(pim);
+    }
+
+    const runningSession = await this.gameServerSessionModelRepository.findOne({
+      url: event.server,
+    });
+    if (runningSession) {
+      await this.gameServerSessionModelRepository.delete(runningSession.url);
+      this.ebus.publish(
+        new GameSessionFinishedEvent(
+          runningSession.url,
+          runningSession.matchId,
+          runningSession.matchInfoJson,
+        ),
+      );
     }
   }
 }
