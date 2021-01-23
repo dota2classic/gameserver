@@ -33,16 +33,16 @@ export class GameServerStartedHandler
     //   new GameSessionCreatedEvent(event.url, event.matchId, event.info),
     // );
 
-    const allSessions = await this.gameServerSessionModelRepository.find();
-
-    const isOkServerStarted = allSessions.find(
-      t => t.matchId === event.matchId && t.url === event.url,
-    );
-    if (isOkServerStarted) {
-      // we do nothing
-    } else {
-      // wrong server got started, we need to kill it!
-      this.ebus.publish(new KillServerRequestedEvent(event.url));
-    }
+    // const allSessions = await this.gameServerSessionModelRepository.find();
+    //
+    // const isOkServerStarted = allSessions.find(
+    //   t => t.matchId === event.matchId && t.url === event.url,
+    // );
+    // if (isOkServerStarted) {
+    //   // we do nothing
+    // } else {
+    //   // wrong server got started, we need to kill it!
+    //   this.ebus.publish(new KillServerRequestedEvent(event.url));
+    // }
   }
 }
