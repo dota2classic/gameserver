@@ -24,6 +24,8 @@ import { inspect } from 'util';
 import { Subject } from 'rxjs';
 import { asyncMap } from 'rxjs-async-map';
 import { KillServerRequestedEvent } from 'gateway/events/gs/kill-server-requested.event';
+import { MatchStartedEvent } from 'gateway/events/match-started.event';
+import { GameServerInfo } from 'gateway/shared-types/game-server-info';
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
@@ -131,6 +133,14 @@ export class FindGameServerHandler
         session.url,
         session.matchId,
         session.matchInfoJson,
+      ),
+    );
+
+    this.ebus.publish(
+      new MatchStartedEvent(
+        session.matchId,
+        session.matchInfoJson,
+        new GameServerInfo(session.url),
       ),
     );
   }

@@ -6,6 +6,7 @@ import { GameServerSessionModel } from 'gameserver/model/game-server-session.mod
 import { GameSessionCreatedEvent } from 'gateway/events/game-session-created.event';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { KillServerRequestedEvent } from 'gateway/events/gs/kill-server-requested.event';
 
 @EventsHandler(GameServerStartedEvent)
 export class GameServerStartedHandler
@@ -32,12 +33,16 @@ export class GameServerStartedHandler
     //   new GameSessionCreatedEvent(event.url, event.matchId, event.info),
     // );
 
-    this.ebus.publish(
-      new MatchStartedEvent(
-        event.matchId,
-        event.info,
-        new GameServerInfo(event.url),
-      ),
+    const allSessions = await this.gameServerSessionModelRepository.find();
+
+    const isOkServerStarted = allSessions.find(
+      t => t.matchId === event.matchId && t.url === event.url,
     );
+    if (isOkServerStarted) {
+      // we do nothing
+    } else {
+      // wrong server got started, we need to kill it!
+      this.ebus.publish(new KillServerRequestedEvent(event.url));
+    }
   }
 }

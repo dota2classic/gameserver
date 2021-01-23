@@ -41,6 +41,8 @@ export class GetPlayerInfoHandler
   ): Promise<GetPlayerInfoQueryResult> {
     await this.cbus.execute(new MakeSureExistsCommand(command.playerId));
 
+    console.log("kappa")
+
     const mmr = (
       await this.versionPlayerRepository.findOne({
         steam_id: command.playerId.value,

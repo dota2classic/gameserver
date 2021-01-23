@@ -9,6 +9,7 @@ import { MatchFinishedEvent } from 'gateway/events/match-finished.event';
 import { Cron } from '@nestjs/schedule';
 import { GameServerRepository } from 'gameserver/repository/game-server.repository';
 import { ServerActualizationRequestedEvent } from 'gateway/events/gs/server-actualization-requested.event';
+import { KillServerRequestedEvent } from 'gateway/events/gs/kill-server-requested.event';
 
 @Injectable()
 export class AppService {
@@ -42,7 +43,8 @@ export class AppService {
       MatchStartedEvent,
       MatchCancelledEvent,
       MatchFinishedEvent,
-      ServerActualizationRequestedEvent
+      ServerActualizationRequestedEvent,
+      KillServerRequestedEvent
     ];
 
     this.ebus
