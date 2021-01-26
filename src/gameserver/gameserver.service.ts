@@ -57,6 +57,7 @@ export class GameServerService {
       .innerJoin('pim.match', 'm')
       .where('pim.playerId = :id', { id: plr.steam_id })
       .andWhere('m.type = :mode', { mode })
+      .andWhere('m.timestamp > :season', { season: season.start_timestamp })
       .getCount();
   }
 }
