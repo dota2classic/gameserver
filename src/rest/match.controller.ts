@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { Mapper } from 'rest/mapper';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
+import { MetaService } from 'rest/service/meta.service';
 
 @Controller('match')
 @ApiTags('match')
@@ -17,7 +18,34 @@ export class MatchController {
     private readonly matchRepository: Repository<Match>,
     @InjectRepository(PlayerInMatch)
     private readonly playerInMatchRepository: Repository<PlayerInMatch>,
+    private readonly metaService: MetaService,
   ) {}
+
+  @ApiQuery({
+    name: 'page',
+    required: true,
+  })
+  @ApiQuery({
+    name: 'per_page',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'hero',
+  })
+  @Get('/by_hero')
+  async heroMatches(
+    @Query('page', ParseIntPipe) page: number,
+    @Query('per_page', ParseIntPipe) perPage: number = 25,
+    @Query('hero') hero: string,
+  ): Promise<MatchPageDto> {
+    const raw = await this.metaService.heroMatches(page, perPage, hero);
+
+
+    return {
+      ...raw,
+      data: raw.data.map(this.mapper.mapMatch),
+    }
+  }
 
   @ApiQuery({
     name: 'page',
@@ -72,7 +100,6 @@ export class MatchController {
     return this.mapper.mapMatch(match);
   }
 
-
   @ApiQuery({
     name: 'page',
     required: true,
@@ -83,7 +110,7 @@ export class MatchController {
   })
   @ApiQuery({
     name: 'mode',
-    required: false
+    required: false,
   })
   @ApiQuery({
     name: 'hero',
@@ -97,20 +124,19 @@ export class MatchController {
     @Query('mode') mode?: MatchmakingMode,
     @Query('hero') hero?: string,
   ): Promise<MatchPageDto> {
-
     let query = this.playerInMatchRepository
       .createQueryBuilder('pim')
       .innerJoinAndSelect('pim.match', 'm')
       .innerJoinAndSelect('m.players', 'players')
       .where(`pim.playerId = '${steam_id}'`)
-      .orderBy("m.timestamp", "DESC")
+      .orderBy('m.timestamp', 'DESC')
       .take(perPage)
       .skip(perPage * page);
 
     if (mode !== undefined) {
       query.andWhere(`m.type = :mode`, { mode });
     }
-    if(hero !== undefined){
+    if (hero !== undefined) {
       query.andWhere(`pim.hero = :hero`, { hero });
     }
 

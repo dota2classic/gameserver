@@ -15,6 +15,8 @@ import { InfoController } from 'rest/info.controller';
 import { PlayerService } from 'rest/service/player.service';
 import { SentryModule } from '@ntegral/nestjs-sentry';
 import { ScheduleModule } from '@nestjs/schedule';
+import { MetaController } from 'rest/meta.controller';
+import { MetaService } from 'rest/service/meta.service';
 
 @Module({
   imports: [
@@ -30,7 +32,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     }),
     CqrsModule,
     TypeOrmModule.forRoot(
-      (isDev ? devDbConfig : prodDbConfig) as TypeOrmModuleOptions,
+      (isDev ? prodDbConfig : prodDbConfig) as TypeOrmModuleOptions,
     ),
     TypeOrmModule.forFeature(Entities),
     ClientsModule.register([
@@ -51,8 +53,9 @@ import { ScheduleModule } from '@nestjs/schedule';
     QueryController,
     MatchController,
     PlayerController,
-    InfoController
+    InfoController,
+    MetaController
   ],
-  providers: [AppService, PlayerService, Mapper, ...GameServerDomain],
+  providers: [AppService, MetaService, PlayerService, Mapper, ...GameServerDomain],
 })
 export class AppModule {}

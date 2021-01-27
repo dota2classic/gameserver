@@ -17,6 +17,7 @@ import { ServerSessionSyncEvent } from 'gateway/events/gs/server-session-sync.ev
 import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
 import { RoomNotReadyEvent } from 'gateway/events/room-not-ready.event';
 import { PlayerDeclinedGameEvent } from 'gateway/events/mm/player-declined-game.event';
+import { isDev } from 'env';
 
 export enum Dota_GameState {
   DOTA_GAMERULES_STATE_INIT = 0,
@@ -47,7 +48,7 @@ export class CoreController {
   private event<T>(constructor: Constructor<T>, data: any) {
     const buff = data;
     buff.__proto__ = constructor.prototype;
-    this.ebus.publish(buff);
+    if (!isDev) this.ebus.publish(buff);
   }
   @EventPattern(RoomReadyEvent.name)
   async RoomReadyEvent(data: RoomReadyEvent) {
@@ -78,7 +79,6 @@ export class CoreController {
   async ServerSessionSyncEvent(data: ServerSessionSyncEvent) {
     this.event(ServerSessionSyncEvent, data);
   }
-
 
   @EventPattern(GameServerDiscoveredEvent.name)
   async GameServerDiscoveredEvent(data: GameServerDiscoveredEvent) {
