@@ -10,6 +10,7 @@ import { GameServerSessionModel } from 'gameserver/model/game-server-session.mod
 import { GameServerModel } from 'gameserver/model/game-server.model';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { MmrChangeLogEntity } from 'gameserver/entity/mmr-change-log.entity';
+import { PlayerReportStatus } from 'gameserver/model/player-report-status';
 import { PlayerReport } from 'gameserver/model/player-report';
 
 export const Entities = [
@@ -28,6 +29,7 @@ export const Entities = [
 
 
   MmrChangeLogEntity,
+  PlayerReportStatus,
   PlayerReport
 ];
 export const devDbConfig: any = {

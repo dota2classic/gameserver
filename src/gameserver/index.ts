@@ -24,6 +24,9 @@ import { PlayerDeclinedGameHandler } from 'gameserver/event-handler/player-decli
 import { ServerNotRespondingHandler } from 'gameserver/event-handler/server-not-responding.handler';
 import { REDIS_PASSWORD, REDIS_URL } from 'env';
 import { GetReportsAvailableHandler } from 'gameserver/query/get-reports-available.handler';
+import { PlayerReportUpdatedHandler } from 'gameserver/event-handler/player-report-updated.handler';
+import { PlayerReportHandler } from 'gameserver/event-handler/player-report.handler';
+import { PlayerReportedHandler } from 'gameserver/event-handler/player-reported.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -50,6 +53,9 @@ const EventHandlers = [
   CrimeLogCreatedHandler,
 
   ServerNotRespondingHandler,
+  PlayerReportUpdatedHandler,
+  PlayerReportHandler,
+  PlayerReportedHandler
 ];
 
 const QueryHandlers = [GetPlayerInfoHandler, GetSessionByUserHandler, GetReportsAvailableHandler];

@@ -3,19 +3,40 @@ import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { inspect } from 'util';
 import {
-  calcCumulativePunishment,
   CRIMES_INTERVAL_FOR_MULTIPLY,
   HARD_PUNISHMENT,
   LIGHT_PUNISHMENT,
-  MAX_TIME_FOR_PUNISHMENT_MULTIPLY,
 } from 'gateway/shared-types/timings';
 import { PlayerBan } from 'gameserver/entity/PlayerBan';
+import { BanReason } from 'gateway/shared-types/ban';
+import { Logger } from '@nestjs/common';
+
+export const calcCumulativePunishment = (
+  totalCrimes: PlayerCrimeLogEntity[],
+) => {
+  return totalCrimes
+    .map(t => {
+      switch (t.crime) {
+        case BanReason.INFINITE_BAN:
+          return Infinity;
+        case BanReason.GAME_DECLINE:
+          return LIGHT_PUNISHMENT;
+        case BanReason.LOAD_FAILURE:
+          return LIGHT_PUNISHMENT;
+        case BanReason.REPORTS:
+          return HARD_PUNISHMENT;
+        default:
+          return 0;
+      }
+    })
+    .reduce((a, b) => a + b, 0);
+};
 
 @EventsHandler(CrimeLogCreatedEvent)
 export class CrimeLogCreatedHandler
   implements IEventHandler<CrimeLogCreatedEvent> {
+  private readonly logger = new Logger(CrimeLogCreatedHandler.name);
   constructor(
     @InjectRepository(PlayerCrimeLogEntity)
     private readonly playerCrimeLogEntityRepository: Repository<
@@ -44,14 +65,22 @@ export class CrimeLogCreatedHandler
           ),
         },
       )
-      .getCount();
-
+      .getMany();
 
     // total crimes done within 24 hours
     const punishmentDuration = calcCumulativePunishment(frequentCrimesCount);
 
-    console.log(`Punishment: ${punishmentDuration / 1000 / 60} minutes`);
-    await this.applyBan(thisCrime.steam_id, punishmentDuration, thisCrime);
+    for (const playerCrimeLogEntity of frequentCrimesCount) {
+      playerCrimeLogEntity.handled = true;
+      await this.playerCrimeLogEntityRepository.save(playerCrimeLogEntity);
+    }
+
+    this.logger.log(
+      `Punishment: ${punishmentDuration / 1000 / 60} minutes for ${
+        thisCrime.steam_id
+      }. Reasons: ${frequentCrimesCount.map(t => t.crime)}`,
+    );
+    // await this.applyBan(thisCrime.steam_id, punishmentDuration, thisCrime);
   }
 
   private async applyBan(

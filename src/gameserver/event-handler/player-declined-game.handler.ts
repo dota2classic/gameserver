@@ -21,6 +21,7 @@ export class PlayerDeclinedGameHandler
     const crime = new PlayerCrimeLogEntity();
     crime.steam_id = event.id.value;
     crime.crime = BanReason.GAME_DECLINE;
+    crime.handled = false;
 
     await this.playerCrimeLogEntityRepository.save(crime);
 

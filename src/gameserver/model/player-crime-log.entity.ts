@@ -12,6 +12,9 @@ export class PlayerCrimeLogEntity {
   @Column()
   crime: BanReason;
 
+  @Column({ default: true })
+  handled: boolean
+
   @CreateDateColumn()
   created_at: Date;
 

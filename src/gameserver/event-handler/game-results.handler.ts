@@ -7,6 +7,7 @@ import { MatchEntity } from 'gameserver/model/match.entity';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { GameSessionFinishedEvent } from 'gateway/events/game-session-finished.event';
 import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
+import { MatchRecordedEvent } from 'gameserver/event/match-recorded.event';
 
 @EventsHandler(GameResultsEvent)
 export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
@@ -68,6 +69,18 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
 
       await this.playerInMatchRepository.save(pim);
     }
+
+    await this.ebus.publish(
+      new MatchRecordedEvent(
+        event.matchId,
+        event.radiantWin,
+        event.duration,
+        event.type,
+        event.timestamp,
+        event.server,
+        event.players,
+      ),
+    );
 
     const runningSession = await this.gameServerSessionModelRepository.findOne({
       url: event.server,

@@ -1,4 +1,4 @@
-import { CacheTTL, Controller, Get, Param } from '@nestjs/common';
+import { Body, CacheTTL, Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Mapper } from 'rest/mapper';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,9 +6,14 @@ import { Repository } from 'typeorm';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { GameSeason } from 'gameserver/entity/GameSeason';
-import { BanStatusDto, LeaderboardEntryDto, PlayerSummaryDto } from 'rest/dto/player.dto';
+import {
+  BanStatusDto,
+  LeaderboardEntryDto,
+  PlayerSummaryDto,
+  ReportPlayerDto,
+} from 'rest/dto/player.dto';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, EventBus } from '@nestjs/cqrs';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { GameServerService } from 'gameserver/gameserver.service';
@@ -17,6 +22,7 @@ import { HeroStatsDto, PlayerGeneralStatsDto } from 'rest/dto/hero.dto';
 import { UNRANKED_GAMES_REQUIRED_FOR_RANKED } from 'gateway/shared-types/timings';
 import { PlayerBan } from 'gameserver/entity/PlayerBan';
 import { BanStatus } from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
+import { PlayerReportEvent } from 'gameserver/event/player-report.event';
 
 @Controller('player')
 @ApiTags('player')
@@ -34,8 +40,8 @@ export class PlayerController {
     private readonly playerBanRepository: Repository<PlayerBan>,
     private readonly gsService: GameServerService,
     private readonly playerService: PlayerService,
+    private readonly ebus: EventBus,
   ) {}
-
 
   @CacheTTL(120)
   @Get('/summary/:version/:id')
@@ -130,5 +136,12 @@ export class PlayerController {
       steam_id,
       ...res,
     };
+  }
+
+  @Post('/report')
+  async reportPlayer(@Body() dto: ReportPlayerDto) {
+    this.ebus.publish(
+      new PlayerReportEvent(dto.matchId, dto.reporter, dto.reported, dto.text),
+    );
   }
 }

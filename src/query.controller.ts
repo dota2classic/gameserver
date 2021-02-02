@@ -5,6 +5,8 @@ import { GetSessionByUserQuery } from 'gateway/queries/GetSessionByUser/get-sess
 import { construct } from 'gateway/util/construct';
 import { GetPlayerInfoQuery } from 'gateway/queries/GetPlayerInfo/get-player-info.query';
 import { GetPlayerInfoQueryResult } from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
+import { GetReportsAvailableQuery } from 'gateway/queries/GetReportsAvailable/get-reports-available.query';
+import { GetReportsAvailableQueryResult } from 'gateway/queries/GetReportsAvailable/get-reports-available-query.result';
 
 @Controller()
 export class QueryController {
@@ -20,5 +22,12 @@ export class QueryController {
     query: GetPlayerInfoQuery,
   ): Promise<GetPlayerInfoQueryResult> {
     return this.qbus.execute(construct(GetPlayerInfoQuery, query));
+  }
+
+  @MessagePattern(GetReportsAvailableQuery.name)
+  async GetReportsAvailableQuery(
+    query: GetReportsAvailableQuery,
+  ): Promise<GetReportsAvailableQueryResult> {
+    return this.qbus.execute(construct(GetReportsAvailableQuery, query));
   }
 }

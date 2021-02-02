@@ -4,7 +4,7 @@ import { GetReportsAvailableQuery } from 'gateway/queries/GetReportsAvailable/ge
 import { GetReportsAvailableQueryResult } from 'gateway/queries/GetReportsAvailable/get-reports-available-query.result';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PlayerReport } from 'gameserver/model/player-report';
+import { PlayerReportStatus } from 'gameserver/model/player-report-status';
 import { cached } from 'util/method-cache';
 
 @QueryHandler(GetReportsAvailableQuery)
@@ -14,8 +14,8 @@ export class GetReportsAvailableHandler
   private readonly logger = new Logger(GetReportsAvailableHandler.name);
 
   constructor(
-    @InjectRepository(PlayerReport)
-    private readonly playerReportRepository: Repository<PlayerReport>,
+    @InjectRepository(PlayerReportStatus)
+    private readonly playerReportRepository: Repository<PlayerReportStatus>,
   ) {}
 
   @cached(360, GetReportsAvailableQuery.name)
@@ -26,7 +26,7 @@ export class GetReportsAvailableHandler
       steam_id: command.id.value,
     });
     if (!c) {
-      c = new PlayerReport();
+      c = new PlayerReportStatus();
       c.steam_id = command.id.value;
       await this.playerReportRepository.save(c);
     }

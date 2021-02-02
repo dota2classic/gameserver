@@ -1,4 +1,5 @@
 import { BanReason } from 'gateway/shared-types/ban';
+import { PlayerId } from 'gateway/shared-types/player-id';
 
 export class LeaderboardEntryDto {
   steam_id: string;
@@ -17,4 +18,12 @@ export class BanStatusDto {
   public readonly isBanned: boolean;
   public readonly bannedUntil: number;
   public readonly status: BanReason;
+}
+
+
+export class ReportPlayerDto {
+  public readonly reported: PlayerId;
+  public readonly reporter: PlayerId;
+  public readonly text: string;
+  public readonly matchId: number;
 }

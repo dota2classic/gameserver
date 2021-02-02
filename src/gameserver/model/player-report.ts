@@ -1,12 +1,24 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class PlayerReport {
 
-  @PrimaryColumn()
-  steam_id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
 
-  @Column({ default: 1 })
-  reports: number
+  @CreateDateColumn()
+  created_at: Date;
+
+  @Column()
+  reporter: string;
+
+  @Column()
+  reported: string;
+
+  @Column()
+  text: string;
+
+  @Column()
+  matchId: number;
 }
