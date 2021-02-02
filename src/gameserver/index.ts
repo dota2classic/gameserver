@@ -23,6 +23,7 @@ import { CrimeLogCreatedHandler } from 'gameserver/event-handler/crime-log-creat
 import { PlayerDeclinedGameHandler } from 'gameserver/event-handler/player-declined-game.handler';
 import { ServerNotRespondingHandler } from 'gameserver/event-handler/server-not-responding.handler';
 import { REDIS_PASSWORD, REDIS_URL } from 'env';
+import { GetReportsAvailableHandler } from 'gameserver/query/get-reports-available.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -51,7 +52,7 @@ const EventHandlers = [
   ServerNotRespondingHandler,
 ];
 
-const QueryHandlers = [GetPlayerInfoHandler, GetSessionByUserHandler];
+const QueryHandlers = [GetPlayerInfoHandler, GetSessionByUserHandler, GetReportsAvailableHandler];
 const Repositories = [GameServerRepository, GameServerSessionRepository];
 const Services = [GameServerService];
 const Sagas = [GameserverSaga];
