@@ -31,6 +31,6 @@ export class GetReportsAvailableHandler
       await this.playerReportRepository.save(c);
     }
 
-    return new GetReportsAvailableQueryResult(c.reports);
+    return new GetReportsAvailableQueryResult(command.id, c.reports);
   }
 }
