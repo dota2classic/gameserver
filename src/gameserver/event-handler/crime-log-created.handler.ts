@@ -55,7 +55,9 @@ export class CrimeLogCreatedHandler
 
     const frequentCrimesCount = await this.playerCrimeLogEntityRepository
       .createQueryBuilder('pc')
+      .select()
       .where('pc.steam_id = :sid', { sid: thisCrime.steam_id })
+      .andWhere('pc.handled = false')
       .andWhere(
         'pc.created_at < :thisCrimeTime and pc.created_at > :crimeCountStart',
         {
@@ -80,7 +82,7 @@ export class CrimeLogCreatedHandler
         thisCrime.steam_id
       }. Reasons: ${frequentCrimesCount.map(t => t.crime)}`,
     );
-    // await this.applyBan(thisCrime.steam_id, punishmentDuration, thisCrime);
+    await this.applyBan(thisCrime.steam_id, punishmentDuration, thisCrime);
   }
 
   private async applyBan(

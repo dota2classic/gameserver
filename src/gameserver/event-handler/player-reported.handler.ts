@@ -4,7 +4,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PlayerBan } from 'gameserver/entity/PlayerBan';
 import { Repository } from 'typeorm';
 import { PlayerReport } from 'gameserver/model/player-report';
-import { CRITICAL_REPORT_COUNT_TO_BAN, REPORT_STACK_WINDOW } from 'gateway/shared-types/timings';
+import {
+  CRITICAL_REPORT_COUNT_TO_BAN,
+  REPORT_STACK_WINDOW,
+} from 'gateway/shared-types/timings';
 import { Logger } from '@nestjs/common';
 import { BanReason } from 'gateway/shared-types/ban';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
@@ -27,21 +30,24 @@ export class PlayerReportedHandler
   ) {}
 
   async handle(event: PlayerReportedEvent) {
-    const { count } = await this.playerReportRepository
-      .createQueryBuilder('pr')
-      .where('pr.reported = :reported', { reported: event.reported.value })
-      .andWhere("pr.created_at > 'now'::timestamp - :stack::interval", {
-        stack: REPORT_STACK_WINDOW,
-      })
-      .groupBy('pr.reporter')
-      .select('count(distinct pr.reporter)')
-      .getRawOne();
+    const countHolder = await this.playerCrimeLogEntityRepository.query(`
+    with t as (select 1 as d
+           from player_report pr
+
+           where pr.reported = '${event.reported.value}' and pr.created_at > 'now'::timestamp - '${REPORT_STACK_WINDOW}'::interval
+           group by pr.reporter)
+select count(*)
+from t
+`);
+
+
+
+    const count = Number(countHolder[0].count)
+    this.logger.log(
+      `${event.reported.value} was reported ${count} times within last ${REPORT_STACK_WINDOW}. To create crime we need: ${CRITICAL_REPORT_COUNT_TO_BAN}`,
+    );
 
     if (count >= CRITICAL_REPORT_COUNT_TO_BAN) {
-      this.logger.log(
-        `${event.reported.value} was reported ${count} times within last ${REPORT_STACK_WINDOW}. Taking care..`,
-      );
-
       const crime = new PlayerCrimeLogEntity();
       crime.steam_id = event.reported.value;
       crime.crime = BanReason.REPORTS;
