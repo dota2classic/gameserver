@@ -8,6 +8,9 @@ export class MmrChangeLogEntity {
   @Column()
   playerId: string;
 
+  @Column({ default: -1 })
+  matchId: number;
+
   @Column()
   winner: boolean;
 

@@ -61,7 +61,7 @@ export class GameserverSaga {
           .filter(p => p.team === winnerTeam)
           .map(t => new PlayerId(t.steam_id));
 
-        return new ProcessRankedMatchCommand(winners, losers);
+        return new ProcessRankedMatchCommand(e.matchId, winners, losers);
       }),
     );
   };

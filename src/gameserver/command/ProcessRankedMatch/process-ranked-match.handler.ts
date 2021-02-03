@@ -10,6 +10,7 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerService } from 'gameserver/gameserver.service';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { MmrChangeLogEntity } from 'gameserver/entity/mmr-change-log.entity';
+import { match } from 'assert';
 
 @CommandHandler(ProcessRankedMatchCommand)
 export class ProcessRankedMatchHandler
@@ -17,7 +18,7 @@ export class ProcessRankedMatchHandler
   private readonly logger = new Logger(ProcessRankedMatchHandler.name);
 
   public static readonly AVERAGE_DIFF_CAP = 300;
-  public static readonly AVERAGE_DEVIATION_MAX = 20;
+  public static readonly AVERAGE_DEVIATION_MAX = 15;
 
   constructor(
     @InjectRepository(VersionPlayer)
@@ -92,6 +93,7 @@ export class ProcessRankedMatchHandler
           diffDeviationFactor,
           winnerAverage,
           loserAverage,
+          command.matchId
         ),
       ),
     );
@@ -104,6 +106,7 @@ export class ProcessRankedMatchHandler
           diffDeviationFactor,
           winnerAverage,
           loserAverage,
+          command.matchId
         ),
       ),
     );
@@ -117,6 +120,7 @@ export class ProcessRankedMatchHandler
     mmrDiff: number,
     winnerAverage: number,
     loserAverage: number,
+    matchId: number
   ) {
     const cb = await this.gameServerService.getGamesPlayed(
       season,
@@ -151,6 +155,7 @@ export class ProcessRankedMatchHandler
       change.winner = winner;
       change.mmrBefore = Number(plr.mmr);
       change.mmrAfter = Number(plr.mmr + mmrChange)
+      change.matchId = matchId
       await this.mmrChangeLogEntityRepository.save(change);
     }catch (e){
       console.error(e)
