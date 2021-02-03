@@ -1,16 +1,14 @@
-import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { EventBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  CRIMES_INTERVAL_FOR_MULTIPLY,
-  HARD_PUNISHMENT,
-  LIGHT_PUNISHMENT,
-} from 'gateway/shared-types/timings';
+import { CRIMES_INTERVAL_FOR_MULTIPLY, HARD_PUNISHMENT, LIGHT_PUNISHMENT } from 'gateway/shared-types/timings';
 import { PlayerBan } from 'gameserver/entity/PlayerBan';
 import { BanReason } from 'gateway/shared-types/ban';
 import { Logger } from '@nestjs/common';
+import { BanSystemEntry, BanSystemEvent } from 'gateway/events/gs/ban-system.event';
+import { PlayerId } from 'gateway/shared-types/player-id';
 
 export const calcCumulativePunishment = (
   totalCrimes: PlayerCrimeLogEntity[],
@@ -44,6 +42,7 @@ export class CrimeLogCreatedHandler
     >,
     @InjectRepository(PlayerBan)
     private readonly playerBanRepository: Repository<PlayerBan>,
+    private readonly ebus: EventBus,
   ) {}
 
   async handle(event: CrimeLogCreatedEvent) {
@@ -82,13 +81,19 @@ export class CrimeLogCreatedHandler
         thisCrime.steam_id
       }. Reasons: ${frequentCrimesCount.map(t => t.crime)}`,
     );
-    await this.applyBan(thisCrime.steam_id, punishmentDuration, thisCrime);
+    await this.applyBan(
+      thisCrime.steam_id,
+      punishmentDuration,
+      thisCrime,
+      frequentCrimesCount,
+    );
   }
 
   private async applyBan(
     steam_id: string,
     duration: number,
     crime: PlayerCrimeLogEntity,
+    frequentCrimesCount: PlayerCrimeLogEntity[],
   ) {
     let ban = await this.playerBanRepository.findOne({
       steam_id: steam_id,
@@ -108,5 +113,16 @@ export class CrimeLogCreatedHandler
       ban.endTime = new Date(ban.endTime.getTime() + duration);
       await this.playerBanRepository.save(ban);
     }
+
+    this.ebus.publish(
+      new BanSystemEvent(
+        new PlayerId(steam_id),
+        frequentCrimesCount.map(
+          t => new BanSystemEntry(t.crime, t.created_at.getTime()),
+        ),
+        ban.endTime.getTime(),
+        duration,
+      ),
+    );
   }
 }
