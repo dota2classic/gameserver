@@ -58,7 +58,7 @@ export class CrimeLogCreatedHandler
       .where('pc.steam_id = :sid', { sid: thisCrime.steam_id })
       .andWhere('pc.handled = false')
       .andWhere(
-        'pc.created_at < :thisCrimeTime and pc.created_at > :crimeCountStart',
+        'pc.created_at <= :thisCrimeTime and pc.created_at >= :crimeCountStart',
         {
           thisCrimeTime: thisCrime.created_at,
           crimeCountStart: new Date(
