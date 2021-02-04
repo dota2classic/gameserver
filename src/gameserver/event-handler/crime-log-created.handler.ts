@@ -107,10 +107,12 @@ export class CrimeLogCreatedHandler
       await this.playerBanRepository.save(ban);
     } else if (ban.endTime.getTime() < new Date().getTime()) {
       ban.endTime = new Date(new Date().getTime() + duration);
+      ban.reason = crime.crime;
       await this.playerBanRepository.save(ban);
     } else {
       // already banned, need to incrmeent
       ban.endTime = new Date(ban.endTime.getTime() + duration);
+      ban.reason = crime.crime;
       await this.playerBanRepository.save(ban);
     }
 
