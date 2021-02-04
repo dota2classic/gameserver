@@ -54,6 +54,17 @@ export class ProcessRankedMatchHandler
       Dota2Version.Dota_681,
     );
 
+    const check = await this.mmrChangeLogEntityRepository.count({
+      matchId: command.matchId
+    });
+
+
+    if(check > 0){
+
+      this.logger.log(`RANKED MATCH ${command.matchId} TRIED TO BE PROCESSED TWICE. CANCELLING`)
+      return;
+    }
+
     const winnerMMR = (
       await Promise.all(
         command.winners.map(t =>
