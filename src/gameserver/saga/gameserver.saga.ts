@@ -10,6 +10,11 @@ import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
 import { PlayerId } from 'gateway/shared-types/player-id';
+import { TournamentGameReadyEvent } from 'gateway/events/tournament/tournament-game-ready.event';
+import * as uuidr from "uuid";
+
+export const uuid = (): string => uuidr.v4();
+
 
 @Injectable()
 export class GameserverSaga {
@@ -27,6 +32,30 @@ export class GameserverSaga {
               e.dire,
               e.averageMMR,
               Dota2Version.Dota_681,
+            ),
+            0,
+          ),
+      ),
+    );
+  };
+
+
+  @Saga()
+  tournamentGameReady = (events$: Observable<any>): Observable<ICommand> => {
+    return events$.pipe(
+      ofType(TournamentGameReadyEvent),
+      map(
+        e =>
+          new FindGameServerCommand(
+            new MatchInfo(
+              e.mode,
+              uuid(),
+              e.radiant,
+              e.dire,
+              0,
+              Dota2Version.Dota_681,
+              e.tournamentId,
+              e.tourMatchId
             ),
             0,
           ),
