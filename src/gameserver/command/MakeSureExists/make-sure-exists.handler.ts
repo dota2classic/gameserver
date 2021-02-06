@@ -31,7 +31,7 @@ export class MakeSureExistsHandler
       const vp = new VersionPlayer();
       vp.steam_id = steam_id;
       vp.version = version;
-      vp.mmr = 2000;
+      vp.mmr = VersionPlayer.STARTING_MMR;
       await this.versionPlayerRepository.save(vp);
     }
   }

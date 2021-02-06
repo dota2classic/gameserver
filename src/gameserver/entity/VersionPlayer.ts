@@ -13,5 +13,5 @@ export class VersionPlayer {
   mmr: number = VersionPlayer.STARTING_MMR;
 
 
-  public static STARTING_MMR = 2000;
+  public static STARTING_MMR = 2500;
 }
