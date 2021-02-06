@@ -5,7 +5,11 @@ import { Repository } from 'typeorm';
 import { MatchRecordedEvent } from 'gameserver/event/match-recorded.event';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
-import { FREE_REPORT_PER_GAMES, GAMES_TO_ADD_REPORT } from 'gateway/shared-types/timings';
+import {
+  FREE_REPORT_PER_GAMES,
+  GAMES_TO_ADD_REPORT,
+  MAX_REPORTS_AVAILABLE,
+} from 'gateway/shared-types/timings';
 
 @EventsHandler(MatchRecordedEvent)
 export class PlayerReportUpdatedHandler
@@ -39,10 +43,17 @@ export class PlayerReportUpdatedHandler
         continue;
       }
 
+      if (!r.updatedWithMatch) {
+        r.updatedWithMatch = event.matchId;
+        await this.playerReportRepository.save(r);
+      }
+
       const gamesSinceLast = await this.playerInMatchRepository
         .createQueryBuilder('pim')
         .innerJoin('pim.match', 'm')
-        .where('m.id > :last_id', { last_id: r.updatedWithMatch || Number.MAX_SAFE_INTEGER })
+        .where('m.id > :last_id', {
+          last_id: r.updatedWithMatch || Number.MAX_SAFE_INTEGER,
+        })
         .andWhere('m.type in (:...modes)', {
           modes: [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],
         })
@@ -50,6 +61,8 @@ export class PlayerReportUpdatedHandler
 
       if (gamesSinceLast >= GAMES_TO_ADD_REPORT) {
         r.reports += FREE_REPORT_PER_GAMES;
+        r.reports = Math.min(r.reports, MAX_REPORTS_AVAILABLE);
+        r.updatedWithMatch = event.matchId;
         await this.playerReportRepository.save(r);
       }
     }

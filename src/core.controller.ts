@@ -18,6 +18,7 @@ import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.even
 import { RoomNotReadyEvent } from 'gateway/events/room-not-ready.event';
 import { PlayerDeclinedGameEvent } from 'gateway/events/mm/player-declined-game.event';
 import { isDev } from 'env';
+import { TournamentGameReadyEvent } from 'gateway/events/tournament/tournament-game-ready.event';
 
 export enum Dota_GameState {
   DOTA_GAMERULES_STATE_INIT = 0,
@@ -53,6 +54,12 @@ export class CoreController {
   @EventPattern(RoomReadyEvent.name)
   async RoomReadyEvent(data: RoomReadyEvent) {
     this.event(RoomReadyEvent, data);
+  }
+
+
+  @EventPattern(TournamentGameReadyEvent.name)
+  async TournamentGameReadyEvent(data: TournamentGameReadyEvent) {
+    this.event(TournamentGameReadyEvent, data);
   }
 
   @EventPattern(GameServerStartedEvent.name)
