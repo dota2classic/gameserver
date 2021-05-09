@@ -6,12 +6,7 @@ import { Repository } from 'typeorm';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { GameSeason } from 'gameserver/entity/GameSeason';
-import {
-  BanStatusDto,
-  LeaderboardEntryDto,
-  PlayerSummaryDto,
-  ReportPlayerDto,
-} from 'rest/dto/player.dto';
+import { BanStatusDto, LeaderboardEntryDto, PlayerSummaryDto, ReportPlayerDto } from 'rest/dto/player.dto';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { CommandBus, EventBus } from '@nestjs/cqrs';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
@@ -110,7 +105,7 @@ export class PlayerController {
   ): Promise<PlayerGeneralStatsDto> {
     await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
 
-    return await this.playerService.generalStats(version, steam_id);
+    return await this.playerService.generalStats(steam_id);
   }
 
   @CacheTTL(120)

@@ -54,10 +54,14 @@ export class PlayerReportUpdatedHandler
         .where('m.id > :last_id', {
           last_id: r.updatedWithMatch || Number.MAX_SAFE_INTEGER,
         })
+        .andWhere('pim.playerId = :pid', { pid: p.steam_id})
         .andWhere('m.type in (:...modes)', {
           modes: [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],
         })
         .getCount();
+
+
+      console.log(`GAMES SINCE LAST `, gamesSinceLast)
 
       if (gamesSinceLast >= GAMES_TO_ADD_REPORT) {
         r.reports += FREE_REPORT_PER_GAMES;

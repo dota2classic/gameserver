@@ -25,9 +25,10 @@ export class PlayerService {
     version: Dota2Version,
     steam_id: string,
   ): Promise<number> {
+    // Only 681 as version player is deprecated model(same mmr for all)
     const p = await this.versionPlayerRepository.findOne({
       steam_id,
-      version,
+      version: Dota2Version.Dota_681,
     });
 
     const rank = await this.versionPlayerRepository.query(`
@@ -132,7 +133,6 @@ LIMIT 20;
 
   @cached(100, 'generalStats')
   async generalStats(
-    version: Dota2Version,
     steam_id: string,
   ): Promise<PlayerGeneralStatsDto> {
     const totalGames = await this.playerInMatchRepository.count({
