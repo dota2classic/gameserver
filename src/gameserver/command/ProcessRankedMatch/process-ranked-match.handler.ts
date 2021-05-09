@@ -139,7 +139,7 @@ export class ProcessRankedMatchHandler
       MatchmakingMode.RANKED,
     );
     const plr = await this.versionPlayerRepository.findOneOrFail({
-      version: season.version,
+      version: Dota2Version.Dota_681,
       steam_id: pid.value,
     });
 

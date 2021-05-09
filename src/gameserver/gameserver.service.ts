@@ -40,7 +40,7 @@ export class GameServerService {
     mode: MatchmakingMode,
   ) {
     let plr = await this.versionPlayerRepository.findOne({
-      version: season.version,
+      version: Dota2Version.Dota_681,
       steam_id: pid.value,
     });
 

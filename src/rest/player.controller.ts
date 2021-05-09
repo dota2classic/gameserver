@@ -48,7 +48,7 @@ export class PlayerController {
 
     const p = await this.versionPlayerRepository.findOne({
       steam_id,
-      version,
+      version: Dota2Version.Dota_681,
     });
 
     const rankedGamesPlayed = await this.playerService.gamesPlayed(

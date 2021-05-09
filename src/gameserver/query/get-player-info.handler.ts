@@ -17,6 +17,7 @@ import { PlayerBan } from 'gameserver/entity/PlayerBan';
 import { HeroStatsDto } from 'rest/dto/hero.dto';
 import { UNRANKED_GAMES_REQUIRED_FOR_RANKED } from 'gateway/shared-types/timings';
 import { cached } from 'util/method-cache';
+import { Dota2Version } from 'gateway/shared-types/dota2version';
 
 @QueryHandler(GetPlayerInfoQuery)
 export class GetPlayerInfoHandler
@@ -41,10 +42,12 @@ export class GetPlayerInfoHandler
   ): Promise<GetPlayerInfoQueryResult> {
     await this.cbus.execute(new MakeSureExistsCommand(command.playerId));
 
+
+    // deprecate multi version mmr
     const mmr = (
       await this.versionPlayerRepository.findOne({
         steam_id: command.playerId.value,
-        version: command.version,
+        version: Dota2Version.Dota_681
       })
     ).mmr;
 
