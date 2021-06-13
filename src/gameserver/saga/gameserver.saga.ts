@@ -31,7 +31,7 @@ export class GameserverSaga {
               e.radiant,
               e.dire,
               e.averageMMR,
-              Dota2Version.Dota_681,
+              e.version,
             ),
             0,
           ),
@@ -53,7 +53,7 @@ export class GameserverSaga {
               e.radiant,
               e.dire,
               0,
-              Dota2Version.Dota_681,
+              e.version,
               e.tournamentId,
               e.tourMatchId
             ),
