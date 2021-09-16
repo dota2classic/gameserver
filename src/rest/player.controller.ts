@@ -86,7 +86,7 @@ export class PlayerController {
       from version_player p
                left outer join player_in_match pim
                inner join match m on pim."matchId" = m.id
-                          on p.steam_id = pim."playerId" and m.timestamp >= 'now'::timestamp - '1 month'::interval and m.type = ${MatchmakingMode.RANKED}
+                          on p.steam_id = pim."playerId" and m.type = ${MatchmakingMode.RANKED}
       
       group by p.steam_id, p.mmr
       having count(pim) >= ${calibrationGames}

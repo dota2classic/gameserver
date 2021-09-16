@@ -65,6 +65,7 @@ export class MatchController {
     @Query('per_page', ParseIntPipe) perPage: number = 25,
     @Query('mode') mode?: MatchmakingMode,
   ): Promise<MatchPageDto> {
+
     const slice = await this.matchRepository.find({
       where: mode !== undefined ? { type: mode } : {},
       take: perPage,

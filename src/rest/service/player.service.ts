@@ -19,7 +19,6 @@ export class PlayerService {
     private readonly gsService: GameServerService,
   ) {}
 
-
   @cached(100, 'getRank')
   public async getRank(
     version: Dota2Version,
@@ -36,7 +35,7 @@ export class PlayerService {
                  from version_player p
                           left outer join player_in_match pim
                           inner join match m on pim."matchId" = m.id
-                                     on p.steam_id = pim."playerId" and m.timestamp >= 'now'::timestamp - '1 month'::interval and
+                                     on p.steam_id = pim."playerId" and
                                         m.type = ${MatchmakingMode.RANKED}
                  group by p.steam_id, p.mmr)
         select count(*)
@@ -67,7 +66,6 @@ export class PlayerService {
       .getCount();
   }
 
-
   @cached(100, 'winrate')
   async winrate(steam_id: string, mode: MatchmakingMode) {
     const wins = (
@@ -88,7 +86,6 @@ where m.type = ${mode} and pim."playerId" = '${steam_id}' and m.radiant_win != c
 
     return parseInt(wins) / Math.max(1, parseInt(wins) + parseInt(loss));
   }
-
 
   @cached(100, 'heroStats')
   async heroStats(
@@ -131,10 +128,36 @@ LIMIT 20;
     return winCount / recordCount;
   }
 
+  @cached(100, 'kdaLastRankedGames')
+  async kdaLastRankedGames(steam_id: string): Promise<number> {
+    console.log('Count latest KDA');
+    const some = await this.playerInMatchRepository.find({
+      where: {
+        playerId: steam_id,
+      },
+      order: {
+        id: 'DESC',
+      },
+      take: 20,
+    });
+
+    const KDA =
+      some
+        .map(it => (it.kills + it.assists) / Math.max(1, it.deaths))
+        .reduce((a, b) => a + b) / Math.max(1, some.length);
+
+
+    console.log("CAlculated latest kda for ", steam_id, "it's ", KDA)
+    return KDA;
+    // const winCount = some.reduce((a, b) => a + (b.is_win ? 1 : 0), 0);
+    //
+    // const recordCount = some.length;
+    //
+    // return winCount / recordCount;
+  }
+
   @cached(100, 'generalStats')
-  async generalStats(
-    steam_id: string,
-  ): Promise<PlayerGeneralStatsDto> {
+  async generalStats(steam_id: string): Promise<PlayerGeneralStatsDto> {
     const totalGames = await this.playerInMatchRepository.count({
       playerId: steam_id,
     });

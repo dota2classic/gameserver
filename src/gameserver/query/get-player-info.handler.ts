@@ -71,6 +71,9 @@ export class GetPlayerInfoHandler
     const recentWinrate = await this.playerService.winrateLastRankedGames(
       command.playerId.value,
     );
+    const recentKDA = await this.playerService.kdaLastRankedGames(
+      command.playerId.value,
+    );
 
     const bestHeroScore = (it: HeroStatsDto): number => {
       const wr = Number(it.wins) / Number(it.games);
@@ -104,7 +107,6 @@ export class GetPlayerInfoHandler
       steam_id: command.playerId.value,
     });
 
-    // const isBot = command.playerId.value.startsWith('[U:1:9510') || command.playerId.value.startsWith('[U:1:10629');
 
 
 
@@ -113,6 +115,7 @@ export class GetPlayerInfoHandler
       command.version,
       mmr,
       recentWinrate,
+      recentKDA,
       summary,
       ban?.asBanStatus() || BanStatus.NOT_BANNED,
     );
