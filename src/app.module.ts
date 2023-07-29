@@ -6,7 +6,7 @@ import { isDev, REDIS_PASSWORD, REDIS_URL } from 'env';
 import { GameServerDomain } from 'gameserver';
 import { CoreController } from 'core.controller';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { devDbConfig, Entities, prodDbConfig } from 'util/typeorm-config';
+import { Entities, prodDbConfig } from 'util/typeorm-config';
 import { QueryController } from 'query.controller';
 import { MatchController } from 'rest/match.controller';
 import { Mapper } from 'rest/mapper';
@@ -17,17 +17,28 @@ import { SentryModule } from '@ntegral/nestjs-sentry';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MetaController } from 'rest/meta.controller';
 import { MetaService } from 'rest/service/meta.service';
+import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
+import { outerQuery } from 'gateway/util/outerQuery';
+import { QueryCache } from 'd2c-rcaches';
+
+
+export function qCache<T, B>() {
+  return new QueryCache<T, B>({
+    url: REDIS_URL(),
+    password: REDIS_PASSWORD(),
+    ttl: 10,
+  });
+}
 
 @Module({
   imports: [
-
     CacheModule.register(),
     ScheduleModule.forRoot(),
     SentryModule.forRoot({
       dsn:
-        "https://67345366524f4d0fb7d9be3a26d6d3f2@o435989.ingest.sentry.io/5529665",
+        'https://67345366524f4d0fb7d9be3a26d6d3f2@o435989.ingest.sentry.io/5529665',
       debug: false,
-      environment: isDev ? "dev" : "production",
+      environment: isDev ? 'dev' : 'production',
       logLevel: 2, //based on sentry.io loglevel //
     }),
     CqrsModule,
@@ -54,8 +65,15 @@ import { MetaService } from 'rest/service/meta.service';
     MatchController,
     PlayerController,
     InfoController,
-    MetaController
+    MetaController,
   ],
-  providers: [AppService, MetaService, PlayerService, Mapper, ...GameServerDomain],
+  providers: [
+    AppService,
+    MetaService,
+    PlayerService,
+    Mapper,
+    ...GameServerDomain,
+    outerQuery(GetUserInfoQuery, 'QueryCore', qCache()),
+  ],
 })
 export class AppModule {}

@@ -144,10 +144,10 @@ LIMIT 20;
     const KDA =
       some
         .map(it => (it.kills + it.assists) / Math.max(1, it.deaths))
-        .reduce((a, b) => a + b) / Math.max(1, some.length);
+        .reduce((a, b) => a + b, 0) / Math.max(1, some.length);
 
 
-    console.log("CAlculated latest kda for ", steam_id, "it's ", KDA)
+    console.log("CAlculated latest kda for ", steam_id, "it's ")
     return KDA;
     // const winCount = some.reduce((a, b) => a + (b.is_win ? 1 : 0), 0);
     //

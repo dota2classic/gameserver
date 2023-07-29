@@ -6,19 +6,27 @@ import { DiscoveryRequestedEvent } from 'gateway/events/discovery-requested.even
 import { MatchStartedEvent } from 'gateway/events/match-started.event';
 import { MatchCancelledEvent } from 'gateway/events/match-cancelled.event';
 import { MatchFinishedEvent } from 'gateway/events/match-finished.event';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { GameServerRepository } from 'gameserver/repository/game-server.repository';
 import { ServerActualizationRequestedEvent } from 'gateway/events/gs/server-actualization-requested.event';
 import { KillServerRequestedEvent } from 'gateway/events/gs/kill-server-requested.event';
 import { BanSystemEvent } from 'gateway/events/gs/ban-system.event';
+import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event';
+import { MoreThan, Repository } from 'typeorm';
+import { construct } from 'gateway/util/construct';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ReplayEntity } from 'gameserver/model/replay.entity';
 
 @Injectable()
 export class AppService {
   constructor(
     private readonly ebus: EventBus,
-    @Inject('QueryCore') private readonly redisEventQueue: ClientProxy,
     private readonly gsRepository: GameServerRepository,
+    @InjectRepository(ReplayEntity)
+    private readonly replayEntityRepository: Repository<ReplayEntity>,
+    @Inject('QueryCore') private readonly redisEventQueue: ClientProxy,
   ) {}
+
 
   @Cron('*/30 * * * * *')
   async actualizeServers() {

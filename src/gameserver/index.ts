@@ -27,6 +27,8 @@ import { GetReportsAvailableHandler } from 'gameserver/query/get-reports-availab
 import { PlayerReportUpdatedHandler } from 'gameserver/event-handler/player-report-updated.handler';
 import { PlayerReportHandler } from 'gameserver/event-handler/player-report.handler';
 import { PlayerReportedHandler } from 'gameserver/event-handler/player-reported.handler';
+import { LiveMatchUpdateHandler } from 'gameserver/event-handler/live-match-update.handler';
+import { StartFakeMatchHandler } from 'gameserver/event-handler/start-fake-match.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -35,6 +37,9 @@ const CommandHandlers = [
   MakeSureExistsHandler,
 ];
 const EventHandlers = [
+  StartFakeMatchHandler,
+  LiveMatchUpdateHandler,
+
   GameServerStoppedHandler,
   GameServerDiscoveredHandler,
   GameServerStartedHandler,

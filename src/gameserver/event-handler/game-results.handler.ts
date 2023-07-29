@@ -43,6 +43,8 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
 
     for (let i = 0; i < event.players.length; i++) {
       const t = event.players[i];
+
+      if(!t) continue;
       const pim = new PlayerInMatch();
 
       pim.match = m;

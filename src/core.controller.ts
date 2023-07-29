@@ -19,6 +19,8 @@ import { RoomNotReadyEvent } from 'gateway/events/room-not-ready.event';
 import { PlayerDeclinedGameEvent } from 'gateway/events/mm/player-declined-game.event';
 import { isDev } from 'env';
 import { TournamentGameReadyEvent } from 'gateway/events/tournament/tournament-game-ready.event';
+import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event';
+import { StartFakeMatchEvent } from 'gateway/events/start-fake-match.event';
 
 export enum Dota_GameState {
   DOTA_GAMERULES_STATE_INIT = 0,
@@ -110,5 +112,16 @@ export class CoreController {
   @EventPattern(PlayerNotLoadedEvent.name)
   async PlayerNotLoadedEvent(data: PlayerNotLoadedEvent) {
     this.event(PlayerNotLoadedEvent, data);
+  }
+
+
+  @EventPattern(LiveMatchUpdateEvent.name)
+  async LiveMatchUpdateEvent(data: LiveMatchUpdateEvent) {
+    this.event(LiveMatchUpdateEvent, data);
+  }
+
+  @EventPattern(StartFakeMatchEvent.name)
+  async StartFakeMatchEvent(data: StartFakeMatchEvent) {
+    this.event(StartFakeMatchEvent, data);
   }
 }

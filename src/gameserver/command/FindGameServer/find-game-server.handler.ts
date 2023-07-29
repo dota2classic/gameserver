@@ -1,9 +1,4 @@
-import {
-  CommandHandler,
-  EventBus,
-  ICommandHandler,
-  QueryBus,
-} from '@nestjs/cqrs';
+import { CommandHandler, EventBus, ICommandHandler, QueryBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
 import { GameServerRepository } from 'gameserver/repository/game-server.repository';
@@ -15,7 +10,11 @@ import { MatchEntity } from 'gameserver/model/match.entity';
 import { Repository } from 'typeorm';
 import { GameServerModel } from 'gameserver/model/game-server.model';
 import { ClientProxy } from '@nestjs/microservices';
-import { LaunchGameServerCommand } from 'gateway/commands/LaunchGameServer/launch-game-server.command';
+import {
+  GSMatchInfo,
+  LaunchGameServerCommand,
+  MatchPlayer,
+} from 'gateway/commands/LaunchGameServer/launch-game-server.command';
 import { LaunchGameServerResponse } from 'gateway/commands/LaunchGameServer/launch-game-server.response';
 import { timeout } from 'rxjs/operators';
 import { ServerNotRespondingEvent } from 'gameserver/event/server-not-responding.event';
@@ -26,6 +25,10 @@ import { asyncMap } from 'rxjs-async-map';
 import { KillServerRequestedEvent } from 'gateway/events/gs/kill-server-requested.event';
 import { MatchStartedEvent } from 'gateway/events/match-started.event';
 import { GameServerInfo } from 'gateway/shared-types/game-server-info';
+import { MatchInfo } from 'gateway/events/room-ready.event';
+import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
+import { GetUserInfoQueryResult } from 'gateway/queries/GetUserInfo/get-user-info-query.result';
+import { DotaTeam } from 'gateway/shared-types/dota-team';
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
@@ -58,6 +61,37 @@ export class FindGameServerHandler
     this.pendingGamesPool.next(command);
   }
 
+  private async extendMatchInfo(matchInfo: MatchInfo): Promise<GSMatchInfo> {
+    const players: MatchPlayer[] = [];
+
+
+    const rQueries = matchInfo.radiant.map(async t => {
+      const res = await this.qbus.execute<
+        GetUserInfoQuery,
+        GetUserInfoQueryResult
+      >(new GetUserInfoQuery(t));
+
+      players.push(new MatchPlayer(t, res.name, DotaTeam.RADIANT));
+    });
+    const dQueries = matchInfo.dire.map(async t => {
+      const res = await this.qbus.execute<
+        GetUserInfoQuery,
+        GetUserInfoQueryResult
+      >(new GetUserInfoQuery(t));
+
+      players.push(new MatchPlayer(t, res.name, DotaTeam.DIRE));
+    });
+
+    await Promise.all(rQueries.concat(...dQueries));
+
+    return new GSMatchInfo(
+      matchInfo.mode,
+      matchInfo.roomId,
+      players,
+      matchInfo.version,
+    );
+  }
+
   private async findServer(command: FindGameServerCommand) {
     const freeServerPool = await this.gsSessionRepository.getAllFree(
       command.matchInfo.version,
@@ -79,10 +113,12 @@ export class FindGameServerHandler
       const candidate = freeServerPool[i];
       const stackUrl = candidate.url;
       try {
+        const cmd = new LaunchGameServerCommand(candidate.url, m.id, await this.extendMatchInfo(command.matchInfo));
+        console.log(JSON.stringify(cmd, null,  2))
         const req = await this.redisEventQueue
           .send<LaunchGameServerResponse, LaunchGameServerCommand>(
             LaunchGameServerCommand.name,
-            new LaunchGameServerCommand(candidate.url, m.id, command.matchInfo),
+            cmd,
           )
           .pipe(timeout(15000))
           .toPromise();
@@ -102,7 +138,7 @@ export class FindGameServerHandler
         // timeout means server is DEAD
         this.ebus.publish(new ServerNotRespondingEvent(stackUrl));
         // just to make sure server is dead
-        this.ebus.publish(new KillServerRequestedEvent(stackUrl))
+        this.ebus.publish(new KillServerRequestedEvent(stackUrl));
       }
 
       i++;
@@ -145,4 +181,3 @@ export class FindGameServerHandler
     );
   }
 }
-

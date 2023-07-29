@@ -12,6 +12,7 @@ import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { MmrChangeLogEntity } from 'gameserver/entity/mmr-change-log.entity';
 import { PlayerReportStatus } from 'gameserver/model/player-report-status';
 import { PlayerReport } from 'gameserver/model/player-report';
+import { ReplayEntity } from 'gameserver/model/replay.entity';
 
 export const Entities = [
   GameSeason,
@@ -30,7 +31,9 @@ export const Entities = [
 
   MmrChangeLogEntity,
   PlayerReportStatus,
-  PlayerReport
+  PlayerReport,
+
+  ReplayEntity
 ];
 export const devDbConfig: any = {
   type: 'postgres',

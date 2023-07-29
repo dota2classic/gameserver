@@ -40,28 +40,28 @@ export class GameserverSaga {
   };
 
 
-  @Saga()
-  tournamentGameReady = (events$: Observable<any>): Observable<ICommand> => {
-    return events$.pipe(
-      ofType(TournamentGameReadyEvent),
-      map(
-        e =>
-          new FindGameServerCommand(
-            new MatchInfo(
-              e.mode,
-              uuid(),
-              e.radiant,
-              e.dire,
-              0,
-              e.version,
-              e.tournamentId,
-              e.tourMatchId
-            ),
-            0,
-          ),
-      ),
-    );
-  };
+  // @Saga()
+  // tournamentGameReady = (events$: Observable<any>): Observable<ICommand> => {
+  //   return events$.pipe(
+  //     ofType(TournamentGameReadyEvent),
+  //     map(
+  //       e =>
+  //         new FindGameServerCommand(
+  //           new MatchInfo(
+  //             e.mode,
+  //             uuid(),
+  //             e.radiant,
+  //             e.dire,
+  //             0,
+  //             e.version,
+  //             e.tournamentId,
+  //             e.tourMatchId
+  //           ),
+  //           0,
+  //         ),
+  //     ),
+  //   );
+  // };
 
   // @Saga()
   // updateReceived = (events$: Observable<any>): Observable<ICommand> => {
