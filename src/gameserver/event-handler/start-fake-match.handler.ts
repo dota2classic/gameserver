@@ -7,7 +7,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event';
-import { construct } from 'gateway/util/construct';
 
 @Injectable()
 @EventsHandler(StartFakeMatchEvent)
