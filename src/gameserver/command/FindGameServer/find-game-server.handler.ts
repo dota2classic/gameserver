@@ -64,7 +64,6 @@ export class FindGameServerHandler
   private async extendMatchInfo(matchInfo: MatchInfo): Promise<GSMatchInfo> {
     const players: MatchPlayer[] = [];
 
-
     const rQueries = matchInfo.radiant.map(async t => {
       const res = await this.qbus.execute<
         GetUserInfoQuery,
@@ -89,6 +88,10 @@ export class FindGameServerHandler
       matchInfo.roomId,
       players,
       matchInfo.version,
+
+      matchInfo.radiant,
+      matchInfo.dire,
+      matchInfo.averageMMR,
     );
   }
 
@@ -113,8 +116,12 @@ export class FindGameServerHandler
       const candidate = freeServerPool[i];
       const stackUrl = candidate.url;
       try {
-        const cmd = new LaunchGameServerCommand(candidate.url, m.id, await this.extendMatchInfo(command.matchInfo));
-        console.log(JSON.stringify(cmd, null,  2))
+        const cmd = new LaunchGameServerCommand(
+          candidate.url,
+          m.id,
+          await this.extendMatchInfo(command.matchInfo),
+        );
+        console.log(JSON.stringify(cmd, null, 2));
         const req = await this.redisEventQueue
           .send<LaunchGameServerResponse, LaunchGameServerCommand>(
             LaunchGameServerCommand.name,
@@ -160,7 +167,17 @@ export class FindGameServerHandler
     session.url = foundServer.url;
 
     session.matchId = m.id;
-    session.matchInfoJson = command.matchInfo;
+    session.matchInfoJson = {
+      ...command.matchInfo,
+      // Obsolete
+      players: command.matchInfo.dire
+        .concat(...command.matchInfo.radiant)
+        .map(it => ({
+          name: '',
+          playerId: it,
+          team: DotaTeam.RADIANT,
+        })),
+    };
 
     await this.gameServerSessionModelRepository.save(session);
 

@@ -7,6 +7,7 @@ import { LeaderboardEntryDto } from 'rest/dto/player.dto';
 import { GameServerModel } from 'gameserver/model/game-server.model';
 import { GameServerDto, GameSessionDto } from 'rest/dto/info.dto';
 import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
+import { DotaTeam } from 'gateway/shared-types/dota-team';
 
 @Injectable()
 export class Mapper {
@@ -57,8 +58,9 @@ export class Mapper {
     matchId: it.matchId,
     info: {
       ...it.matchInfoJson,
-      radiant: it.matchInfoJson.radiant.map(t => t.value),
-      dire: it.matchInfoJson.dire.map(t => t.value),
+      averageMMR: 0,
+      radiant: it.matchInfoJson.players.filter(it => it.team == DotaTeam.RADIANT).map(t => t.playerId.value),
+      dire: it.matchInfoJson.players.filter(it => it.team == DotaTeam.DIRE).map(t => t.playerId.value),
     },
   });
 }

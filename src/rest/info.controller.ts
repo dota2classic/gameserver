@@ -45,7 +45,7 @@ export class InfoController {
     const allSessions = await this.gameServerSessionModelRepository.find();
     return allSessions.reduce(
       (a, b) =>
-        a + b.matchInfoJson.radiant.length + b.matchInfoJson.dire.length,
+        a + b.matchInfoJson.players.length,
       0,
     );
   }

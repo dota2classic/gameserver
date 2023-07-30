@@ -48,9 +48,8 @@ export class GameServerSessionRepository {
     const all = await this.gameServerSessionModelRepository.find();
 
     return all.find(t =>
-      [...t.matchInfoJson.radiant]
-        .concat(t.matchInfoJson.dire)
-        .find(z => z.value === playerId.value),
+      t.matchInfoJson.players
+        .find(z => z.playerId.value === playerId.value),
     );
   }
 }

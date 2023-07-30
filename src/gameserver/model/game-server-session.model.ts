@@ -1,6 +1,5 @@
-import { AggregateRoot } from '@nestjs/cqrs';
-import { MatchInfo } from 'gateway/events/room-ready.event';
 import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { GSMatchInfo } from 'gateway/commands/LaunchGameServer/launch-game-server.command';
 
 
 @Entity()
@@ -14,7 +13,7 @@ export class GameServerSessionModel {
 
 
   @Column("simple-json")
-  matchInfoJson: MatchInfo;
+  matchInfoJson: GSMatchInfo;
 
 
 
