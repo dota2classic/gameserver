@@ -32,9 +32,8 @@ export class GetPlayerInfoHandler
     private readonly cbus: CommandBus,
     @InjectRepository(PlayerBan)
     private readonly playerBanRepository: Repository<PlayerBan>,
-    private readonly playerService: PlayerService
+    private readonly playerService: PlayerService,
   ) {}
-
 
   @cached(60, GetPlayerInfoQuery.name)
   async execute(
@@ -42,12 +41,13 @@ export class GetPlayerInfoHandler
   ): Promise<GetPlayerInfoQueryResult> {
     await this.cbus.execute(new MakeSureExistsCommand(command.playerId));
 
-
     // deprecate multi version mmr
     const mmr = (
       await this.versionPlayerRepository.findOne({
-        steam_id: command.playerId.value,
-        version: Dota2Version.Dota_681
+        where: {
+          steam_id: command.playerId.value,
+          version: Dota2Version.Dota_681,
+        },
       })
     ).mmr;
 
@@ -104,11 +104,8 @@ export class GetPlayerInfoHandler
     );
 
     const ban = await this.playerBanRepository.findOne({
-      steam_id: command.playerId.value,
+      where: { steam_id: command.playerId.value },
     });
-
-
-
 
     return new GetPlayerInfoQueryResult(
       command.playerId,

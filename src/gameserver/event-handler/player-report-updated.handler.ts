@@ -5,11 +5,7 @@ import { Repository } from 'typeorm';
 import { MatchRecordedEvent } from 'gameserver/event/match-recorded.event';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
-import {
-  FREE_REPORT_PER_GAMES,
-  GAMES_TO_ADD_REPORT,
-  MAX_REPORTS_AVAILABLE,
-} from 'gateway/shared-types/timings';
+import { FREE_REPORT_PER_GAMES, GAMES_TO_ADD_REPORT, MAX_REPORTS_AVAILABLE } from 'gateway/shared-types/timings';
 
 @EventsHandler(MatchRecordedEvent)
 export class PlayerReportUpdatedHandler
@@ -32,7 +28,7 @@ export class PlayerReportUpdatedHandler
     for (let i = 0; i < event.players.length; i++) {
       const p = event.players[i];
       let r = await this.playerReportRepository.findOne({
-        steam_id: p.steam_id,
+        where: { steam_id: p.steam_id, }
       });
 
       if (!r) {

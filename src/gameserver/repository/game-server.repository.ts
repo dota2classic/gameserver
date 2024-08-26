@@ -1,5 +1,4 @@
 import { GameServerModel } from 'gameserver/model/game-server.model';
-import { RuntimeRepository } from 'util/runtime-repository';
 import { Injectable } from '@nestjs/common';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { EventPublisher } from '@nestjs/cqrs';
@@ -16,7 +15,7 @@ export class GameServerRepository {
 
   async find(version: Dota2Version): Promise<GameServerModel[]> {
     return this.gameServerModelRepository.find({
-      version,
+      where: { version, }
     });
   }
 

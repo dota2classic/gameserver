@@ -1,4 +1,4 @@
-import { CacheTTL, Controller, Get } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Mapper } from 'rest/mapper';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,6 +9,7 @@ import { GameServerRepository } from 'gameserver/repository/game-server.reposito
 import { GameServerDto, GameSessionDto } from 'rest/dto/info.dto';
 import { GameServerSessionRepository } from 'gameserver/repository/game-server-session.repository';
 import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
+import { CacheTTL } from '@nestjs/cache-manager';
 
 @Controller('info')
 @ApiTags('info')

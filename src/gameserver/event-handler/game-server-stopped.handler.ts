@@ -18,7 +18,7 @@ export class GameServerStoppedHandler
 
   async handle(event: GameServerStoppedEvent) {
     const runningSession = await this.gameServerSessionModelRepository.findOne({
-      url: event.url
+      where: { url: event.url }
     });
     if (runningSession) {
       await this.gameServerSessionModelRepository.delete(runningSession.url);

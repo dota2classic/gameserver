@@ -24,8 +24,8 @@ export class MakeSureExistsHandler
 
   private async makeSureExists(steam_id: string, version: Dota2Version) {
     const p = await this.versionPlayerRepository.findOne({
-      steam_id,
-      version: Dota2Version.Dota_681,
+      where: { steam_id,
+        version: Dota2Version.Dota_681,}
     });
     if (!p) {
       const vp = new VersionPlayer();

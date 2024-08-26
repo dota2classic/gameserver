@@ -27,7 +27,7 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
 
   async handle(event: GameResultsEvent) {
     const mInfo = await this.matchEntityRepository.findOne({
-      id: event.matchId,
+      where: { id: event.matchId,}
     });
 
     if (!mInfo) return;
@@ -85,7 +85,9 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
     );
 
     const runningSession = await this.gameServerSessionModelRepository.findOne({
-      url: event.server,
+      where: {
+        url: event.server,
+      }
     });
     if (runningSession) {
       await this.gameServerSessionModelRepository.delete(runningSession.url);

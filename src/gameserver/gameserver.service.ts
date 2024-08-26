@@ -6,11 +6,7 @@ import { GameSeason } from 'gameserver/entity/GameSeason';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
-import { inspect } from 'util';
-import {
-  MatchmakingMode,
-  MatchmakingModes,
-} from 'gateway/shared-types/matchmaking-mode';
+import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 @Injectable()
 export class GameServerService {
@@ -40,8 +36,7 @@ export class GameServerService {
     mode: MatchmakingMode,
   ) {
     let plr = await this.versionPlayerRepository.findOne({
-      version: Dota2Version.Dota_681,
-      steam_id: pid.value,
+      where: { version: Dota2Version.Dota_681, steam_id: pid.value },
     });
 
     if (!plr) {

@@ -14,7 +14,7 @@ export class ServerNotRespondingHandler
 
   async handle(event: ServerNotRespondingEvent) {
     const s = await this.gameServerModelRepository.findOne({
-      url: event.url,
+      where: { url: event.url, }
     });
 
     if (s) {

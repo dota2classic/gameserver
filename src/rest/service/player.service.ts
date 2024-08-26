@@ -26,8 +26,10 @@ export class PlayerService {
   ): Promise<number> {
     // Only 681 as version player is deprecated model(same mmr for all)
     const p = await this.versionPlayerRepository.findOne({
-      steam_id,
-      version: Dota2Version.Dota_681,
+      where: {
+        steam_id,
+        version: Dota2Version.Dota_681,
+      },
     });
 
     const rank = await this.versionPlayerRepository.query(`
@@ -54,7 +56,7 @@ export class PlayerService {
   ): Promise<number> {
     if (mode === undefined) {
       return this.playerInMatchRepository.count({
-        playerId: steam_id,
+        where: { playerId: steam_id },
       });
     }
 
@@ -146,8 +148,7 @@ LIMIT 20;
         .map(it => (it.kills + it.assists) / Math.max(1, it.deaths))
         .reduce((a, b) => a + b, 0) / Math.max(1, some.length);
 
-
-    console.log("CAlculated latest kda for ", steam_id, "it's ")
+    console.log('CAlculated latest kda for ', steam_id, "it's ");
     return KDA;
     // const winCount = some.reduce((a, b) => a + (b.is_win ? 1 : 0), 0);
     //
@@ -159,7 +160,9 @@ LIMIT 20;
   @cached(100, 'generalStats')
   async generalStats(steam_id: string): Promise<PlayerGeneralStatsDto> {
     const totalGames = await this.playerInMatchRepository.count({
-      playerId: steam_id,
+      where: {
+        playerId: steam_id,
+      },
     });
 
     const wins = (

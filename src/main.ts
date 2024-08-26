@@ -1,10 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { CommandBus, EventBus, EventPublisher, ofType, QueryBus } from '@nestjs/cqrs';
-import { REDIS_PASSWORD, REDIS_URL } from 'env';
+import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT } from 'env';
 import { Transport } from '@nestjs/microservices';
 import { inspect } from 'util';
-import { Subscriber } from 'rxjs';
 import { Logger } from '@nestjs/common';
 import { DiscoveryRequestedEvent } from 'gateway/events/discovery-requested.event';
 import { wait } from 'util/wait';
@@ -23,7 +22,9 @@ async function bootstrap() {
   app.connectMicroservice({
     transport: Transport.REDIS,
     options: {
-      url: REDIS_URL(),
+      host: REDIS_HOST(),
+      port: REDIS_PORT(),
+      // url: REDIS_URL(),
       retryAttempts: Infinity,
       retryDelay: 5000,
       password: REDIS_PASSWORD(),
@@ -55,32 +56,24 @@ async function bootstrap() {
   const elogger = new Logger('EventLogger');
   const qlogger = new Logger('EventLogger');
 
-  ebus._subscribe(
-    new Subscriber<any>(e => {
-      if (e.constructor.name === ServerActualizationRequestedEvent.name) return;
-      if (e.constructor.name === ServerSessionSyncEvent.name) return;
+  ebus.subscribe(e => {
+    if (e.constructor.name === ServerActualizationRequestedEvent.name) return;
+    if (e.constructor.name === ServerSessionSyncEvent.name) return;
 
-      elogger.log(`${inspect(e)}`);
-    }),
-  );
+    elogger.log(`${inspect(e)}`);
+  });
 
-  qbus._subscribe(
-    new Subscriber<any>(e => {
-      qlogger.log(`${inspect(e)}`);
-    }),
-  );
+  qbus.subscribe(e => {
+    qlogger.log(`${inspect(e)}`);
+  });
 
-  cbus.pipe(
-    ofType(FindGameServerCommand)
-  )._subscribe(
-    new Subscriber<any>(e => {
-      if (e.constructor.name === MakeSureExistsCommand.name) return;
-      clogger.log(
-        `${inspect(e)}`,
-        // e.__proto__.constructor.name,
-      );
-    }),
-  );
+  cbus.pipe(ofType(FindGameServerCommand)).subscribe(e => {
+    if (e.constructor.name === MakeSureExistsCommand.name) return;
+    clogger.log(
+      `${inspect(e)}`,
+      // e.__proto__.constructor.name,
+    );
+  });
 
   await wait(500);
 

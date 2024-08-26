@@ -20,7 +20,7 @@ export class PlayerReportHandler implements IEventHandler<PlayerReportEvent> {
 
   async handle(event: PlayerReportEvent) {
     let r = await this.playerReportStatusRepository.findOne({
-      steam_id: event.reporter.value,
+      where: { steam_id: event.reporter.value, }
     });
 
     if (!r) {

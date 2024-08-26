@@ -15,7 +15,7 @@ export class PlayerBanHammeredHandler
 
   async handle(event: PlayerBanHammeredEvent) {
     let banEnt = await this.playerBanRepository.findOne({
-      steam_id: event.playerId.value,
+      where: { steam_id: event.playerId.value, }
     });
 
     if (!banEnt) {

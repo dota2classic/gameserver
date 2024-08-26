@@ -13,7 +13,7 @@ export class MatchStartedHandler implements IEventHandler<MatchStartedEvent> {
 
   async handle(event: MatchStartedEvent) {
     const m = await this.matchRepository.findOne({
-      id: event.matchId,
+      where: { id: event.matchId,}
     });
     if (m) {
       m.started = true;

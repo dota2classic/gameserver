@@ -23,7 +23,7 @@ export class GetReportsAvailableHandler
     command: GetReportsAvailableQuery,
   ): Promise<GetReportsAvailableQueryResult> {
     let c = await this.playerReportRepository.findOne({
-      steam_id: command.id.value,
+      where: { steam_id: command.id.value },
     });
     if (!c) {
       c = new PlayerReportStatus();

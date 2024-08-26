@@ -1,4 +1,5 @@
-import { Body, CacheTTL, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { CacheTTL } from '@nestjs/cache-manager';
 import { ApiTags } from '@nestjs/swagger';
 import { Mapper } from 'rest/mapper';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -47,8 +48,7 @@ export class PlayerController {
     await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
 
     const p = await this.versionPlayerRepository.findOne({
-      steam_id,
-      version: Dota2Version.Dota_681,
+      where: { steam_id, version: Dota2Version.Dota_681 },
     });
 
     const rankedGamesPlayed = await this.playerService.gamesPlayed(
@@ -122,7 +122,7 @@ export class PlayerController {
   @Get(`/ban_info/:id`)
   async banInfo(@Param('id') steam_id: string): Promise<BanStatusDto> {
     const ban = await this.playerBanRepository.findOne({
-      steam_id: steam_id,
+      where: { steam_id: steam_id },
     });
 
     const res: BanStatus = ban?.asBanStatus() || BanStatus.NOT_BANNED;

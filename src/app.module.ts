@@ -1,8 +1,8 @@
-import { CacheModule, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AppService } from 'app.service';
 import { CqrsModule } from '@nestjs/cqrs';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { isDev, REDIS_PASSWORD, REDIS_URL } from 'env';
+import { isDev, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_URL } from 'env';
 import { GameServerDomain } from 'gameserver';
 import { CoreController } from 'core.controller';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
@@ -13,13 +13,13 @@ import { Mapper } from 'rest/mapper';
 import { PlayerController } from 'rest/player.controller';
 import { InfoController } from 'rest/info.controller';
 import { PlayerService } from 'rest/service/player.service';
-import { SentryModule } from '@ntegral/nestjs-sentry';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MetaController } from 'rest/meta.controller';
 import { MetaService } from 'rest/service/meta.service';
 import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
 import { outerQuery } from 'gateway/util/outerQuery';
 import { QueryCache } from 'd2c-rcaches';
+import { CacheModule } from '@nestjs/cache-manager';
 
 
 export function qCache<T, B>() {
@@ -34,13 +34,13 @@ export function qCache<T, B>() {
   imports: [
     CacheModule.register(),
     ScheduleModule.forRoot(),
-    SentryModule.forRoot({
-      dsn:
-        'https://67345366524f4d0fb7d9be3a26d6d3f2@o435989.ingest.sentry.io/5529665',
-      debug: false,
-      environment: isDev ? 'dev' : 'production',
-      logLevel: 2, //based on sentry.io loglevel //
-    }),
+    // SentryModule.forRoot({
+    //   dsn:
+    //     'https://67345366524f4d0fb7d9be3a26d6d3f2@o435989.ingest.sentry.io/5529665',
+    //   debug: false,
+    //   environment: isDev ? 'dev' : 'production',
+    //   logLevel: 2, //based on sentry.io loglevel //
+    // }),
     CqrsModule,
     TypeOrmModule.forRoot(
       (isDev ? prodDbConfig : prodDbConfig) as TypeOrmModuleOptions,
@@ -49,9 +49,11 @@ export function qCache<T, B>() {
     ClientsModule.register([
       {
         name: 'QueryCore',
+        // @ts-ignore
         transport: Transport.REDIS,
         options: {
-          url: REDIS_URL(),
+          host: REDIS_HOST(),
+          port: REDIS_PORT(),
           retryAttempts: Infinity,
           password: REDIS_PASSWORD(),
           retryDelay: 5000,

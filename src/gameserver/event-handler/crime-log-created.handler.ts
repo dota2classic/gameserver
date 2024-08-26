@@ -49,7 +49,7 @@ export class CrimeLogCreatedHandler
     // ok, first we find last crime
 
     const thisCrime = await this.playerCrimeLogEntityRepository.findOne({
-      id: event.id,
+      where: { id: event.id, }
     });
 
     const frequentCrimesCount = await this.playerCrimeLogEntityRepository
@@ -96,7 +96,9 @@ export class CrimeLogCreatedHandler
     frequentCrimesCount: PlayerCrimeLogEntity[],
   ) {
     let ban = await this.playerBanRepository.findOne({
-      steam_id: steam_id,
+      where: {
+        steam_id: steam_id,
+      }
     });
 
     if (!ban) {

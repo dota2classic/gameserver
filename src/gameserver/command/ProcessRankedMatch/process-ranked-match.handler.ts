@@ -10,7 +10,6 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerService } from 'gameserver/gameserver.service';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { MmrChangeLogEntity } from 'gameserver/entity/mmr-change-log.entity';
-import { match } from 'assert';
 
 @CommandHandler(ProcessRankedMatchCommand)
 export class ProcessRankedMatchHandler
@@ -55,13 +54,13 @@ export class ProcessRankedMatchHandler
     );
 
     const check = await this.mmrChangeLogEntityRepository.count({
-      matchId: command.matchId
+      where: {matchId: command.matchId,}
     });
 
-
-    if(check > 0){
-
-      this.logger.log(`RANKED MATCH ${command.matchId} TRIED TO BE PROCESSED TWICE. CANCELLING`)
+    if (check > 0) {
+      this.logger.log(
+        `RANKED MATCH ${command.matchId} TRIED TO BE PROCESSED TWICE. CANCELLING`,
+      );
       return;
     }
 
@@ -69,8 +68,8 @@ export class ProcessRankedMatchHandler
       await Promise.all(
         command.winners.map(t =>
           this.versionPlayerRepository.findOne({
-            version: Dota2Version.Dota_681,
-            steam_id: t.value,
+            where: {version: Dota2Version.Dota_681,
+              steam_id: t.value,}
           }),
         ),
       )
@@ -80,8 +79,8 @@ export class ProcessRankedMatchHandler
       await Promise.all(
         command.losers.map(t =>
           this.versionPlayerRepository.findOne({
-            version: Dota2Version.Dota_681,
-            steam_id: t.value,
+            where: { version: Dota2Version.Dota_681,
+              steam_id: t.value,}
           }),
         ),
       )
@@ -104,7 +103,7 @@ export class ProcessRankedMatchHandler
           diffDeviationFactor,
           winnerAverage,
           loserAverage,
-          command.matchId
+          command.matchId,
         ),
       ),
     );
@@ -117,7 +116,7 @@ export class ProcessRankedMatchHandler
           diffDeviationFactor,
           winnerAverage,
           loserAverage,
-          command.matchId
+          command.matchId,
         ),
       ),
     );
@@ -131,7 +130,7 @@ export class ProcessRankedMatchHandler
     mmrDiff: number,
     winnerAverage: number,
     loserAverage: number,
-    matchId: number
+    matchId: number,
   ) {
     const cb = await this.gameServerService.getGamesPlayed(
       season,
@@ -139,8 +138,10 @@ export class ProcessRankedMatchHandler
       MatchmakingMode.RANKED,
     );
     const plr = await this.versionPlayerRepository.findOneOrFail({
-      version: Dota2Version.Dota_681,
-      steam_id: pid.value,
+      where: {
+        version: Dota2Version.Dota_681,
+        steam_id: pid.value,
+      },
     });
 
     const mmrChange = Math.round(
@@ -157,7 +158,7 @@ export class ProcessRankedMatchHandler
     //   } became ${plr.mmr + mmrChange}`,
     // );
 
-    try{
+    try {
       const change = new MmrChangeLogEntity();
       change.playerId = pid.value;
       change.loserAverage = Number(loserAverage);
@@ -165,11 +166,11 @@ export class ProcessRankedMatchHandler
       change.change = Number(mmrChange);
       change.winner = winner;
       change.mmrBefore = Number(plr.mmr);
-      change.mmrAfter = Number(plr.mmr + mmrChange)
-      change.matchId = matchId
+      change.mmrAfter = Number(plr.mmr + mmrChange);
+      change.matchId = matchId;
       await this.mmrChangeLogEntityRepository.save(change);
-    }catch (e){
-      console.error(e)
+    } catch (e) {
+      console.error(e);
     }
 
     plr.mmr = plr.mmr + mmrChange;

@@ -3,7 +3,6 @@ import { ServerSessionSyncEvent } from 'gateway/events/gs/server-session-sync.ev
 import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { GameSessionCreatedEvent } from 'gateway/events/game-session-created.event';
 
 @EventsHandler(ServerSessionSyncEvent)
 export class ServerSessionSyncHandler
@@ -19,7 +18,7 @@ export class ServerSessionSyncHandler
   async handle(event: ServerSessionSyncEvent) {
     const existingSession = await this.gameServerSessionModelRepository.findOne(
       {
-        url: event.url,
+        where: { url: event.url, }
       },
     );
 

@@ -40,11 +40,10 @@ export class MatchController {
   ): Promise<MatchPageDto> {
     const raw = await this.metaService.heroMatches(page, perPage, hero);
 
-
     return {
       ...raw,
       data: raw.data.map(this.mapper.mapMatch),
-    }
+    };
   }
 
   @ApiQuery({
@@ -62,10 +61,9 @@ export class MatchController {
   @Get('/all')
   async matches(
     @Query('page', ParseIntPipe) page: number,
-    @Query('per_page', ParseIntPipe) perPage: number = 25,
+    @Query('per_page') perPage: number = 25,
     @Query('mode') mode?: MatchmakingMode,
   ): Promise<MatchPageDto> {
-
     const slice = await this.matchRepository.find({
       where: mode !== undefined ? { type: mode } : {},
       take: perPage,
@@ -89,14 +87,10 @@ export class MatchController {
 
   @Get('/:id')
   async getMatch(@Param('id') id: number): Promise<MatchDto> {
-    const match = await this.matchRepository.findOne(
-      {
-        id,
-      },
-      {
-        relations: ['players'],
-      },
-    );
+    const match = await this.matchRepository.findOne({
+      where: { id },
+      relations: ['players'],
+    });
 
     return this.mapper.mapMatch(match);
   }
