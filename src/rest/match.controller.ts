@@ -34,8 +34,8 @@ export class MatchController {
   })
   @Get('/by_hero')
   async heroMatches(
-    @Query('page', ParseIntPipe) page: number,
-    @Query('per_page', ParseIntPipe) perPage: number = 25,
+    @Query('page') page: number,
+    @Query('per_page') perPage: number = 25,
     @Query('hero') hero: string,
   ): Promise<MatchPageDto> {
     const raw = await this.metaService.heroMatches(page, perPage, hero);
@@ -60,10 +60,11 @@ export class MatchController {
   })
   @Get('/all')
   async matches(
-    @Query('page', ParseIntPipe) page: number,
+    @Query('page') page: number,
     @Query('per_page') perPage: number = 25,
     @Query('mode') mode?: MatchmakingMode,
   ): Promise<MatchPageDto> {
+    console.log(page, perPage, mode, typeof page, typeof perPage, typeof mode)
     const slice = await this.matchRepository.find({
       where: mode !== undefined ? { type: mode } : {},
       take: perPage,
