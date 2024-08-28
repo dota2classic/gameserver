@@ -1,4 +1,4 @@
-import { queryCacheFactory } from 'd2c-rcaches';
+import { queryCacheFactory } from 'rcache';
 import { REDIS_PASSWORD, REDIS_URL } from 'env';
 
 export const cached = queryCacheFactory({

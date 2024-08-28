@@ -18,7 +18,7 @@ import { MetaController } from 'rest/meta.controller';
 import { MetaService } from 'rest/service/meta.service';
 import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
 import { outerQuery } from 'gateway/util/outerQuery';
-import { QueryCache } from 'd2c-rcaches';
+import { QueryCache } from 'rcache';
 import { CacheModule } from '@nestjs/cache-manager';
 
 

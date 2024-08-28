@@ -312,11 +312,6 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@bitauth/libauth@^1.17.1":
-  version "1.19.1"
-  resolved "https://registry.yarnpkg.com/@bitauth/libauth/-/libauth-1.19.1.tgz#713751bbc09815b667f8fe00a1cc5b0f3bf45dd1"
-  integrity sha512-R524tD5VwOt3QRHr7N518nqTVR/HKgfWL4LypekcGuNQN8R4PWScvuRcRzrY39A28kLztMv+TJdiKuMNbkU1ug==
-
 "@cnakazawa/watch@^1.0.3":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@cnakazawa/watch/-/watch-1.0.4.tgz#f864ae85004d0fcab6f50be9141c4da368d1656a"
@@ -2348,15 +2343,6 @@ cssstyle@^2.3.0:
   integrity sha512-AZL67abkUzIuvcHqk7c09cezpGNcxUxU4Ioi/05xHk4DQeTkWmGYftIE6ctU6AEt+Gn4n1lDStOtj7FKycP71A==
   dependencies:
     cssom "~0.3.6"
-
-d2c-rcaches@^1.2.1:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/d2c-rcaches/-/d2c-rcaches-1.2.1.tgz#ae2e4cac4ac23451fb3e616eef9307e02e375852"
-  integrity sha512-nCT52DeaiXndAZB18YoGN7yLR3wuqNTfsQfM7MOrYCmQaOpPgH5bCOMj+L/Fk+RDASMGduOP1V5CvMya6Hzjcw==
-  dependencies:
-    "@bitauth/libauth" "^1.17.1"
-    cache-manager "^5.7.6"
-    cache-manager-redis-yet "^5.1.4"
 
 data-urls@^2.0.0:
   version "2.0.0"
