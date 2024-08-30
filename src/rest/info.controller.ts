@@ -2,7 +2,6 @@ import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Mapper } from 'rest/mapper';
 import { InjectRepository } from '@nestjs/typeorm';
-import Match from 'gameserver/entity/Match';
 import { Repository } from 'typeorm';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { GameServerRepository } from 'gameserver/repository/game-server.repository';
@@ -16,8 +15,6 @@ import { CacheTTL } from '@nestjs/cache-manager';
 export class InfoController {
   constructor(
     private readonly mapper: Mapper,
-    @InjectRepository(Match)
-    private readonly matchRepository: Repository<Match>,
     @InjectRepository(GameServerSessionModel)
     private readonly gameServerSessionModelRepository: Repository<
       GameServerSessionModel

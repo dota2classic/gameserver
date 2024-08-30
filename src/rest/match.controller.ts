@@ -1,21 +1,21 @@
 import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { MatchDto, MatchPageDto } from 'rest/dto/match.dto';
-import Match from 'gameserver/entity/Match';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Mapper } from 'rest/mapper';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { MetaService } from 'rest/service/meta.service';
+import FinishedMatch from 'gameserver/entity/finished-match';
 
 @Controller('match')
 @ApiTags('match')
 export class MatchController {
   constructor(
     private readonly mapper: Mapper,
-    @InjectRepository(Match)
-    private readonly matchRepository: Repository<Match>,
+    @InjectRepository(FinishedMatch)
+    private readonly matchRepository: Repository<FinishedMatch>,
     @InjectRepository(PlayerInMatch)
     private readonly playerInMatchRepository: Repository<PlayerInMatch>,
     private readonly metaService: MetaService,
@@ -66,7 +66,7 @@ export class MatchController {
   ): Promise<MatchPageDto> {
     console.log(page, perPage, mode, typeof page, typeof perPage, typeof mode)
     const slice = await this.matchRepository.find({
-      where: mode !== undefined ? { type: mode } : {},
+      where: mode !== undefined ? { matchmaking_mode: mode } : {},
       take: perPage,
       skip: perPage * page,
       order: {
@@ -75,7 +75,7 @@ export class MatchController {
     });
 
     const pages = await this.matchRepository.count({
-      where: mode !== undefined ? { type: mode } : {},
+      where: mode !== undefined ? { matchmaking_mode: mode } : {},
     });
 
     return {
@@ -130,7 +130,7 @@ export class MatchController {
       .skip(perPage * page);
 
     if (mode !== undefined) {
-      query.andWhere(`m.type = :mode`, { mode });
+      query.andWhere(`m.matchmaking_mode = :mode`, { mode });
     }
     if (hero !== undefined) {
       query.andWhere(`pim.hero = :hero`, { hero });

@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import Match from 'gameserver/entity/Match';
 import { MatchDto, PlayerInMatchDto } from 'rest/dto/match.dto';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
@@ -8,6 +7,7 @@ import { GameServerModel } from 'gameserver/model/game-server.model';
 import { GameServerDto, GameSessionDto } from 'rest/dto/info.dto';
 import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
 import { DotaTeam } from 'gateway/shared-types/dota-team';
+import FinishedMatch from 'gameserver/entity/finished-match';
 
 @Injectable()
 export class Mapper {
@@ -33,12 +33,13 @@ export class Mapper {
     abandoned: it.abandoned,
   });
 
-  public mapMatch = (match: Match): MatchDto => ({
+  public mapMatch = (match: FinishedMatch): MatchDto => ({
     id: match.id,
-    mode: match.type,
+    mode: match.matchmaking_mode,
+    game_mode: match.game_mode,
     radiant: match.players.filter(t => t.team === 2).map(this.mapPlayerInMatch),
     dire: match.players.filter(t => t.team === 3).map(this.mapPlayerInMatch),
-    winner: match.radiant_win ? 2 : 3,
+    winner: match.winner,
     duration: match.duration,
     timestamp: match.timestamp,
   });

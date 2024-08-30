@@ -1,7 +1,6 @@
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { DB_HOST, DB_PASSWORD, DB_USERNAME } from 'env';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
-import Match from 'gameserver/entity/Match';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { GameSeason } from 'gameserver/entity/GameSeason';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm/dist/interfaces/typeorm-options.interface';
@@ -13,13 +12,14 @@ import { MmrChangeLogEntity } from 'gameserver/entity/mmr-change-log.entity';
 import { PlayerReportStatus } from 'gameserver/model/player-report-status';
 import { PlayerReport } from 'gameserver/model/player-report';
 import { ReplayEntity } from 'gameserver/model/replay.entity';
+import FinishedMatch from 'gameserver/entity/finished-match';
 
 export const Entities = [
   GameSeason,
   VersionPlayer,
 
   MatchEntity,
-  Match,
+  FinishedMatch,
   PlayerInMatch,
 
   PlayerBan,

@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import Match from './Match';
+import FinishedMatch from 'gameserver/entity/finished-match';
 
 @Entity()
 export default class PlayerInMatch {
@@ -13,11 +13,11 @@ export default class PlayerInMatch {
   playerId!: string;
 
   @ManyToOne(
-    type => Match,
+    type => FinishedMatch,
     match => match.players,
   )
   @JoinColumn()
-  match!: Match;
+  match!: FinishedMatch;
 
   @Column('int')
   team!: number;

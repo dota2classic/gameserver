@@ -38,7 +38,7 @@ export class PlayerService {
                           left outer join player_in_match pim
                           inner join match m on pim."matchId" = m.id
                                      on p.steam_id = pim."playerId" and
-                                        m.type = ${MatchmakingMode.RANKED}
+                                        m.matchmaking_mode = ${MatchmakingMode.RANKED}
                  group by p.steam_id, p.mmr)
         select count(*)
         from players p
@@ -63,7 +63,7 @@ export class PlayerService {
     return this.playerInMatchRepository
       .createQueryBuilder('pim')
       .innerJoin('pim.match', 'm')
-      .where('m.type = :mode', { mode })
+      .where('m.matchmaking_mode = :mode', { mode })
       .andWhere('pim.playerId = :steam_id', { steam_id })
       .getCount();
   }
@@ -75,7 +75,7 @@ export class PlayerService {
 select count(*) as wins
 from player_in_match pim
          inner join match m on pim."matchId" = m.id
-where m.type = ${mode} and pim."playerId" = '${steam_id}' and m.radiant_win = case pim.team when 2 then true else false end`)
+where m.matchmaking_mode = ${mode} and pim."playerId" = '${steam_id}' and m.radiant_win = case pim.team when 2 then true else false end`)
     )[0].wins;
 
     const loss = (
@@ -83,7 +83,7 @@ where m.type = ${mode} and pim."playerId" = '${steam_id}' and m.radiant_win = ca
 select count(*) as wins
 from player_in_match pim
          inner join match m on pim."matchId" = m.id
-where m.type = ${mode} and pim."playerId" = '${steam_id}' and m.radiant_win != case pim.team when 2 then true else false end`)
+where m.matchmaking_mode = ${mode} and pim."playerId" = '${steam_id}' and m.radiant_win != case pim.team when 2 then true else false end`)
     )[0].wins;
 
     return parseInt(wins) / Math.max(1, parseInt(wins) + parseInt(loss));
@@ -118,7 +118,7 @@ group by pim.hero, pim."playerId"
       .query(`
     select (case when m.radiant_win then 2 else 3 end) = pims.team as is_win
 from match m inner join player_in_match pims on m.id = pims."matchId"
-where pims."playerId" = '${steam_id}' and m.type = ${MatchmakingMode.RANKED}
+where pims."playerId" = '${steam_id}' and m.matchmaking_mode = ${MatchmakingMode.RANKED}
 order by m.timestamp DESC
 LIMIT 20;
 `);
@@ -170,7 +170,7 @@ LIMIT 20;
 select count(*) as wins
 from player_in_match pim
          inner join match m on pim."matchId" = m.id
-where m.type = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and m.radiant_win = case pim.team when 2 then true else false end`)
+where m.matchmaking_mode = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and m.radiant_win = case pim.team when 2 then true else false end`)
     )[0].wins;
 
     const loss = (
@@ -178,7 +178,7 @@ where m.type = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and 
 select count(*) as wins
 from player_in_match pim
          inner join match m on pim."matchId" = m.id
-where m.type = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and m.radiant_win != case pim.team when 2 then true else false end`)
+where m.matchmaking_mode = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and m.radiant_win != case pim.team when 2 then true else false end`)
     )[0].wins;
 
     return {
@@ -196,7 +196,7 @@ where m.type = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and 
       .innerJoin('pim.match', 'm')
       .where('pim.playerId = :steam_id', { steam_id })
       .andWhere(
-        '(m.type = :mode or m.type = :mode2 or m.type = :mode3 or m.type = :mode4)',
+        '(m.matchmaking_mode = :mode or m.matchmaking_mode = :mode2 or m.matchmaking_mode = :mode3 or m.matchmaking_mode = :mode4)',
         {
           mode: MatchmakingMode.UNRANKED,
           mode2: MatchmakingMode.BOTS,

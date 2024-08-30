@@ -1,10 +1,11 @@
-import { GameResultsEvent, PlayerInMatchDTO } from 'gateway/events/gs/game-results.event';
+import { PlayerInMatchDTO } from 'gateway/events/gs/game-results.event';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
+import { DotaTeam } from 'gateway/shared-types/dota-team';
 
 export class MatchRecordedEvent {
   constructor(
     public readonly matchId: number,
-    public readonly radiantWin: boolean,
+    public readonly winner: DotaTeam,
     public readonly duration: number,
     public readonly type: MatchmakingMode,
     public readonly timestamp: number,

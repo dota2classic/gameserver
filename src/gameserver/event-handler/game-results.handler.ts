@@ -1,6 +1,5 @@
 import { EventBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
-import Match from 'gameserver/entity/Match';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MatchEntity } from 'gameserver/model/match.entity';
@@ -8,12 +7,13 @@ import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { GameSessionFinishedEvent } from 'gateway/events/game-session-finished.event';
 import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
 import { MatchRecordedEvent } from 'gameserver/event/match-recorded.event';
+import FinishedMatch from 'gameserver/entity/finished-match';
 
 @EventsHandler(GameResultsEvent)
 export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
   constructor(
-    @InjectRepository(Match)
-    private readonly matchRepository: Repository<Match>,
+    @InjectRepository(FinishedMatch)
+    private readonly matchRepository: Repository<FinishedMatch>,
     @InjectRepository(MatchEntity)
     private readonly matchEntityRepository: Repository<MatchEntity>,
     @InjectRepository(PlayerInMatch)
@@ -27,24 +27,27 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
 
   async handle(event: GameResultsEvent) {
     const mInfo = await this.matchEntityRepository.findOne({
-      where: { id: event.matchId,}
+      where: { id: event.matchId },
     });
 
     if (!mInfo) return;
 
-    const m = new Match();
-    m.id = mInfo.id;
-    m.timestamp = new Date(event.timestamp * 1000).toUTCString();
-    m.type = event.type;
-    m.duration = event.duration;
-    m.radiant_win = event.radiantWin;
-    m.server = event.server;
+    const m = new FinishedMatch(
+      mInfo.id,
+      event.winner,
+      new Date(event.timestamp * 1000).toUTCString(),
+      event.gameMode,
+      event.type,
+      event.duration,
+      event.server,
+    );
+
     await this.matchRepository.save(m);
 
     for (let i = 0; i < event.players.length; i++) {
       const t = event.players[i];
 
-      if(!t) continue;
+      if (!t) continue;
       const pim = new PlayerInMatch();
 
       pim.match = m;
@@ -75,7 +78,7 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
     await this.ebus.publish(
       new MatchRecordedEvent(
         event.matchId,
-        event.radiantWin,
+        event.winner,
         event.duration,
         event.type,
         event.timestamp,
@@ -87,7 +90,7 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
     const runningSession = await this.gameServerSessionModelRepository.findOne({
       where: {
         url: event.server,
-      }
+      },
     });
     if (runningSession) {
       await this.gameServerSessionModelRepository.delete(runningSession.url);

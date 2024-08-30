@@ -78,13 +78,12 @@ export class GameserverSaga {
       ofType(GameResultsEvent),
       filter(t => t.type === MatchmakingMode.RANKED),
       map(e => {
-        const winnerTeam = e.radiantWin ? 2 : 3;
 
         const losers = e.players
-          .filter(p => p.team !== winnerTeam)
+          .filter(p => p.team !== e.winner)
           .map(t => new PlayerId(t.steam_id));
         const winners = e.players
-          .filter(p => p.team === winnerTeam)
+          .filter(p => p.team === e.winner)
           .map(t => new PlayerId(t.steam_id));
 
         return new ProcessRankedMatchCommand(e.matchId, winners, losers);
