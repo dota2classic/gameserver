@@ -25,8 +25,7 @@ export class GameserverSaga {
             new MatchInfo(
               e.mode,
               e.roomId,
-              e.radiant,
-              e.dire,
+              e.players,
               e.averageMMR,
               e.version,
             ),

@@ -10,11 +10,7 @@ import { MatchEntity } from 'gameserver/model/match.entity';
 import { Repository } from 'typeorm';
 import { GameServerModel } from 'gameserver/model/game-server.model';
 import { ClientProxy } from '@nestjs/microservices';
-import {
-  GSMatchInfo,
-  LaunchGameServerCommand,
-  MatchPlayer,
-} from 'gateway/commands/LaunchGameServer/launch-game-server.command';
+import { GSMatchInfo, LaunchGameServerCommand } from 'gateway/commands/LaunchGameServer/launch-game-server.command';
 import { LaunchGameServerResponse } from 'gateway/commands/LaunchGameServer/launch-game-server.response';
 import { timeout } from 'rxjs/operators';
 import { ServerNotRespondingEvent } from 'gameserver/event/server-not-responding.event';
@@ -25,10 +21,9 @@ import { asyncMap } from 'rxjs-async-map';
 import { KillServerRequestedEvent } from 'gateway/events/gs/kill-server-requested.event';
 import { MatchStartedEvent } from 'gateway/events/match-started.event';
 import { GameServerInfo } from 'gateway/shared-types/game-server-info';
-import { MatchInfo } from 'gateway/events/room-ready.event';
+import { MatchInfo, MatchPlayer } from 'gateway/events/room-ready.event';
 import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
 import { GetUserInfoQueryResult } from 'gateway/queries/GetUserInfo/get-user-info-query.result';
-import { DotaTeam } from 'gateway/shared-types/dota-team';
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
@@ -64,33 +59,24 @@ export class FindGameServerHandler
   private async extendMatchInfo(matchInfo: MatchInfo): Promise<GSMatchInfo> {
     const players: MatchPlayer[] = [];
 
-    const rQueries = matchInfo.radiant.map(async t => {
+    // todo: maybe not needed at all
+    const resolves = matchInfo.players.map(async t => {
       const res = await this.qbus.execute<
         GetUserInfoQuery,
         GetUserInfoQueryResult
-      >(new GetUserInfoQuery(t));
+      >(new GetUserInfoQuery(t.playerId));
 
-      players.push(new MatchPlayer(t, res.name, DotaTeam.RADIANT));
-    });
-    const dQueries = matchInfo.dire.map(async t => {
-      const res = await this.qbus.execute<
-        GetUserInfoQuery,
-        GetUserInfoQueryResult
-      >(new GetUserInfoQuery(t));
 
-      players.push(new MatchPlayer(t, res.name, DotaTeam.DIRE));
+      players.push(new MatchPlayer(t.playerId, res.name, t.team));
     });
 
-    await Promise.all(rQueries.concat(...dQueries));
+    await Promise.all(resolves);
 
     return new GSMatchInfo(
       matchInfo.mode,
       matchInfo.roomId,
       players,
       matchInfo.version,
-
-      matchInfo.radiant,
-      matchInfo.dire,
       matchInfo.averageMMR,
     );
   }
@@ -170,13 +156,7 @@ export class FindGameServerHandler
     session.matchInfoJson = {
       ...command.matchInfo,
       // Obsolete
-      players: command.matchInfo.dire
-        .concat(...command.matchInfo.radiant)
-        .map(it => ({
-          name: '',
-          playerId: it,
-          team: DotaTeam.RADIANT,
-        })),
+      players: command.matchInfo.players,
     };
 
     await this.gameServerSessionModelRepository.save(session);

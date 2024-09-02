@@ -9,6 +9,7 @@ import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { HeroStatsDto, PlayerGeneralStatsDto } from 'rest/dto/hero.dto';
 import { cached } from 'util/method-cache';
 
+// TODO: we probably need to orm this shit up
 @Injectable()
 export class PlayerService {
   constructor(
