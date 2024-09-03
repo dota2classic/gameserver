@@ -17,18 +17,17 @@ import { GetPlayerInfoHandler } from 'gameserver/query/get-player-info.handler';
 import { MakeSureExistsHandler } from 'gameserver/command/MakeSureExists/make-sure-exists.handler';
 import { GameServerService } from 'gameserver/gameserver.service';
 import { PlayerBanHammeredHandler } from 'gameserver/event-handler/player-ban-hammered.handler';
-import { ServerSessionSyncHandler } from 'gameserver/event-handler/server-session-sync.handler';
 import { PlayerNotLoadedHandler } from 'gameserver/event-handler/player-not-loaded.handler';
 import { CrimeLogCreatedHandler } from 'gameserver/event-handler/crime-log-created.handler';
 import { PlayerDeclinedGameHandler } from 'gameserver/event-handler/player-declined-game.handler';
 import { ServerNotRespondingHandler } from 'gameserver/event-handler/server-not-responding.handler';
-import { REDIS_PASSWORD, REDIS_URL } from 'env';
 import { GetReportsAvailableHandler } from 'gameserver/query/get-reports-available.handler';
 import { PlayerReportUpdatedHandler } from 'gameserver/event-handler/player-report-updated.handler';
 import { PlayerReportHandler } from 'gameserver/event-handler/player-report.handler';
 import { PlayerReportedHandler } from 'gameserver/event-handler/player-reported.handler';
 import { LiveMatchUpdateHandler } from 'gameserver/event-handler/live-match-update.handler';
 import { StartFakeMatchHandler } from 'gameserver/event-handler/start-fake-match.handler';
+import { ServerStatusHandler } from 'gameserver/event-handler/sever-status.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -52,7 +51,7 @@ const EventHandlers = [
   GameResultsHandler,
   PlayerBanHammeredHandler,
 
-  ServerSessionSyncHandler,
+  ServerStatusHandler,
   PlayerNotLoadedHandler,
   PlayerDeclinedGameHandler,
   CrimeLogCreatedHandler,

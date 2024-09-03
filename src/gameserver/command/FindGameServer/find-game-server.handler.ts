@@ -65,7 +65,7 @@ export class FindGameServerHandler
         GetUserInfoQuery,
         GetUserInfoQueryResult
       >(new GetUserInfoQuery(t.playerId));
-
+      console.log(new GetUserInfoQuery(t.playerId), res)
 
       players.push(new MatchPlayer(t.playerId, res.name, t.team));
     });
@@ -85,6 +85,8 @@ export class FindGameServerHandler
     const freeServerPool = await this.gsSessionRepository.getAllFree(
       command.matchInfo.version,
     );
+
+    console.log('FindServer called, pool', freeServerPool)
 
     const m = new MatchEntity();
     m.server = MatchEntity.NOT_DECIDED_SERVER;
