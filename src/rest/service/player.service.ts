@@ -107,7 +107,7 @@ select pim."playerId",
        sum(case (pim.team = (case match.radiant_win when true then 2 else 3 end)) when true then 0 else 1 end) as loss,
        pim.hero
 from player_in_match pim
-inner join match on "matchId" = match.id
+inner join finished_match on "matchId" = match.id
 where pim."playerId" = '${steam_id}' and (match.type = ${MatchmakingMode.RANKED} or match.type = ${MatchmakingMode.UNRANKED})
 group by pim.hero, pim."playerId"
 `);

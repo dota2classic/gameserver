@@ -27,7 +27,7 @@ import { PlayerReportHandler } from 'gameserver/event-handler/player-report.hand
 import { PlayerReportedHandler } from 'gameserver/event-handler/player-reported.handler';
 import { LiveMatchUpdateHandler } from 'gameserver/event-handler/live-match-update.handler';
 import { StartFakeMatchHandler } from 'gameserver/event-handler/start-fake-match.handler';
-import { ServerStatusHandler } from 'gameserver/event-handler/sever-status.handler';
+import { ServerStatusHandler } from 'gameserver/event-handler/server-status.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,

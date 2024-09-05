@@ -85,7 +85,7 @@ export class PlayerController {
              p.mmr
       from version_player p
                left outer join player_in_match pim
-               inner join match m on pim."matchId" = m.id
+               inner join finished_match m on pim."matchId" = m.id
                           on p.steam_id = pim."playerId" and m.matchmaking_mode = ${MatchmakingMode.RANKED}
       
       group by p.steam_id, p.mmr

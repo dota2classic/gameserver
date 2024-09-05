@@ -1,13 +1,8 @@
 import { EventPattern } from '@nestjs/microservices';
-import { Body, Controller, Logger, Post } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { RoomReadyEvent } from 'gateway/events/room-ready.event';
-import { inspect } from 'util';
 import { Constructor, EventBus } from '@nestjs/cqrs';
-import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import {
-  GameServerStartedEvent,
-  GameServerNotStartedEvent,
-} from 'gateway/events/game-server-started.event';
+import { GameServerNotStartedEvent, GameServerStartedEvent } from 'gateway/events/game-server-started.event';
 import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
 import { GameSessionUpdatedEvent } from 'gameserver/event/game-session-updated.event';
 import { GameServerDiscoveredEvent } from 'gateway/events/game-server-discovered.event';
@@ -15,12 +10,12 @@ import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
 import { PlayerBanHammeredEvent } from 'gateway/events/bans/player-ban-hammered.event';
 import { ServerSessionSyncEvent } from 'gateway/events/gs/server-session-sync.event';
 import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
-import { RoomNotReadyEvent } from 'gateway/events/room-not-ready.event';
 import { PlayerDeclinedGameEvent } from 'gateway/events/mm/player-declined-game.event';
 import { isDev } from 'env';
 import { TournamentGameReadyEvent } from 'gateway/events/tournament/tournament-game-ready.event';
 import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event';
 import { StartFakeMatchEvent } from 'gateway/events/start-fake-match.event';
+import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
 
 export enum Dota_GameState {
   DOTA_GAMERULES_STATE_INIT = 0,
@@ -123,5 +118,10 @@ export class CoreController {
   @EventPattern(StartFakeMatchEvent.name)
   async StartFakeMatchEvent(data: StartFakeMatchEvent) {
     this.event(StartFakeMatchEvent, data);
+  }
+
+  @EventPattern(ServerStatusEvent.name)
+  async ServerStatusEvent(data: ServerStatusEvent) {
+    this.event(ServerStatusEvent, data);
   }
 }
