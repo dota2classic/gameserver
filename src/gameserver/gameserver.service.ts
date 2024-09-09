@@ -7,6 +7,8 @@ import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
+import FinishedMatch from 'gameserver/entity/finished-match';
+import { ItemMap } from 'util/items';
 
 @Injectable()
 export class GameServerService {
@@ -17,14 +19,12 @@ export class GameServerService {
     private readonly gameSeasonRepository: Repository<GameSeason>,
     @InjectRepository(PlayerInMatch)
     private readonly playerInMatchRepository: Repository<PlayerInMatch>,
-    // @InjectRepository(Match)
-    // private readonly matchRepository: Repository<Match>,
-    // @InjectRepository(FinishedMatch)
-    // private readonly finishedMatchRepository: Repository<FinishedMatch>,
+    @InjectRepository(FinishedMatch)
+    private readonly finishedMatchRepository: Repository<FinishedMatch>,
   ) {
-
-
     // this.migrateShit();
+
+    // this.migrateItems();
   }
 
   // public async migrateShit() {
@@ -129,5 +129,99 @@ export class GameServerService {
       .andWhere('m.matchmaking_mode = :mode', { mode })
       .andWhere('m.timestamp > :season', { season: season.start_timestamp })
       .getCount();
+  }
+
+  public async migratePlayerInMatch() {}
+
+  // public async scrapD2com() {
+  //
+  //
+  //   for (let i = 0; i < 1; i++) {
+  //     const url = `https://dota2classic.com/API/Match/List?page=0`;
+  //     const d: any = await fetch(url).then(it => it.json());
+  //     await Promise.all(
+  //       d.Matches.map(async match => {
+  //         console.log(match);
+  //         const fm = new FinishedMatch(
+  //           match.MatchHistory.match_id,
+  //           match.MatchHistory.winner ? DotaTeam.RADIANT : DotaTeam.DIRE,
+  //           match.MatchHistory.endtime,
+  //           match.MatchHistory.game_mode_id,
+  //           match.MatchHistory.game_mode_id,
+  //           match.MatchHistory.duration,
+  //           'dota2classic.com',
+  //         );
+  //
+  //         const item = id => items.find(it => it.id === id).name;
+  //
+  //         // @ts-ignore
+  //         fm.players = [
+  //           ...match.Teams.RadiantPlayers,
+  //           ...match.Teams.DirePlayers,
+  //         ].map((raw, index) => {
+  //           const d: Partial<PlayerInMatch> = {
+  //             playerId: (
+  //               BigInt(raw.steam64_id) - BigInt('76561197960265728')
+  //             ).toString(),
+  //             team: raw.team ? DotaTeam.DIRE : DotaTeam.RADIANT,
+  //             kills: raw.kills,
+  //             deaths: raw.deaths,
+  //             assists: raw.assists,
+  //             level: raw.level,
+  //             hero: heromap.find(it => it.id === raw.hero_id).name, // todo: translate via id
+  //             last_hits: raw.last_hits,
+  //             denies: raw.denies,
+  //             gpm: raw.gpm,
+  //             xpm: raw.xpm,
+  //             items: [
+  //               item(raw.item1),
+  //               item(raw.item2),
+  //               item(raw.item3),
+  //               item(raw.item4),
+  //               item(raw.item5),
+  //               item(raw.item6),
+  //             ].join(','),
+  //           };
+  //
+  //           return d;
+  //         });
+  //
+  //         const f = await fs.promises.writeFile(
+  //           `matches/${match.MatchHistory.match_id}.json`,
+  //           JSON.stringify(fm),
+  //         );
+  //       }),
+  //     );
+  //   }
+  // }
+  //
+  public async migrateItems() {
+    const players = await this.playerInMatchRepository.find();
+    const chunkSize = 512;
+
+    const chunks = Math.ceil(players.length / chunkSize);
+
+    for (let i = 0; i < chunks; i++) {
+      const slice = players.slice(i * chunkSize, (i + 1) * chunkSize);
+
+      slice.forEach(it => {
+        const [item0, item1, item2, item3, item4, item5] = it.items
+          .split(',')
+          .map(
+            itemDeprecated =>
+              ItemMap.find(it => itemDeprecated.includes(it.name)).id,
+          );
+
+        it.item0 = item0;
+        it.item1 = item1;
+        it.item2 = item2;
+        it.item3 = item3;
+        it.item4 = item4;
+        it.item5 = item5;
+      });
+
+      await this.playerInMatchRepository.save(slice);
+      console.log(`Chunk ${i} of ${chunks} complete`)
+    }
   }
 }

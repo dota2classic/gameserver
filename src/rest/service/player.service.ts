@@ -103,12 +103,12 @@ select pim."playerId",
        CAST(count(*) as INT) as games,
        avg(pim.last_hits) as last_hits,
        avg(pim.denies) as denies,
-       sum(case (pim.team = (case match.radiant_win when true then 2 else 3 end)) when true then 1 else 0 end) as wins,
-       sum(case (pim.team = (case match.radiant_win when true then 2 else 3 end)) when true then 0 else 1 end) as loss,
+       CAST(sum((pim.team = match.winner)::int) as INT) as wins,
+       CAST(sum((pim.team != match.winner)::int) as INT) as loss,
        pim.hero
 from player_in_match pim
-inner join finished_match on "matchId" = match.id
-where pim."playerId" = '${steam_id}' and (match.type = ${MatchmakingMode.RANKED} or match.type = ${MatchmakingMode.UNRANKED})
+inner join finished_match match on "matchId" = match.id
+where pim."playerId" = '${steam_id}' and (match.matchmaking_mode = ${MatchmakingMode.RANKED} or match.matchmaking_mode = ${MatchmakingMode.UNRANKED})
 group by pim.hero, pim."playerId"
 `);
   }
@@ -117,7 +117,7 @@ group by pim.hero, pim."playerId"
   async winrateLastRankedGames(steam_id: string): Promise<number> {
     const some: { is_win: boolean }[] = await this.playerInMatchRepository
       .query(`
-    select (case when m.radiant_win then 2 else 3 end) = pims.team as is_win
+    select m.winner = pims.team as is_win
 from finished_match m inner join player_in_match pims on m.id = pims."matchId"
 where pims."playerId" = '${steam_id}' and m.matchmaking_mode = ${MatchmakingMode.RANKED}
 order by m.timestamp DESC
@@ -171,7 +171,7 @@ LIMIT 20;
 select count(*) as wins
 from player_in_match pim
          inner join finished_match m on pim."matchId" = m.id
-where m.matchmaking_mode = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and m.radiant_win = case pim.team when 2 then true else false end`)
+where m.matchmaking_mode = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and m.winner = pim.team`)
     )[0].wins;
 
     const loss = (
@@ -179,7 +179,7 @@ where m.matchmaking_mode = ${MatchmakingMode.RANKED} and pim."playerId" = '${ste
 select count(*) as wins
 from player_in_match pim
          inner join finished_match m on pim."matchId" = m.id
-where m.matchmaking_mode = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and m.radiant_win != case pim.team when 2 then true else false end`)
+where m.matchmaking_mode = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and m.winner != pim.team`)
     )[0].wins;
 
     return {

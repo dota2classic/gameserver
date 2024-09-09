@@ -8,6 +8,7 @@ import { GameSessionFinishedEvent } from 'gateway/events/game-session-finished.e
 import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
 import { MatchRecordedEvent } from 'gameserver/event/match-recorded.event';
 import FinishedMatch from 'gameserver/entity/finished-match';
+import { ItemMap } from 'util/items';
 
 @EventsHandler(GameResultsEvent)
 export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
@@ -66,7 +67,21 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
 
       pim.abandoned = t.abandoned;
 
-      pim.items = t.items.join(',');
+
+      const [item0, item1, item2, item3, item4, item5] = t.items
+        .map(
+          itemDeprecated =>
+            ItemMap.find(it => itemDeprecated.includes(it.name)).id,
+        );
+
+      pim.item0 = item0;
+      pim.item1 = item1;
+      pim.item2 = item2;
+      pim.item3 = item3;
+      pim.item4 = item4;
+      pim.item5 = item5;
+
+
       pim.level = t.level;
       pim.playerId = t.steam_id;
       pim.team = t.team;

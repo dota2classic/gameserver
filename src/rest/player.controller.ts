@@ -114,7 +114,7 @@ export class PlayerController {
     @Param('version') version: Dota2Version,
     @Param('id') steam_id: string,
   ): Promise<HeroStatsDto[]> {
-    await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
+    // await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
 
     return await this.playerService.heroStats(version, steam_id);
   }

@@ -28,7 +28,12 @@ export class Mapper {
     gpm: it.gpm,
     xpm: it.xpm,
 
-    items: it.items.split(','),
+    item0: it.item0,
+    item1: it.item1,
+    item2: it.item2,
+    item3: it.item3,
+    item4: it.item4,
+    item5: it.item5,
 
     abandoned: it.abandoned,
   });

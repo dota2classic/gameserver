@@ -76,8 +76,6 @@ async function bootstrap() {
   });
 
   await wait(500);
-
-  // todo uncomment
   ebus.publish(new DiscoveryRequestedEvent(Math.random()));
 
   // ebus.publish(construct(GameResultsEvent, {

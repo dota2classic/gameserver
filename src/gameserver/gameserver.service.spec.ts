@@ -95,7 +95,6 @@ describe('GameserverService', () => {
       const pim = new PlayerInMatch();
       pim.match = match;
       pim.playerId = testSubject.value;
-      pim.items = '';
       pim.abandoned = false;
       pim.denies = 0;
       pim.last_hits = 0;

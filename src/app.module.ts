@@ -49,11 +49,10 @@ export function qCache<T, B>() {
     ClientsModule.register([
       {
         name: 'QueryCore',
-        // @ts-ignore
         transport: Transport.REDIS,
         options: {
           host: REDIS_HOST(),
-          port: REDIS_PORT(),
+          port: parseInt(REDIS_PORT() as string),
           retryAttempts: Infinity,
           password: REDIS_PASSWORD(),
           retryDelay: 5000,

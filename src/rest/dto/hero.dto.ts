@@ -1,5 +1,5 @@
 export class HeroStatsDto {
-  playerSteamId: string;
+  playerId: string;
   gpm: number;
   xpm: number;
   kda: number;

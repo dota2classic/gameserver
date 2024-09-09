@@ -34,9 +34,6 @@ export default class PlayerInMatch {
   @Column('int')
   level!: number;
 
-  @Column('varchar')
-  items!: string;
-
   @Column('int', { default: 0 })
   gpm: number = 0;
 
@@ -54,6 +51,30 @@ export default class PlayerInMatch {
 
   @Column('varchar')
   hero!: string;
+
+  /**
+   * @deprecated
+   */
+  @Column('varchar')
+  items!: string;
+
+  @Column('smallint', { default: 0 })
+  item0: number;
+
+  @Column('smallint', { default: 0 })
+  item1: number;
+
+  @Column('smallint', { default: 0 })
+  item2: number;
+
+  @Column('smallint', { default: 0 })
+  item3: number;
+
+  @Column('smallint', { default: 0 })
+  item4: number;
+
+  @Column('smallint', { default: 0 })
+  item5: number;
 }
 
 /**
