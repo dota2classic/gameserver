@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { MatchDto, MatchPageDto } from 'rest/dto/match.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -8,6 +8,8 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { MetaService } from 'rest/service/meta.service';
 import FinishedMatch from 'gameserver/entity/finished-match';
+import { NullableIntPipe } from 'util/pipes';
+
 
 @Controller('match')
 @ApiTags('match')
@@ -34,8 +36,8 @@ export class MatchController {
   })
   @Get('/by_hero')
   async heroMatches(
-    @Query('page') page: number,
-    @Query('per_page') perPage: number = 25,
+    @Query('page', NullableIntPipe) page: number,
+    @Query('per_page', NullableIntPipe) perPage: number = 25,
     @Query('hero') hero: string,
   ): Promise<MatchPageDto> {
     const raw = await this.metaService.heroMatches(page, perPage, hero);
@@ -60,11 +62,10 @@ export class MatchController {
   })
   @Get('/all')
   async matches(
-    @Query('page') page: number,
-    @Query('per_page') perPage: number = 25,
+    @Query('page', NullableIntPipe) page: number,
+    @Query('per_page', NullableIntPipe) perPage: number = 25,
     @Query('mode') mode?: MatchmakingMode,
   ): Promise<MatchPageDto> {
-    console.log(page, perPage, mode, typeof page, typeof perPage, typeof mode)
     const slice = await this.matchRepository.find({
       where: mode !== undefined ? { matchmaking_mode: mode } : {},
       take: perPage,
@@ -87,7 +88,7 @@ export class MatchController {
   }
 
   @Get('/:id')
-  async getMatch(@Param('id') id: number): Promise<MatchDto> {
+  async getMatch(@Param('id', NullableIntPipe) id: number): Promise<MatchDto> {
     const match = await this.matchRepository.findOne({
       where: { id },
       relations: ['players'],
@@ -115,9 +116,9 @@ export class MatchController {
   @Get('/player/:id')
   async playerMatches(
     @Param('id') steam_id: string,
-    @Query('page', ParseIntPipe) page: number,
-    @Query('per_page') perPage: number = 25,
-    @Query('mode') mode?: MatchmakingMode,
+    @Query('page', NullableIntPipe) page: number,
+    @Query('per_page', NullableIntPipe) perPage: number = 25,
+    @Query('mode', NullableIntPipe) mode?: MatchmakingMode,
     @Query('hero') hero?: string,
   ): Promise<MatchPageDto> {
     let query = this.playerInMatchRepository
