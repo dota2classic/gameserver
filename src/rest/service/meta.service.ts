@@ -60,8 +60,8 @@ export class MetaService {
       .where('m.matchmaking_mode in (:...modes)', {
         modes: [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],
       })
-      .addSelect('cast(sum(isWin(pim, m)) as integer)', 'wins')
-      .addSelect('cast(sum(isLose(pim, m)) as integer)', 'losses')
+      .addSelect('cast(sum((pim.team = m.winner)::int) as integer)', 'wins')
+      .addSelect('cast(sum((pim.team != m.winner)::int) as integer)', 'losses')
       .addSelect('cast(count(pim) as integer)', 'games')
       .addSelect('cast(avg(pim.kills) as float)', 'kills')
       .addSelect('cast(avg(pim.deaths) as float)', 'deaths')
