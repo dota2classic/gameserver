@@ -171,7 +171,7 @@ LIMIT 20;
 select count(*) as wins
 from player_in_match pim
          inner join finished_match m on pim."matchId" = m.id
-where m.matchmaking_mode = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and m.winner = pim.team`)
+where m.matchmaking_mode = ${MatchmakingMode.RANKED} or m.matchmaking_mode = ${MatchmakingMode.UNRANKED} and pim."playerId" = '${steam_id}' and m.winner = pim.team`)
     )[0].wins;
 
     const loss = (
@@ -179,7 +179,7 @@ where m.matchmaking_mode = ${MatchmakingMode.RANKED} and pim."playerId" = '${ste
 select count(*) as wins
 from player_in_match pim
          inner join finished_match m on pim."matchId" = m.id
-where m.matchmaking_mode = ${MatchmakingMode.RANKED} and pim."playerId" = '${steam_id}' and m.winner != pim.team`)
+where m.matchmaking_mode = ${MatchmakingMode.RANKED} or m.matchmaking_mode = ${MatchmakingMode.UNRANKED} and pim."playerId" = '${steam_id}' and m.winner != pim.team`)
     )[0].wins;
 
     return {

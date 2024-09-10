@@ -25,6 +25,8 @@ export class Mapper {
     last_hits: it.last_hits,
     denies: it.denies,
 
+    gold: it.gold,
+
     gpm: it.gpm,
     xpm: it.xpm,
 
@@ -63,7 +65,9 @@ export class Mapper {
     url: it.url,
     matchId: it.matchId,
     info: {
-      ...it.matchInfoJson,
+      mode: it.matchInfoJson.mode,
+      version: it.matchInfoJson.version,
+      roomId: it.matchInfoJson.roomId,
       averageMMR: 0,
       radiant: it.matchInfoJson.players.filter(it => it.team == DotaTeam.RADIANT).map(t => t.playerId.value),
       dire: it.matchInfoJson.players.filter(it => it.team == DotaTeam.DIRE).map(t => t.playerId.value),

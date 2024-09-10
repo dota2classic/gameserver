@@ -9,6 +9,41 @@ import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import FinishedMatch from 'gameserver/entity/finished-match';
 import { ItemMap } from 'util/items';
+import * as fs from 'fs';
+import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
+
+export interface MatchD2Com {
+  players: Player[];
+  timestamp: number;
+  duration: number;
+  server: string;
+  winner: number;
+  matchmaking_mode: number;
+}
+
+export interface Player {
+  steam64: string;
+  playerId: string;
+  kills: number;
+  deaths: number;
+  assists: number;
+  level: number;
+  last_hits: number;
+  denies: number;
+  gpm: number;
+  xpm: number;
+  hd: number;
+  td: number;
+  gold: number;
+  hero: string;
+  team: number;
+  item0: number;
+  item1: number;
+  item2: number;
+  item3: number;
+  item4: number;
+  item5: number;
+}
 
 @Injectable()
 export class GameServerService {
@@ -20,11 +55,13 @@ export class GameServerService {
     @InjectRepository(PlayerInMatch)
     private readonly playerInMatchRepository: Repository<PlayerInMatch>,
     @InjectRepository(FinishedMatch)
-    private readonly finishedMatchRepository: Repository<FinishedMatch>,
-  ) {
+    private readonly finishedMatchRepository: Repository<FinishedMatch>, // @InjectRepository(MatchEntity)
+  ) // private readonly matchEntityRepository: Repository<MatchEntity>,
+  {
     // this.migrateShit();
 
     // this.migrateItems();
+    // this.migrated2com();
   }
 
   // public async migrateShit() {
@@ -221,7 +258,89 @@ export class GameServerService {
       });
 
       await this.playerInMatchRepository.save(slice);
-      console.log(`Chunk ${i} of ${chunks} complete`)
+      console.log(`Chunk ${i} of ${chunks} complete`);
     }
+  }
+
+  public async migrated2com() {
+    const matches = await fs.promises.readdir('matches');
+
+    const chunkSize = 64;
+    const chunks = Math.ceil(matches.length / chunkSize);
+    for(let i = 0; i < chunks; i++){
+      const slice = matches.slice(i * chunkSize, (i + 1) * chunkSize).map(it => Number(it.split('.')[0]));;
+      const tasks = Promise.all(slice.map(it => this.migrateMatch(it)));
+      await tasks;
+
+      console.log(`Migrated chunk ${i} out of ${chunks} chunks`)
+    }
+  }
+
+  private async migrateMatch(id: number) {
+    const magicD2ComConstant = 1000000;
+
+    const realId = magicD2ComConstant + id;
+
+    const j: MatchD2Com = JSON.parse(
+      (await fs.promises.readFile(`./matches/${id}.json`)).toString(),
+    );
+
+    let fm = await this.finishedMatchRepository.findOne({
+      where: { externalMatchId: id, id: realId },
+    });
+    if (fm) {
+
+      // return;
+
+      const pims = await this.playerInMatchRepository.find({
+         where: {match: fm}
+      });
+
+      await this.playerInMatchRepository.remove(pims)
+
+      await this.finishedMatchRepository.remove(fm);
+      console.log(`External match ${id} already exists`);
+    }
+
+    fm = new FinishedMatch(
+      realId,
+      j.winner,
+      new Date(j.timestamp).toString(),
+      Dota_GameMode.ALLPICK,
+      j.matchmaking_mode as MatchmakingMode,
+      j.duration,
+      j.server,
+    );
+    fm.externalMatchId = id;
+    fm = await this.finishedMatchRepository.save(fm);
+
+    let pims: PlayerInMatch[] = j.players.map(it => {
+      const pim = new PlayerInMatch();
+      pim.playerId = it.playerId;
+      pim.team = it.team;
+      pim.kills = it.kills;
+      pim.deaths = it.deaths;
+      pim.assists = it.assists;
+      pim.level = it.level;
+      pim.gpm = it.gpm;
+      pim.xpm = it.xpm;
+      pim.abandoned = false;
+      pim.last_hits = it.last_hits;
+      pim.denies = it.denies;
+      pim.hero = it.hero;
+      pim.items = '';
+      pim.item0 = it.item0;
+      pim.item1 = it.item1;
+      pim.item2 = it.item2;
+      pim.item3 = it.item3;
+      pim.item4 = it.item4;
+      pim.item5 = it.item5;
+      pim.match = fm;
+      pim.gold = it.gold;
+      return pim;
+    });
+
+    pims = await this.playerInMatchRepository.save(pims);
+    // console.log(pims);
   }
 }

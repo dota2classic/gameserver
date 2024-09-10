@@ -12,6 +12,7 @@ export default class FinishedMatch {
 
   @PrimaryColumn()
   id!: number;
+
   @Column('smallint')
   game_mode: Dota_GameMode;
 
@@ -26,6 +27,9 @@ export default class FinishedMatch {
   @Column('int', { default: 0 })
   duration!: number;
 
+  @Column('int', { nullable: true })
+  externalMatchId?: number;
+
   @OneToMany(
     type => PlayerInMatch,
     pim => pim.match,
@@ -33,7 +37,7 @@ export default class FinishedMatch {
   )
   players!: PlayerInMatch[];
 
-  constructor(id: number, winner: number, timestamp: string, game_mode: Dota_GameMode, matchmaking_mode: MatchmakingMode, duration: number, server: string) {
+  constructor(id: number | undefined, winner: number, timestamp: string, game_mode: Dota_GameMode, matchmaking_mode: MatchmakingMode, duration: number, server: string) {
     this.id = id;
     this.winner = winner;
     this.timestamp = timestamp;

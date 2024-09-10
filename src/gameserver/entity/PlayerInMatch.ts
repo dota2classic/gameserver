@@ -49,6 +49,10 @@ export default class PlayerInMatch {
   @Column('int', { default: 0 })
   denies: number = 0;
 
+
+  @Column('int', { default: 0 })
+  gold: number = 0;
+
   @Column('varchar')
   hero!: string;
 
@@ -75,6 +79,29 @@ export default class PlayerInMatch {
 
   @Column('smallint', { default: 0 })
   item5: number;
+
+
+  // constructor(playerId: string, team: number, kills: number, deaths: number, assists: number, level: number, gpm: number, xpm: number, abandoned: boolean, last_hits: number, denies: number, hero: string, items: string, item0: number, item1: number, item2: number, item3: number, item4: number, item5: number) {
+  //   this.playerId = playerId;
+  //   this.team = team;
+  //   this.kills = kills;
+  //   this.deaths = deaths;
+  //   this.assists = assists;
+  //   this.level = level;
+  //   this.gpm = gpm;
+  //   this.xpm = xpm;
+  //   this.abandoned = abandoned;
+  //   this.last_hits = last_hits;
+  //   this.denies = denies;
+  //   this.hero = hero;
+  //   this.items = items;
+  //   this.item0 = item0;
+  //   this.item1 = item1;
+  //   this.item2 = item2;
+  //   this.item3 = item3;
+  //   this.item4 = item4;
+  //   this.item5 = item5;
+  // }
 }
 
 /**

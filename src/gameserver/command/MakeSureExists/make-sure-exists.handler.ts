@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { Repository } from 'typeorm';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
+import { inspect } from 'util';
 
 @CommandHandler(MakeSureExistsCommand)
 export class MakeSureExistsHandler
@@ -17,15 +18,16 @@ export class MakeSureExistsHandler
   ) {}
 
   async execute(command: MakeSureExistsCommand) {
-    // noinspection UnnecessaryLocalVariableJS
-    const steamId = command.id.value;
-    await this.makeSureExists(steamId, Dota2Version.Dota_681);
+    try {
+      await this.makeSureExists(command.id.value, Dota2Version.Dota_681);
+    }catch (e){
+      this.logger.error(`Error creating new user? ${command.id.value} ${inspect(command)}`)
+    }
   }
 
   private async makeSureExists(steam_id: string, version: Dota2Version) {
     const p = await this.versionPlayerRepository.findOne({
-      where: { steam_id,
-        version: Dota2Version.Dota_681,}
+      where: { steam_id, version: Dota2Version.Dota_681 },
     });
     if (!p) {
       const vp = new VersionPlayer();

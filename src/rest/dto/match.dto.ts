@@ -30,6 +30,8 @@ export class PlayerInMatchDto {
   last_hits: number;
   denies: number;
 
+  gold: number;
+
   // items: string[];
 
   item0: number;
