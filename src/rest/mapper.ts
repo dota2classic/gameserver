@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MatchDto, PlayerInMatchDto } from 'rest/dto/match.dto';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
-import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
-import { LeaderboardEntryDto } from 'rest/dto/player.dto';
 import { GameServerModel } from 'gameserver/model/game-server.model';
 import { GameServerDto, GameSessionDto } from 'rest/dto/info.dto';
 import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
@@ -51,10 +49,10 @@ export class Mapper {
     timestamp: match.timestamp,
   });
 
-  public mapLeaderboardEntry = (it: VersionPlayer): LeaderboardEntryDto => ({
-    steam_id: it.steam_id,
-    mmr: it.mmr,
-  });
+  // public mapLeaderboardEntry = (it: VersionPlayer): LeaderboardEntryDto => ({
+  //   steam_id: it.steam_id,
+  //   mmr: it.mmr,
+  // });
 
   public mapGameServer = (it: GameServerModel): GameServerDto => ({
     url: it.url,

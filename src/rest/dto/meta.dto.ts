@@ -5,5 +5,17 @@ export class HeroSummaryDto {
   kills: number;
   deaths: number;
   assists: number;
+  gpm: number;
+  xpm: number;
+  last_hits: number;
+  denies: number;
   hero: string;
+}
+
+
+export class HeroItemDto {
+  item: number;
+  game_count: number;
+  wins: number;
+  winrate: number;
 }

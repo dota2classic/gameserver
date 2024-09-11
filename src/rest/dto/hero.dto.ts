@@ -19,3 +19,12 @@ export class PlayerGeneralStatsDto {
   wins: number;
   loss: number;
 }
+
+
+export class PlayerHeroPerformance {
+  steam_id: string;
+  games: number;
+  wins: number;
+  kda: number;
+  score: number;
+}

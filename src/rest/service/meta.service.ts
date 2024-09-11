@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
-import { HeroSummaryDto } from 'rest/dto/meta.dto';
+import { Connection, In, Repository } from 'typeorm';
+import { HeroItemDto, HeroSummaryDto } from 'rest/dto/meta.dto';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Page } from 'rest/dto/page';
 import { cached } from 'util/method-cache';
@@ -15,6 +15,7 @@ export class MetaService {
     private readonly playerInMatchRepository: Repository<PlayerInMatch>,
     @InjectRepository(FinishedMatch)
     private readonly matchRepository: Repository<FinishedMatch>,
+    private readonly connection: Connection
   ) {}
 
   @cached(60 * 24, 'meta_heroMatches')
@@ -66,7 +67,57 @@ export class MetaService {
       .addSelect('cast(avg(pim.kills) as float)', 'kills')
       .addSelect('cast(avg(pim.deaths) as float)', 'deaths')
       .addSelect('cast(avg(pim.assists) as float)', 'assists')
+      .addSelect('cast(avg(pim.last_hits) as float)', 'last_hits')
+      .addSelect('cast(avg(pim.denies) as float)', 'denies')
+      .addSelect('cast(avg(pim.gpm) as float)', 'gpm')
+      .addSelect('cast(avg(pim.xpm) as float)', 'xpm')
       .addGroupBy('pim.hero')
       .getRawMany();
+  }
+
+  /**
+   * This is a heavy method that should be cached
+   * @param hero
+   */
+  public async heroMeta(hero: string) {
+    // This query finds all unique items bought on hero, games that played on this hero, and then counts winrates
+    const query = `with items as (select pim.item0
+               from player_in_match pim
+               union
+               select pim.item1
+               from player_in_match pim
+               union
+               select pim.item2
+               from player_in_match pim
+               union
+               select pim.item3
+               from player_in_match pim
+               union
+               select pim.item4
+               from player_in_match pim
+               union
+               select pim.item5
+               from player_in_match pim),
+     games as (select pim.item0,
+                      pim.item1,
+                      pim.item2,
+                      pim.item3,
+                      pim.item4,
+                      pim.item5,
+                      (pim.team = m.winner)::int as win
+               from player_in_match pim
+                        inner join finished_match m on m.id = pim."matchId"
+               where pim.hero = $1),
+     winrates as (
+         select i.item0 as item, sum(g.win) as wins , avg(g.win) as winrate, count(g) as game_count
+         from items i,
+              games g
+         where i.item0 in (g.item0, g.item1, g.item2, g.item3, g.item4, g.item5)
+         group by i.item0) select w.item, w.wins::int, w.game_count::int, w.winrate::float from winrates w where w.game_count > 10 and w.item != 0 
+order by w.game_count desc`
+
+
+    return this.connection.query<HeroItemDto[]>(query, [hero]);
+
   }
 }

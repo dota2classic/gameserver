@@ -14,7 +14,7 @@ import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-su
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { GameServerService } from 'gameserver/gameserver.service';
 import { PlayerService } from 'rest/service/player.service';
-import { HeroStatsDto, PlayerGeneralStatsDto } from 'rest/dto/hero.dto';
+import { HeroStatsDto } from 'rest/dto/hero.dto';
 import { UNRANKED_GAMES_REQUIRED_FOR_RANKED } from 'gateway/shared-types/timings';
 import { PlayerBan } from 'gameserver/entity/PlayerBan';
 import { BanStatus } from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
@@ -47,30 +47,21 @@ export class PlayerController {
   ): Promise<PlayerSummaryDto> {
     await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
 
-    const p = await this.versionPlayerRepository.findOne({
-      where: { steam_id, version: Dota2Version.Dota_681 },
-    });
 
-    const rankedGamesPlayed = await this.playerService.gamesPlayed(
-      steam_id,
-      MatchmakingMode.RANKED,
-    );
+    const summary = await this.playerService.fullSummary(steam_id);
 
     const rank = await this.playerService.getRank(version, steam_id);
 
     return {
-      mmr: p.mmr,
-      steam_id: p.steam_id,
-      rank: rank + 1,
-      newbieUnrankedGamesLeft:
-        rankedGamesPlayed > 0
-          ? 0
-          : Math.max(
-              UNRANKED_GAMES_REQUIRED_FOR_RANKED -
-                (await this.playerService.getNonRankedGamesPlayed(steam_id)),
-              0,
-            ),
-    };
+      mmr: summary.mmr,
+      steam_id: summary.steam_id,
+      games_played: summary.games_played,
+      games_played_all: summary.games_played_all,
+      wins: summary.wins,
+      loss: summary.loss,
+      rank,
+      newbieUnrankedGamesLeft: summary.ranked_games > 0 ? 0 : Math.max(0, UNRANKED_GAMES_REQUIRED_FOR_RANKED - summary.unranked_games)
+    }
   }
 
   @Get('/leaderboard/:version')
@@ -80,32 +71,24 @@ export class PlayerController {
   ): Promise<LeaderboardEntryDto[]> {
     const calibrationGames = 1;
 
-    const leaderboard = await this.versionPlayerRepository.query(`
-      select p.steam_id,
-             p.mmr
-      from version_player p
-               left outer join player_in_match pim
-               inner join finished_match m on pim."matchId" = m.id
-                          on p.steam_id = pim."playerId" and m.matchmaking_mode = ${MatchmakingMode.RANKED}
-      
-      group by p.steam_id, p.mmr
-      having count(pim) >= ${calibrationGames}
-      order by p.mmr DESC
-      limit 1000;
-`);
-
-    return leaderboard.map(this.mapper.mapLeaderboardEntry);
-  }
-
-  @CacheTTL(120)
-  @Get(`/summary/general/:version/:id`)
-  async playerGeneralSummary(
-    @Param('version') version: Dota2Version,
-    @Param('id') steam_id: string,
-  ): Promise<PlayerGeneralStatsDto> {
-    await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
-
-    return await this.playerService.generalStats(steam_id);
+    // return leaderboard.map(this.mapper.mapLeaderboardEntry);
+    return await this.versionPlayerRepository
+      .query(`select pim."playerId"                  as steam_id,
+       count(pim)                      as games,
+       sum((pim.team = m.winner)::int) as wins,
+       coalesce(vp.mmr, ${VersionPlayer.STARTING_MMR})::int            as mmr,
+       avg(pim.kills)::float           as kills,
+       avg(pim.deaths)::float          as deaths,
+       avg(pim.assists)::float         as assists,
+       sum(m.duration)::int            as play_time
+from player_in_match pim
+         left outer join finished_match m on m.id = pim."matchId"
+         left outer join version_player vp on vp.steam_id = pim."playerId"
+where pim."playerId"::decimal > 10
+  and m.matchmaking_mode in (${MatchmakingMode.UNRANKED}, ${MatchmakingMode.RANKED})
+group by pim."playerId", mmr
+order by mmr DESC, games desc
+limit 1000`);
   }
 
   @CacheTTL(120)
@@ -114,9 +97,14 @@ export class PlayerController {
     @Param('version') version: Dota2Version,
     @Param('id') steam_id: string,
   ): Promise<HeroStatsDto[]> {
-    // await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
+    await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
 
     return await this.playerService.heroStats(version, steam_id);
+  }
+
+  @Get('/hero/:hero/players')
+  async getHeroPlayers(@Param('hero') hero: string) {
+    return this.playerService.getHeroPlayers(hero);
   }
 
   @Get(`/ban_info/:id`)
