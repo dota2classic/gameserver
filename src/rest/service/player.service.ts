@@ -28,6 +28,7 @@ export class PlayerService {
     steam_id: string,
   ): Promise<number> {
     // Only 681 as version player is deprecated model(same mmr for all)
+
     const p = await this.versionPlayerRepository.findOne({
       where: {
         steam_id,
@@ -35,21 +36,33 @@ export class PlayerService {
       },
     });
 
-    const rank = await this.versionPlayerRepository.query(`
-        with players as (select p.steam_id, p.mmr, count(pim) as games
-                 from version_player p
-                          left outer join player_in_match pim
-                          inner join finished_match m on pim."matchId" = m.id
-                                     on p.steam_id = pim."playerId" and
-                                        m.matchmaking_mode = ${MatchmakingMode.RANKED}
-                 group by p.steam_id, p.mmr)
-        select count(*)
-        from players p
-        where p.mmr > ${p.mmr}
-        and p.games > 0
-`);
+    const rank2 = await this.connection.query<{ count: number; pgames: number }[]>(`
+with players as (select p.steam_id, p.mmr, count(pim) as games
+             from version_player p
+                      left outer join player_in_match pim
+                      inner join finished_match m on pim."matchId" = m.id
+                                 on p.steam_id = pim."playerId" and
+                                    m.matchmaking_mode = $1
+             where m.timestamp > now() - '14 days' :: interval
+             group by p.steam_id, p.mmr),
+     played_games as (select count(*) as games
+                  from player_in_match p
+                           inner join finished_match m on m.id = p."matchId"
+                  where p."playerId" = $2
+                    and m.matchmaking_mode = $1
+                    and m.timestamp > now() - '14 days' :: interval)
+select count(p.steam_id)::int, pg.games::int as pgames
+from players p,
+     played_games pg
+where p.mmr > $3
+  and p.games > 0 group by pgames
+    `, [MatchmakingMode.RANKED, steam_id, p.mmr])
 
-    return parseInt(rank[0].count);
+    if(rank2.length === 0) return -1;
+    if(rank2[0].pgames === 0) return -1;
+
+
+    return rank2[0].count + 1;
   }
 
   @cached(100, 'gamesPlayed')

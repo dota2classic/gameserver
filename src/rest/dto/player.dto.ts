@@ -2,6 +2,8 @@ import { BanReason } from 'gateway/shared-types/ban';
 import { PlayerId } from 'gateway/shared-types/player-id';
 
 export class LeaderboardEntryDto {
+  rank: number | null;
+
   steam_id: string;
   mmr: number;
 

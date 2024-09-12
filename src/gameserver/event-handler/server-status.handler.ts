@@ -28,7 +28,7 @@ export class ServerStatusHandler implements IEventHandler<ServerStatusEvent> {
       existingSession.matchId = event.matchId;
       existingSession.matchInfoJson = event.session;
       await this.gameServerSessionModelRepository.save(existingSession);
-    } else {
+    } else if(existingSession) { // remove session if it exists
       await this.gameServerSessionModelRepository.remove(existingSession);
     }
   }
