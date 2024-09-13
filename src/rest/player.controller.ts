@@ -18,6 +18,7 @@ import { UNRANKED_GAMES_REQUIRED_FOR_RANKED } from 'gateway/shared-types/timings
 import { PlayerBan } from 'gameserver/entity/PlayerBan';
 import { BanStatus } from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
 import { PlayerReportEvent } from 'gameserver/event/player-report.event';
+import { LeaderboardView } from 'gameserver/model/leaderboard.view';
 
 @Controller('player')
 @ApiTags('player')
@@ -37,6 +38,8 @@ export class PlayerController {
     private readonly playerService: PlayerService,
     private readonly ebus: EventBus,
     private readonly connection: Connection,
+    @InjectRepository(LeaderboardView)
+    private readonly leaderboardViewRepository: Repository<LeaderboardView>,
   ) {}
 
   @CacheTTL(120)
@@ -47,18 +50,49 @@ export class PlayerController {
   ): Promise<PlayerSummaryDto> {
     await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
 
+    const lb = await this.leaderboardViewRepository.findOne({
+      where: { steam_id },
+    });
+    // if it exists in the view, we happy
+    if (lb) {
+      return {
+        rank: lb.rank,
+
+        steam_id: lb.steam_id,
+        mmr: lb.mmr,
+
+        games: lb.games,
+        wins: lb.wins,
+
+        kills: lb.kills,
+        deaths: lb.deaths,
+        assists: lb.assists,
+
+        play_time: lb.play_time,
+        newbieUnrankedGamesLeft:
+          lb.ranked_games > 0
+            ? 0
+            : Math.max(0, UNRANKED_GAMES_REQUIRED_FOR_RANKED - lb.games),
+      };
+    }
+
     const summary = await this.playerService.fullSummary(steam_id);
 
     const rank = await this.playerService.getRank(version, steam_id);
 
     return {
+      rank: rank,
       mmr: summary.mmr,
       steam_id: summary.steam_id,
-      games_played: summary.games_played,
-      games_played_all: summary.games_played_all,
+
+      games: summary.games,
       wins: summary.wins,
-      loss: summary.loss,
-      rank,
+
+      kills: summary.kills,
+      deaths: summary.deaths,
+      assists: summary.assists,
+      play_time: summary.play_time,
+
       newbieUnrankedGamesLeft:
         summary.ranked_games > 0
           ? 0
@@ -74,39 +108,9 @@ export class PlayerController {
   async leaderboard(
     @Param('version') version: Dota2Version,
   ): Promise<LeaderboardEntryDto[]> {
-    // return leaderboard.map(this.mapper.mapLeaderboardEntry);
-    return await this.connection
-      .query<LeaderboardEntryDto[]>(`with cte as (select plr."playerId"                                                                   as steam_id,
-                    count(m)                                                                         as games,
-                    sum((m.winner = plr.team)::int)                                                  as wins,
-                    sum((m.matchmaking_mode = 0 and m.timestamp > now() - '14 days'::interval)::int) as recent_ranked_games,
-                    coalesce(p.mmr, -1)                                                              as mmr,
-                    sum((m.matchmaking_mode = 0 and m.timestamp > now() - '14 days'::interval)::int) as score
-             from player_in_match plr
-                      left join version_player p on plr."playerId" = p.steam_id
-                      inner join finished_match m on plr."matchId" = m.id and m.matchmaking_mode in (0, 1)
-             group by plr."playerId", p.mmr)
-select p.steam_id,
-       p.wins::int,
-       p.games::int,
-       (case when p.mmr > 0 and p.recent_ranked_games > 0 then p.mmr else null end)::int as mmr,
-       avg(pim.kills)::float   as kills,
-       avg(pim.deaths)::float  as deaths,
-       avg(pim.assists)::float as assists,
-       sum(m.duration)::int    as play_time,
-       (case
-           when p.recent_ranked_games > 0
-               then row_number()
-                    over ( partition by
-                            p.recent_ranked_games >
-                            0 order by p.mmr desc
-                        )
-           end)::int                 as rank
-from cte p
-         inner join player_in_match pim on pim."playerId" = p.steam_id
-         inner join finished_match m on pim."matchId" = m.id and m.matchmaking_mode in (0, 1)
-group by p.steam_id, p.recent_ranked_games, p.mmr, p.games, p.wins
-order by rank, games desc limit  500`);
+    return this.leaderboardViewRepository.find({
+      take: 500,
+    });
   }
 
   @CacheTTL(120)

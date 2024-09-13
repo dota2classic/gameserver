@@ -81,24 +81,7 @@ export class MetaService {
    */
   public async heroMeta(hero: string) {
     // This query finds all unique items bought on hero, games that played on this hero, and then counts winrates
-    const query = `with items as (select pim.item0
-               from player_in_match pim
-               union
-               select pim.item1
-               from player_in_match pim
-               union
-               select pim.item2
-               from player_in_match pim
-               union
-               select pim.item3
-               from player_in_match pim
-               union
-               select pim.item4
-               from player_in_match pim
-               union
-               select pim.item5
-               from player_in_match pim),
-     games as (select pim.item0,
+    const query = `with games as (select pim.item0,
                       pim.item1,
                       pim.item2,
                       pim.item3,
@@ -109,11 +92,11 @@ export class MetaService {
                         inner join finished_match m on m.id = pim."matchId"
                where pim.hero = $1),
      winrates as (
-         select i.item0 as item, sum(g.win) as wins , avg(g.win) as winrate, count(g) as game_count
-         from items i,
+         select i.item_id as item, sum(g.win) as wins , avg(g.win) as winrate, count(g) as game_count
+         from item_view i,
               games g
-         where i.item0 in (g.item0, g.item1, g.item2, g.item3, g.item4, g.item5)
-         group by i.item0) select w.item, w.wins::int, w.game_count::int, w.winrate::float from winrates w where w.game_count > 10 and w.item != 0 
+         where i.item_id in (g.item0, g.item1, g.item2, g.item3, g.item4, g.item5)
+         group by i.item_id) select w.item, w.wins::int, w.game_count::int, w.winrate::float from winrates w where w.game_count > 10 and w.item != 0 
 order by w.game_count desc`
 
 

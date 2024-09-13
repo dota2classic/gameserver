@@ -17,16 +17,8 @@ export class LeaderboardEntryDto {
   play_time: number;
 }
 
-export class PlayerSummaryDto {
-  mmr: number;
-  steam_id: string;
-  rank: number;
+export class PlayerSummaryDto extends LeaderboardEntryDto {
   newbieUnrankedGamesLeft: number;
-
-  games_played: number;
-  games_played_all: number;
-  wins: number;
-  loss: number;
 }
 
 export class BanStatusDto {

@@ -13,6 +13,8 @@ import { PlayerReportStatus } from 'gameserver/model/player-report-status';
 import { PlayerReport } from 'gameserver/model/player-report';
 import { ReplayEntity } from 'gameserver/model/replay.entity';
 import FinishedMatch from 'gameserver/entity/finished-match';
+import { LeaderboardView } from 'gameserver/model/leaderboard.view';
+import { ItemView } from 'gameserver/model/item.view';
 
 export const Entities = [
   GameSeason,
@@ -33,7 +35,9 @@ export const Entities = [
   PlayerReportStatus,
   PlayerReport,
 
-  ReplayEntity
+  ReplayEntity,
+  LeaderboardView,
+  ItemView
 ];
 export const devDbConfig: any = {
   type: 'postgres',

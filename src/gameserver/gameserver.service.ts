@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { LessThanOrEqual, Repository } from 'typeorm';
@@ -8,11 +8,14 @@ import { PlayerId } from 'gateway/shared-types/player-id';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import FinishedMatch from 'gameserver/entity/finished-match';
-import { ItemMap } from 'util/items';
-import * as fs from 'fs';
+import { HeroMap, ItemMap } from 'util/items';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
+import * as cheerio from 'cheerio';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { LeaderboardView } from 'gameserver/model/leaderboard.view';
 
 export interface MatchD2Com {
+  id: number;
   players: Player[];
   timestamp: number;
   duration: number;
@@ -47,6 +50,8 @@ export interface Player {
 
 @Injectable()
 export class GameServerService {
+  private readonly logger = new Logger(GameServerService.name);
+
   constructor(
     @InjectRepository(VersionPlayer)
     private readonly versionPlayerRepository: Repository<VersionPlayer>,
@@ -55,13 +60,55 @@ export class GameServerService {
     @InjectRepository(PlayerInMatch)
     private readonly playerInMatchRepository: Repository<PlayerInMatch>,
     @InjectRepository(FinishedMatch)
-    private readonly finishedMatchRepository: Repository<FinishedMatch>, // @InjectRepository(MatchEntity)
-  ) // private readonly matchEntityRepository: Repository<MatchEntity>,
-  {
+    private readonly finishedMatchRepository: Repository<FinishedMatch>,
+    @InjectRepository(LeaderboardView)
+    private readonly leaderboardViewRepository: Repository<LeaderboardView>,
+  ) {
     // this.migrateShit();
-
     // this.migrateItems();
     // this.migrated2com();
+    // this.migratePendoSite();
+    this.refreshLeaderboardView();
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async refreshLeaderboardView() {
+    await this.leaderboardViewRepository.query(
+      `refresh materialized view leaderboard_view`,
+    );
+    this.logger.log('Refreshed leaderboard_view');
+    await this.leaderboardViewRepository.query(
+      `refresh materialized view item_view`,
+    );
+    this.logger.log('Refreshed item_view');
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async migratePendoSite() {
+    // while we get new matches from api, we do
+    // when we receive existing match, we break
+    // 100 pages at a time
+    for (let page = 0; page < 100; page++) {
+      const { Matches } = await fetch(
+        `https://dota2classic.com/API/Match/List?page=${page}`,
+      ).then(it => it.json());
+      const matchIds = Matches.map(it => it.MatchHistory.match_id);
+
+      for (let matchId of matchIds) {
+        // Check for existing
+        const exists = await this.finishedMatchRepository.exists({
+          where: { externalMatchId: matchId },
+        });
+        if (exists) {
+          console.log('HOORAY! WE CAUGHT UP IN MATCHES');
+          return;
+        }
+
+        const scrappedMatch = await this.scrapMatch(matchId);
+        await this.migrateMatch(scrappedMatch);
+        console.log(`Migrated match ${matchId}`);
+      }
+    }
   }
 
   // public async migrateShit() {
@@ -262,41 +309,39 @@ export class GameServerService {
     }
   }
 
-  public async migrated2com() {
-    const matches = await fs.promises.readdir('matches');
+  // public async migrated2com() {
+  //   const matches = await fs.promises.readdir('matches');
+  //
+  //   const chunkSize = 64;
+  //   const chunks = Math.ceil(matches.length / chunkSize);
+  //   for (let i = 0; i < chunks; i++) {
+  //     const slice = matches
+  //       .slice(i * chunkSize, (i + 1) * chunkSize)
+  //       .map(it => Number(it.split('.')[0]));
+  //     const tasks = Promise.all(slice.map(it => this.migrateMatch(it)));
+  //     await tasks;
+  //
+  //     console.log(`Migrated chunk ${i} out of ${chunks} chunks`);
+  //   }
+  // }
 
-    const chunkSize = 64;
-    const chunks = Math.ceil(matches.length / chunkSize);
-    for(let i = 0; i < chunks; i++){
-      const slice = matches.slice(i * chunkSize, (i + 1) * chunkSize).map(it => Number(it.split('.')[0]));;
-      const tasks = Promise.all(slice.map(it => this.migrateMatch(it)));
-      await tasks;
-
-      console.log(`Migrated chunk ${i} out of ${chunks} chunks`)
-    }
-  }
-
-  private async migrateMatch(id: number) {
+  private async migrateMatch(j: MatchD2Com) {
     const magicD2ComConstant = 1000000;
 
+    const id = j.id;
     const realId = magicD2ComConstant + id;
-
-    const j: MatchD2Com = JSON.parse(
-      (await fs.promises.readFile(`./matches/${id}.json`)).toString(),
-    );
 
     let fm = await this.finishedMatchRepository.findOne({
       where: { externalMatchId: id, id: realId },
     });
     if (fm) {
-
       // return;
 
       const pims = await this.playerInMatchRepository.find({
-         where: {match: fm}
+        where: { match: fm },
       });
 
-      await this.playerInMatchRepository.remove(pims)
+      await this.playerInMatchRepository.remove(pims);
 
       await this.finishedMatchRepository.remove(fm);
       console.log(`External match ${id} already exists`);
@@ -342,5 +387,111 @@ export class GameServerService {
 
     pims = await this.playerInMatchRepository.save(pims);
     // console.log(pims);
+  }
+
+  private async scrapMatch(matchId: number): Promise<MatchD2Com> {
+    const url = `https://dota2classic.com/Match/${matchId}`;
+    console.log('SCraping');
+
+    const $ = await cheerio.fromURL(url);
+
+    const matchId2 = $('.match-info-id')
+      .text()
+      .replace('Match ID: ', '');
+    const [m, s] = $('.match-info-duration')
+      .text()
+      .split(':')
+      .map(it => it.trim())
+      .map(Number);
+
+    const duration = m * 60 + s;
+
+    const winner = $('.match-info-radiant-victory')
+      .text()
+      .toLowerCase()
+      .includes('radiant')
+      ? 2
+      : 3;
+
+    const date = new Date($('.match-info-date time').attr('datetime'));
+
+    const players = $('.player-row')
+      .map(function(i) {
+        const $el = $(this);
+
+        const teamWrap = $el
+          .parent()
+          .parent()
+          .parent();
+        const team = teamWrap
+          .find('.team-title')
+          .text()
+          .toLowerCase()
+          .includes('radiant')
+          ? 2
+          : 3;
+
+        const heroid = $el.find('.player-hero').data('heroid');
+        const hero =
+          `npc_dota_hero_` + HeroMap.find(it => it.id === heroid).name;
+        const steam64 = $el
+          .find('.player-name-link')
+          .attr('href')
+          .split('/')[2];
+        const level = parseInt($el.find('.player-level').text());
+        const kills = parseInt($el.find('.player-kills').text());
+        const deaths = parseInt($el.find('.player-deaths').text());
+        const assists = parseInt($el.find('.player-assists').text());
+        const gpm = parseInt($el.find('.player-gpm').text());
+        const xpm = parseInt($el.find('.player-xpm').text());
+        const hd = parseInt($el.find('.player-hd').text());
+        const td = parseInt($el.find('.player-td').text());
+        const gold = parseInt($el.find('.player-gold').text());
+        const last_hits = parseInt($el.find('.player-lasthits').text());
+        const denies = parseInt($el.find('.player-denies').text());
+
+        const itemList = $el
+          .find('.player-stat-item')
+          .toArray()
+          .map(it => it.attribs['data-itemid'])
+          .map(Number); //.map(itemid => items.find(it => it.id === itemid).name);
+
+        return {
+          steam64: steam64,
+          playerId: (BigInt(steam64) - BigInt('76561197960265728')).toString(),
+          kills,
+          deaths,
+          assists,
+          team,
+          level,
+          last_hits,
+          denies,
+          gpm,
+          xpm,
+          hd,
+          td,
+          gold,
+          hero,
+          item0: itemList[0],
+          item1: itemList[1],
+          item2: itemList[2],
+          item3: itemList[3],
+          item4: itemList[4],
+          item5: itemList[5],
+        };
+      })
+      .toArray();
+
+    const isBotMatch = players.find(it => Number(it.steam64) <= 10);
+
+    return {
+      id: matchId,
+      players,
+      timestamp: date.getTime(),
+      duration,
+      server: 'dota2classic.com',
+      winner: winner,
+      matchmaking_mode: isBotMatch ? 7 : 1, // 1 = unranked
+    };
   }
 }
