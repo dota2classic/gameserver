@@ -240,7 +240,9 @@ where (m.matchmaking_mode = ${MatchmakingMode.RANKED} or m.matchmaking_mode = ${
 select p.player as steam_id,
        p.games::int                                                               as games,
        p.wins::int                                                                as wins,
-       ((p.kills + p.assists) / greatest(1, p.deaths))::float                     as kda,
+       p.kills::float                                                             as kills,
+       p.deaths::float                                                            as deaths,
+       p.assists::float                                                           as assists,
        (((p.kills + p.assists) / greatest(1, p.deaths)) * p.level * ((p.wins::float / p.games) ^ 2 * p.games))::int as score
 from players p
 where p.games > $4

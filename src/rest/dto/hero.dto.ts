@@ -25,6 +25,8 @@ export class PlayerHeroPerformance {
   steam_id: string;
   games: number;
   wins: number;
-  kda: number;
+  kills: number;
+  deaths: number;
+  assists: number;
   score: number;
 }

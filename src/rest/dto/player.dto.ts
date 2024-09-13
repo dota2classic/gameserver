@@ -28,10 +28,18 @@ export class BanStatusDto {
   public readonly status: BanReason;
 }
 
-
 export class ReportPlayerDto {
   public readonly reported: PlayerId;
   public readonly reporter: PlayerId;
   public readonly text: string;
   public readonly matchId: number;
+}
+
+export class PlayerTeammateDto {
+  public readonly steam_id: string;
+  public readonly games: number;
+  public readonly wins: number;
+  public readonly losses: number;
+  public readonly winrate: number;
+  public readonly rank: number;
 }

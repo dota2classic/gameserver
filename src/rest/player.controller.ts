@@ -5,7 +5,13 @@ import { Mapper } from 'rest/mapper';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
-import { BanStatusDto, LeaderboardEntryDto, PlayerSummaryDto, ReportPlayerDto } from 'rest/dto/player.dto';
+import {
+  BanStatusDto,
+  LeaderboardEntryDto,
+  PlayerSummaryDto,
+  PlayerTeammateDto,
+  ReportPlayerDto,
+} from 'rest/dto/player.dto';
 import { CommandBus, EventBus } from '@nestjs/cqrs';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import { PlayerId } from 'gateway/shared-types/player-id';
@@ -41,6 +47,34 @@ export class PlayerController {
     @InjectRepository(LeaderboardView)
     private readonly leaderboardViewRepository: Repository<LeaderboardView>,
   ) {}
+
+
+  @Get(`/:id/teammates`)
+  async playerTeammates(@Param('id') id: string){
+    return this.connection.query<PlayerTeammateDto[]>(`with teammates as (select distinct pim."playerId",
+                                   count(pim)                        as games,
+                                   sum((pim.team = fm.winner)::int)  as wins,
+                                   sum((pim.team != fm.winner)::int) as losses
+                   from player_in_match pim
+                            inner join finished_match fm on fm.id = pim."matchId"
+                            left join player_in_match match_players
+                                      on match_players."matchId" = fm.id and match_players."playerId" = $1
+                   where match_players is not null
+                     and match_players.team = pim.team
+                     and pim."playerId" != $1
+                   group by pim."playerId")
+select p."playerId"                                                                                         as steam_id,
+       p.games::int                                                                                         as games,
+       p.wins::int                                                                                          as wins,
+       p.losses::int                                                                                        as losses,
+       (p.wins::float / greatest(1, p.wins + p.losses))::float                                              as winrate,
+       (row_number() over (partition by sign(p.wins - p.losses) order by abs(p.wins - p.losses) desc))::int as rank
+
+from teammates p
+-- order by p.wins desc, p.losses asc;
+order by ABS((p.wins - p.losses)) desc
+limit 50`, [id])
+  }
 
   @CacheTTL(120)
   @Get('/summary/:version/:id')
@@ -124,6 +158,8 @@ export class PlayerController {
     return await this.playerService.heroStats(version, steam_id);
   }
 
+
+
   @Get('/hero/:hero/players')
   async getHeroPlayers(@Param('hero') hero: string) {
     return this.playerService.getHeroPlayers(hero);
@@ -149,4 +185,7 @@ export class PlayerController {
       new PlayerReportEvent(dto.matchId, dto.reporter, dto.reported, dto.text),
     );
   }
+
+
+
 }
