@@ -1,18 +1,18 @@
 import { EventBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
-import { PlayerBan } from 'gameserver/entity/PlayerBan';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BanReason } from 'gateway/shared-types/ban';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
+import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
 
 @EventsHandler(PlayerNotLoadedEvent)
 export class PlayerNotLoadedHandler
   implements IEventHandler<PlayerNotLoadedEvent> {
   constructor(
-    @InjectRepository(PlayerBan)
-    private readonly playerBanRepository: Repository<PlayerBan>,
+    @InjectRepository(PlayerBanEntity)
+    private readonly playerBanRepository: Repository<PlayerBanEntity>,
     @InjectRepository(PlayerCrimeLogEntity)
     private readonly playerCrimeLogEntityRepository: Repository<
       PlayerCrimeLogEntity

@@ -1,39 +1,39 @@
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { DB_HOST, DB_PASSWORD, DB_USERNAME } from 'env';
-import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
-import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
-import { GameSeason } from 'gameserver/entity/GameSeason';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm/dist/interfaces/typeorm-options.interface';
-import { PlayerBan } from 'gameserver/entity/PlayerBan';
-import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
-import { GameServerModel } from 'gameserver/model/game-server.model';
+import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
+import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
-import { MmrChangeLogEntity } from 'gameserver/entity/mmr-change-log.entity';
-import { PlayerReportStatus } from 'gameserver/model/player-report-status';
-import { PlayerReport } from 'gameserver/model/player-report';
+import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 import { ReplayEntity } from 'gameserver/model/replay.entity';
-import FinishedMatch from 'gameserver/entity/finished-match';
 import { LeaderboardView } from 'gameserver/model/leaderboard.view';
 import { ItemView } from 'gameserver/model/item.view';
+import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
+import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
+import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
+import { PlayerReportStatusEntity } from 'gameserver/model/player-report-status.entity';
+import { PlayerReportEntity } from 'gameserver/model/player-report.entity';
+import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 
 export const Entities = [
-  GameSeason,
-  VersionPlayer,
+  GameSeasonEntity,
+  VersionPlayerEntity,
 
   MatchEntity,
-  FinishedMatch,
-  PlayerInMatch,
+  FinishedMatchEntity,
+  PlayerInMatchEntity,
 
-  PlayerBan,
+  PlayerBanEntity,
 
-  GameServerSessionModel,
-  GameServerModel,
+  GameServerSessionEntity,
+  GameServerEntity,
   PlayerCrimeLogEntity,
 
 
   MmrChangeLogEntity,
-  PlayerReportStatus,
-  PlayerReport,
+  PlayerReportStatusEntity,
+  PlayerReportEntity,
 
   ReplayEntity,
   LeaderboardView,
@@ -61,7 +61,7 @@ export const testDbConfig: TypeOrmModuleOptions = {
   dropSchema: true,
 };
 
-export const prodDbConfig: any = {
+export const prodDbConfig: TypeOrmModuleOptions = {
   type: 'postgres',
   database: 'postgres',
   host: DB_HOST(),
@@ -70,6 +70,7 @@ export const prodDbConfig: any = {
   password: DB_PASSWORD,
   entities: Entities,
   synchronize: true,
+  maxQueryExecutionTime: 1000,
 
   ssl: false,
 };

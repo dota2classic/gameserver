@@ -1,20 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, In, Repository } from 'typeorm';
 import { HeroItemDto, HeroSummaryDto } from 'rest/dto/meta.dto';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Page } from 'rest/dto/page';
 import { cached } from 'util/method-cache';
-import FinishedMatch from 'gameserver/entity/finished-match';
+import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
+import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 
 @Injectable()
 export class MetaService {
   constructor(
-    @InjectRepository(PlayerInMatch)
-    private readonly playerInMatchRepository: Repository<PlayerInMatch>,
-    @InjectRepository(FinishedMatch)
-    private readonly matchRepository: Repository<FinishedMatch>,
+    @InjectRepository(PlayerInMatchEntity)
+    private readonly playerInMatchRepository: Repository<PlayerInMatchEntity>,
+    @InjectRepository(FinishedMatchEntity)
+    private readonly matchRepository: Repository<FinishedMatchEntity>,
     private readonly connection: Connection
   ) {}
 
@@ -23,7 +23,7 @@ export class MetaService {
     page: number,
     perPage: number,
     hero: string,
-  ): Promise<Page<FinishedMatch>> {
+  ): Promise<Page<FinishedMatchEntity>> {
     const [ids, count] = await this.matchRepository
       .createQueryBuilder('m')
       .select(['m.id', 'm.timestamp'])

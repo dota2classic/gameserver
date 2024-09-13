@@ -4,11 +4,11 @@ import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CRIMES_INTERVAL_FOR_MULTIPLY, HARD_PUNISHMENT, LIGHT_PUNISHMENT } from 'gateway/shared-types/timings';
-import { PlayerBan } from 'gameserver/entity/PlayerBan';
 import { BanReason } from 'gateway/shared-types/ban';
 import { Logger } from '@nestjs/common';
 import { BanSystemEntry, BanSystemEvent } from 'gateway/events/gs/ban-system.event';
 import { PlayerId } from 'gateway/shared-types/player-id';
+import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
 
 export const calcCumulativePunishment = (
   totalCrimes: PlayerCrimeLogEntity[],
@@ -40,8 +40,8 @@ export class CrimeLogCreatedHandler
     private readonly playerCrimeLogEntityRepository: Repository<
       PlayerCrimeLogEntity
     >,
-    @InjectRepository(PlayerBan)
-    private readonly playerBanRepository: Repository<PlayerBan>,
+    @InjectRepository(PlayerBanEntity)
+    private readonly playerBanRepository: Repository<PlayerBanEntity>,
     private readonly ebus: EventBus,
   ) {}
 
@@ -102,7 +102,7 @@ export class CrimeLogCreatedHandler
     });
 
     if (!ban) {
-      ban = new PlayerBan();
+      ban = new PlayerBanEntity();
       ban.steam_id = steam_id;
       ban.reason = crime.crime;
       ban.endTime = new Date(new Date().getTime() + duration);

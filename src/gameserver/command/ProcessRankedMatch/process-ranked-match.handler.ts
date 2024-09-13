@@ -1,15 +1,15 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
-import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { GameSeason } from 'gameserver/entity/GameSeason';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerService } from 'gameserver/gameserver.service';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
-import { MmrChangeLogEntity } from 'gameserver/entity/mmr-change-log.entity';
+import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
+import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
+import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 
 @CommandHandler(ProcessRankedMatchCommand)
 export class ProcessRankedMatchHandler
@@ -20,8 +20,8 @@ export class ProcessRankedMatchHandler
   public static readonly AVERAGE_DEVIATION_MAX = 15;
 
   constructor(
-    @InjectRepository(VersionPlayer)
-    private readonly versionPlayerRepository: Repository<VersionPlayer>,
+    @InjectRepository(VersionPlayerEntity)
+    private readonly versionPlayerRepository: Repository<VersionPlayerEntity>,
     private readonly gameServerService: GameServerService,
     @InjectRepository(MmrChangeLogEntity)
     private readonly mmrChangeLogEntityRepository: Repository<
@@ -124,7 +124,7 @@ export class ProcessRankedMatchHandler
   }
 
   private async changeMMR(
-    season: GameSeason,
+    season: GameSeasonEntity,
     pid: PlayerId,
     winner: boolean,
     mmrDiff: number,

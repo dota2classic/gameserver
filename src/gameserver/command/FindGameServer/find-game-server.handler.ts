@@ -4,11 +4,10 @@ import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-ga
 import { GameServerRepository } from 'gameserver/repository/game-server.repository';
 import { GameSessionCreatedEvent } from 'gateway/events/game-session-created.event';
 import { GameServerSessionRepository } from 'gameserver/repository/game-server-session.repository';
-import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
+import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MatchEntity } from 'gameserver/model/match.entity';
 import { Repository } from 'typeorm';
-import { GameServerModel } from 'gameserver/model/game-server.model';
+import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { ClientProxy } from '@nestjs/microservices';
 import { GSMatchInfo, LaunchGameServerCommand } from 'gateway/commands/LaunchGameServer/launch-game-server.command';
 import { LaunchGameServerResponse } from 'gateway/commands/LaunchGameServer/launch-game-server.response';
@@ -24,6 +23,7 @@ import { GameServerInfo } from 'gateway/shared-types/game-server-info';
 import { MatchInfo, MatchPlayer } from 'gateway/events/room-ready.event';
 import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
 import { GetUserInfoQueryResult } from 'gateway/queries/GetUserInfo/get-user-info-query.result';
+import { MatchEntity } from 'gameserver/model/match.entity';
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
@@ -37,9 +37,9 @@ export class FindGameServerHandler
   constructor(
     private readonly gsRepository: GameServerRepository,
     private readonly gsSessionRepository: GameServerSessionRepository,
-    @InjectRepository(GameServerSessionModel)
+    @InjectRepository(GameServerSessionEntity)
     private readonly gameServerSessionModelRepository: Repository<
-      GameServerSessionModel
+      GameServerSessionEntity
     >,
     private readonly ebus: EventBus,
     @InjectRepository(MatchEntity)
@@ -97,7 +97,7 @@ export class FindGameServerHandler
     await this.matchEntityRepository.save(m);
 
     let i = 0;
-    let foundServer: GameServerModel | undefined;
+    let foundServer: GameServerEntity | undefined;
 
     console.log('Free pool:', freeServerPool.length);
     while (i < freeServerPool.length) {
@@ -151,7 +151,7 @@ export class FindGameServerHandler
     }
     // ok here we launch server
 
-    const session = new GameServerSessionModel();
+    const session = new GameServerSessionEntity();
     session.url = foundServer.url;
 
     session.matchId = m.id;

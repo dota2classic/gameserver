@@ -3,24 +3,24 @@ import { ApiTags } from '@nestjs/swagger';
 import { Mapper } from 'rest/mapper';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { GameServerRepository } from 'gameserver/repository/game-server.repository';
 import { GameServerDto, GameSessionDto } from 'rest/dto/info.dto';
 import { GameServerSessionRepository } from 'gameserver/repository/game-server-session.repository';
-import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
+import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { CacheTTL } from '@nestjs/cache-manager';
+import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 
 @Controller('info')
 @ApiTags('info')
 export class InfoController {
   constructor(
     private readonly mapper: Mapper,
-    @InjectRepository(GameServerSessionModel)
+    @InjectRepository(GameServerSessionEntity)
     private readonly gameServerSessionModelRepository: Repository<
-      GameServerSessionModel
+      GameServerSessionEntity
     >,
-    @InjectRepository(PlayerInMatch)
-    private readonly playerInMatchRepository: Repository<PlayerInMatch>,
+    @InjectRepository(PlayerInMatchEntity)
+    private readonly playerInMatchRepository: Repository<PlayerInMatchEntity>,
     private readonly gsRep: GameServerRepository,
     private readonly gameSessionRepository: GameServerSessionRepository,
   ) {}

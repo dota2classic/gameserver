@@ -7,17 +7,17 @@ import {
 } from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
 import { GetPlayerInfoQuery } from 'gateway/queries/GetPlayerInfo/get-player-info.query';
 import { InjectRepository } from '@nestjs/typeorm';
-import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { Repository } from 'typeorm';
-import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import { PlayerService } from 'rest/service/player.service';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { PlayerBan } from 'gameserver/entity/PlayerBan';
 import { HeroStatsDto } from 'rest/dto/hero.dto';
 import { UNRANKED_GAMES_REQUIRED_FOR_RANKED } from 'gateway/shared-types/timings';
 import { cached } from 'util/method-cache';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
+import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
+import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
 
 @QueryHandler(GetPlayerInfoQuery)
 export class GetPlayerInfoHandler
@@ -25,13 +25,13 @@ export class GetPlayerInfoHandler
   private readonly logger = new Logger(GetPlayerInfoHandler.name);
 
   constructor(
-    @InjectRepository(PlayerInMatch)
-    private readonly playerInMatchRepository: Repository<PlayerInMatch>,
-    @InjectRepository(VersionPlayer)
-    private readonly versionPlayerRepository: Repository<VersionPlayer>,
+    @InjectRepository(PlayerInMatchEntity)
+    private readonly playerInMatchRepository: Repository<PlayerInMatchEntity>,
+    @InjectRepository(VersionPlayerEntity)
+    private readonly versionPlayerRepository: Repository<VersionPlayerEntity>,
     private readonly cbus: CommandBus,
-    @InjectRepository(PlayerBan)
-    private readonly playerBanRepository: Repository<PlayerBan>,
+    @InjectRepository(PlayerBanEntity)
+    private readonly playerBanRepository: Repository<PlayerBanEntity>,
     private readonly playerService: PlayerService,
   ) {}
 

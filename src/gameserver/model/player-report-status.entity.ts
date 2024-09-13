@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryColumn } from 'typeorm';
 
-@Entity()
-export class PlayerReportStatus {
+@Entity('player_report_status')
+export class PlayerReportStatusEntity {
 
   @PrimaryColumn()
   steam_id: string;

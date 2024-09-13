@@ -1,27 +1,24 @@
 import { EventBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { PlayerReportedEvent } from 'gateway/events/bans/player-reported.event';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PlayerBan } from 'gameserver/entity/PlayerBan';
 import { Repository } from 'typeorm';
-import { PlayerReport } from 'gameserver/model/player-report';
-import {
-  CRITICAL_REPORT_COUNT_TO_BAN,
-  REPORT_STACK_WINDOW,
-} from 'gateway/shared-types/timings';
+import { CRITICAL_REPORT_COUNT_TO_BAN, REPORT_STACK_WINDOW } from 'gateway/shared-types/timings';
 import { Logger } from '@nestjs/common';
 import { BanReason } from 'gateway/shared-types/ban';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
+import { PlayerReportEntity } from 'gameserver/model/player-report.entity';
+import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
 
 @EventsHandler(PlayerReportedEvent)
 export class PlayerReportedHandler
   implements IEventHandler<PlayerReportedEvent> {
   private readonly logger = new Logger(PlayerReportedHandler.name);
   constructor(
-    @InjectRepository(PlayerBan)
-    private readonly playerBanRepository: Repository<PlayerBan>,
-    @InjectRepository(PlayerReport)
-    private readonly playerReportRepository: Repository<PlayerReport>,
+    @InjectRepository(PlayerBanEntity)
+    private readonly playerBanRepository: Repository<PlayerBanEntity>,
+    @InjectRepository(PlayerReportEntity)
+    private readonly playerReportRepository: Repository<PlayerReportEntity>,
     @InjectRepository(PlayerCrimeLogEntity)
     private readonly playerCrimeLogEntityRepository: Repository<
       PlayerCrimeLogEntity

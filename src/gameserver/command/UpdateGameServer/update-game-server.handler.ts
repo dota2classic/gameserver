@@ -1,8 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { UpdateGameServerCommand } from 'gameserver/command/UpdateGameServer/update-game-server.command';
-import { GameServerRepository } from 'gameserver/repository/game-server.repository';
-import { GameServerModel } from 'gameserver/model/game-server.model';
 import { GameServerSessionRepository } from 'gameserver/repository/game-server-session.repository';
 
 @CommandHandler(UpdateGameServerCommand)

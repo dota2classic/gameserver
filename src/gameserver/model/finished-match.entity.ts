@@ -1,11 +1,10 @@
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn } from 'typeorm';
-import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
+import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 
-@Entity()
-export default class FinishedMatch {
-
+@Entity('finished_match')
+export default class FinishedMatchEntity {
 
   @Column('smallint')
   winner!: number;
@@ -31,11 +30,11 @@ export default class FinishedMatch {
   externalMatchId?: number;
 
   @OneToMany(
-    type => PlayerInMatch,
+    type => PlayerInMatchEntity,
     pim => pim.match,
     { eager: true },
   )
-  players!: PlayerInMatch[];
+  players!: PlayerInMatchEntity[];
 
   constructor(id: number | undefined, winner: number, timestamp: string, game_mode: Dota_GameMode, matchmaking_mode: MatchmakingMode, duration: number, server: string) {
     this.id = id;

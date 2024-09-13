@@ -3,13 +3,9 @@ import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { GameServerService } from 'gameserver/gameserver.service';
 import { Entities, testDbConfig } from 'util/typeorm-config';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
-import { GameSeason } from 'gameserver/entity/GameSeason';
 import { Connection, Repository } from 'typeorm';
 import { PlayerId } from 'gateway/shared-types/player-id';
-import Match from 'gameserver/entity/Match';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
-import { MatchEntity } from 'gameserver/model/match.entity';
 
 // const THIS_SEASON_TIMESTAMP = new Date('2020-08-31 20:00:00.000000');
 const THIS_SEASON_TIMESTAMP = new Date('2021-01-12 21:00:00.000000');

@@ -1,16 +1,16 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { PlayerBanHammeredEvent } from 'gateway/events/bans/player-ban-hammered.event';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PlayerBan } from 'gameserver/entity/PlayerBan';
 import { Repository } from 'typeorm';
 import { BanReason } from 'gateway/shared-types/ban';
+import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
 
 @EventsHandler(PlayerBanHammeredEvent)
 export class PlayerBanHammeredHandler
   implements IEventHandler<PlayerBanHammeredEvent> {
   constructor(
-    @InjectRepository(PlayerBan)
-    private readonly playerBanRepository: Repository<PlayerBan>,
+    @InjectRepository(PlayerBanEntity)
+    private readonly playerBanRepository: Repository<PlayerBanEntity>,
   ) {}
 
   async handle(event: PlayerBanHammeredEvent) {
@@ -19,7 +19,7 @@ export class PlayerBanHammeredHandler
     });
 
     if (!banEnt) {
-      banEnt = new PlayerBan();
+      banEnt = new PlayerBanEntity();
       banEnt.steam_id = event.playerId.value;
       banEnt.reason = BanReason.INFINITE_BAN;
     }

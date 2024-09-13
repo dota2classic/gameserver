@@ -1,6 +1,6 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { ServerNotRespondingEvent } from 'gameserver/event/server-not-responding.event';
-import { GameServerModel } from 'gameserver/model/game-server.model';
+import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -8,8 +8,8 @@ import { Repository } from 'typeorm';
 export class ServerNotRespondingHandler
   implements IEventHandler<ServerNotRespondingEvent> {
   constructor(
-    @InjectRepository(GameServerModel)
-    private readonly gameServerModelRepository: Repository<GameServerModel>,
+    @InjectRepository(GameServerEntity)
+    private readonly gameServerModelRepository: Repository<GameServerEntity>,
   ) {}
 
   async handle(event: ServerNotRespondingEvent) {

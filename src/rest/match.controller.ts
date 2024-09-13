@@ -5,10 +5,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Mapper } from 'rest/mapper';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { MetaService } from 'rest/service/meta.service';
-import FinishedMatch from 'gameserver/entity/finished-match';
 import { NullableIntPipe } from 'util/pipes';
+import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
+import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 
 
 @Controller('match')
@@ -16,10 +16,10 @@ import { NullableIntPipe } from 'util/pipes';
 export class MatchController {
   constructor(
     private readonly mapper: Mapper,
-    @InjectRepository(FinishedMatch)
-    private readonly matchRepository: Repository<FinishedMatch>,
-    @InjectRepository(PlayerInMatch)
-    private readonly playerInMatchRepository: Repository<PlayerInMatch>,
+    @InjectRepository(FinishedMatchEntity)
+    private readonly matchRepository: Repository<FinishedMatchEntity>,
+    @InjectRepository(PlayerInMatchEntity)
+    private readonly playerInMatchRepository: Repository<PlayerInMatchEntity>,
     private readonly metaService: MetaService,
   ) {}
 

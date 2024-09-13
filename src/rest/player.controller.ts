@@ -5,8 +5,6 @@ import { Mapper } from 'rest/mapper';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
-import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
-import { GameSeason } from 'gameserver/entity/GameSeason';
 import { BanStatusDto, LeaderboardEntryDto, PlayerSummaryDto, ReportPlayerDto } from 'rest/dto/player.dto';
 import { CommandBus, EventBus } from '@nestjs/cqrs';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
@@ -15,10 +13,12 @@ import { GameServerService } from 'gameserver/gameserver.service';
 import { PlayerService } from 'rest/service/player.service';
 import { HeroStatsDto } from 'rest/dto/hero.dto';
 import { UNRANKED_GAMES_REQUIRED_FOR_RANKED } from 'gateway/shared-types/timings';
-import { PlayerBan } from 'gameserver/entity/PlayerBan';
 import { BanStatus } from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
 import { PlayerReportEvent } from 'gameserver/event/player-report.event';
 import { LeaderboardView } from 'gameserver/model/leaderboard.view';
+import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
+import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
+import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 
 @Controller('player')
 @ApiTags('player')
@@ -27,13 +27,13 @@ export class PlayerController {
 
   constructor(
     private readonly mapper: Mapper,
-    @InjectRepository(VersionPlayer)
-    private readonly versionPlayerRepository: Repository<VersionPlayer>,
-    @InjectRepository(GameSeason)
-    private readonly gameSeasonRepository: Repository<GameSeason>,
+    @InjectRepository(VersionPlayerEntity)
+    private readonly versionPlayerRepository: Repository<VersionPlayerEntity>,
+    @InjectRepository(GameSeasonEntity)
+    private readonly gameSeasonRepository: Repository<GameSeasonEntity>,
     private readonly cbus: CommandBus,
-    @InjectRepository(PlayerBan)
-    private readonly playerBanRepository: Repository<PlayerBan>,
+    @InjectRepository(PlayerBanEntity)
+    private readonly playerBanRepository: Repository<PlayerBanEntity>,
     private readonly gsService: GameServerService,
     private readonly playerService: PlayerService,
     private readonly ebus: EventBus,

@@ -1,18 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { LessThanOrEqual, Repository } from 'typeorm';
-import { GameSeason } from 'gameserver/entity/GameSeason';
-import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import FinishedMatch from 'gameserver/entity/finished-match';
 import { HeroMap, ItemMap } from 'util/items';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import * as cheerio from 'cheerio';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { LeaderboardView } from 'gameserver/model/leaderboard.view';
+import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
+import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
+import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 
 export interface MatchD2Com {
   id: number;
@@ -53,14 +53,14 @@ export class GameServerService {
   private readonly logger = new Logger(GameServerService.name);
 
   constructor(
-    @InjectRepository(VersionPlayer)
-    private readonly versionPlayerRepository: Repository<VersionPlayer>,
-    @InjectRepository(GameSeason)
-    private readonly gameSeasonRepository: Repository<GameSeason>,
-    @InjectRepository(PlayerInMatch)
-    private readonly playerInMatchRepository: Repository<PlayerInMatch>,
-    @InjectRepository(FinishedMatch)
-    private readonly finishedMatchRepository: Repository<FinishedMatch>,
+    @InjectRepository(VersionPlayerEntity)
+    private readonly versionPlayerRepository: Repository<VersionPlayerEntity>,
+    @InjectRepository(GameSeasonEntity)
+    private readonly gameSeasonRepository: Repository<GameSeasonEntity>,
+    @InjectRepository(PlayerInMatchEntity)
+    private readonly playerInMatchRepository: Repository<PlayerInMatchEntity>,
+    @InjectRepository(FinishedMatchEntity)
+    private readonly finishedMatchRepository: Repository<FinishedMatchEntity>,
     @InjectRepository(LeaderboardView)
     private readonly leaderboardViewRepository: Repository<LeaderboardView>,
   ) {
@@ -119,8 +119,8 @@ export class GameServerService {
   //   for(let i = 0; i < Math.ceil(matches.length / chunkSize); i++){
   //     const slice = matches.slice(i * chunkSize, (i + 1) * chunkSize);
   //
-  //     const newMatches: FinishedMatch[] = slice.map(m1 => {
-  //       const m2 = new FinishedMatch();
+  //     const newMatches: FinishedMatchEntity[] = slice.map(m1 => {
+  //       const m2 = new FinishedMatchEntity();
   //       m2.id = m1.id;
   //       m2.server = m1.server;
   //       m2.matchmaking_mode = m1.type;
@@ -178,7 +178,7 @@ export class GameServerService {
   //
   // }
 
-  public async getCurrentSeason(version: Dota2Version): Promise<GameSeason> {
+  public async getCurrentSeason(version: Dota2Version): Promise<GameSeasonEntity> {
     return this.gameSeasonRepository.findOne({
       where: {
         start_timestamp: LessThanOrEqual(new Date()),
@@ -190,7 +190,7 @@ export class GameServerService {
   }
 
   public async getGamesPlayed(
-    season: GameSeason,
+    season: GameSeasonEntity,
     pid: PlayerId,
     mode: MatchmakingMode,
   ) {
@@ -199,10 +199,10 @@ export class GameServerService {
     });
 
     if (!plr) {
-      plr = new VersionPlayer();
+      plr = new VersionPlayerEntity();
       plr.steam_id = pid.value;
       plr.version = season.version;
-      plr.mmr = VersionPlayer.STARTING_MMR;
+      plr.mmr = VersionPlayerEntity.STARTING_MMR;
       await this.versionPlayerRepository.save(plr);
     }
 
@@ -226,7 +226,7 @@ export class GameServerService {
   //     await Promise.all(
   //       d.Matches.map(async match => {
   //         console.log(match);
-  //         const fm = new FinishedMatch(
+  //         const fm = new FinishedMatchEntity(
   //           match.MatchHistory.match_id,
   //           match.MatchHistory.winner ? DotaTeam.RADIANT : DotaTeam.DIRE,
   //           match.MatchHistory.endtime,
@@ -243,7 +243,7 @@ export class GameServerService {
   //           ...match.Teams.RadiantPlayers,
   //           ...match.Teams.DirePlayers,
   //         ].map((raw, index) => {
-  //           const d: Partial<PlayerInMatch> = {
+  //           const d: Partial<PlayerInMatchEntity> = {
   //             playerId: (
   //               BigInt(raw.steam64_id) - BigInt('76561197960265728')
   //             ).toString(),
@@ -347,7 +347,7 @@ export class GameServerService {
       console.log(`External match ${id} already exists`);
     }
 
-    fm = new FinishedMatch(
+    fm = new FinishedMatchEntity(
       realId,
       j.winner,
       new Date(j.timestamp).toString(),
@@ -359,8 +359,8 @@ export class GameServerService {
     fm.externalMatchId = id;
     fm = await this.finishedMatchRepository.save(fm);
 
-    let pims: PlayerInMatch[] = j.players.map(it => {
-      const pim = new PlayerInMatch();
+    let pims: PlayerInMatchEntity[] = j.players.map(it => {
+      const pim = new PlayerInMatchEntity();
       pim.playerId = it.playerId;
       pim.team = it.team;
       pim.kills = it.kills;

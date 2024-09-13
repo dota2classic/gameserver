@@ -2,10 +2,10 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import { InjectRepository } from '@nestjs/typeorm';
-import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { Repository } from 'typeorm';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { inspect } from 'util';
+import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 
 @CommandHandler(MakeSureExistsCommand)
 export class MakeSureExistsHandler
@@ -13,8 +13,8 @@ export class MakeSureExistsHandler
   private readonly logger = new Logger(MakeSureExistsHandler.name);
 
   constructor(
-    @InjectRepository(VersionPlayer)
-    private readonly versionPlayerRepository: Repository<VersionPlayer>,
+    @InjectRepository(VersionPlayerEntity)
+    private readonly versionPlayerRepository: Repository<VersionPlayerEntity>,
   ) {}
 
   async execute(command: MakeSureExistsCommand) {
@@ -30,10 +30,10 @@ export class MakeSureExistsHandler
       where: { steam_id, version: Dota2Version.Dota_681 },
     });
     if (!p) {
-      const vp = new VersionPlayer();
+      const vp = new VersionPlayerEntity();
       vp.steam_id = steam_id;
       vp.version = version;
-      vp.mmr = VersionPlayer.STARTING_MMR;
+      vp.mmr = VersionPlayerEntity.STARTING_MMR;
       await this.versionPlayerRepository.save(vp);
     }
   }

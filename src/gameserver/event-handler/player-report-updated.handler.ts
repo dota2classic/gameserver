@@ -1,20 +1,20 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { PlayerReportStatus } from 'gameserver/model/player-report-status';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MatchRecordedEvent } from 'gameserver/event/match-recorded.event';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { FREE_REPORT_PER_GAMES, GAMES_TO_ADD_REPORT, MAX_REPORTS_AVAILABLE } from 'gateway/shared-types/timings';
+import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import { PlayerReportStatusEntity } from 'gameserver/model/player-report-status.entity';
 
 @EventsHandler(MatchRecordedEvent)
 export class PlayerReportUpdatedHandler
   implements IEventHandler<MatchRecordedEvent> {
   constructor(
-    @InjectRepository(PlayerReportStatus)
-    private readonly playerReportRepository: Repository<PlayerReportStatus>,
-    @InjectRepository(PlayerInMatch)
-    private readonly playerInMatchRepository: Repository<PlayerInMatch>,
+    @InjectRepository(PlayerReportStatusEntity)
+    private readonly playerReportRepository: Repository<PlayerReportStatusEntity>,
+    @InjectRepository(PlayerInMatchEntity)
+    private readonly playerInMatchRepository: Repository<PlayerInMatchEntity>,
   ) {}
 
   async handle(event: MatchRecordedEvent) {
@@ -32,7 +32,7 @@ export class PlayerReportUpdatedHandler
       });
 
       if (!r) {
-        r = new PlayerReportStatus();
+        r = new PlayerReportStatusEntity();
         r.steam_id = p.steam_id;
         r.updatedWithMatch = event.matchId;
         await this.playerReportRepository.save(r);

@@ -1,4 +1,4 @@
-import { GameServerModel } from 'gameserver/model/game-server.model';
+import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { Injectable } from '@nestjs/common';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { EventPublisher } from '@nestjs/cqrs';
@@ -9,11 +9,11 @@ import { Repository } from 'typeorm';
 export class GameServerRepository {
   constructor(
     eventPublisher: EventPublisher,
-    @InjectRepository(GameServerModel)
-    private readonly gameServerModelRepository: Repository<GameServerModel>,
+    @InjectRepository(GameServerEntity)
+    private readonly gameServerModelRepository: Repository<GameServerEntity>,
   ) {}
 
-  async find(version: Dota2Version): Promise<GameServerModel[]> {
+  async find(version: Dota2Version): Promise<GameServerEntity[]> {
     return this.gameServerModelRepository.find({
       where: { version, }
     });

@@ -1,8 +1,8 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import FinishedMatch from 'gameserver/entity/finished-match';
+import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 
-@Entity()
-export default class PlayerInMatch {
+@Entity('player_in_match')
+export default class PlayerInMatchEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
@@ -13,11 +13,13 @@ export default class PlayerInMatch {
   playerId!: string;
 
   @ManyToOne(
-    type => FinishedMatch,
+    type => FinishedMatchEntity,
     match => match.players,
   )
-  @JoinColumn()
-  match!: FinishedMatch;
+  @JoinColumn({
+    foreignKeyConstraintName: "FK_match_player"
+  })
+  match!: FinishedMatchEntity;
 
   @Column('int')
   team!: number;

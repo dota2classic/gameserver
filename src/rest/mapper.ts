@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { MatchDto, PlayerInMatchDto } from 'rest/dto/match.dto';
-import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
-import { GameServerModel } from 'gameserver/model/game-server.model';
+import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { GameServerDto, GameSessionDto } from 'rest/dto/info.dto';
-import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
+import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { DotaTeam } from 'gateway/shared-types/dota-team';
-import FinishedMatch from 'gameserver/entity/finished-match';
+import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 
 @Injectable()
 export class Mapper {
-  public mapPlayerInMatch = (it: PlayerInMatch): PlayerInMatchDto => ({
+  public mapPlayerInMatch = (it: PlayerInMatchEntity): PlayerInMatchDto => ({
     steam_id: it.playerId,
 
     team: it.team,
@@ -38,7 +38,7 @@ export class Mapper {
     abandoned: it.abandoned,
   });
 
-  public mapMatch = (match: FinishedMatch): MatchDto => ({
+  public mapMatch = (match: FinishedMatchEntity): MatchDto => ({
     id: match.id,
     mode: match.matchmaking_mode,
     game_mode: match.game_mode,
@@ -54,12 +54,12 @@ export class Mapper {
   //   mmr: it.mmr,
   // });
 
-  public mapGameServer = (it: GameServerModel): GameServerDto => ({
+  public mapGameServer = (it: GameServerEntity): GameServerDto => ({
     url: it.url,
     version: it.version,
   });
 
-  public mapGameSession = (it: GameServerSessionModel): GameSessionDto => ({
+  public mapGameSession = (it: GameServerSessionEntity): GameSessionDto => ({
     url: it.url,
     matchId: it.matchId,
     info: {

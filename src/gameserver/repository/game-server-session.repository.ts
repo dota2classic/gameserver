@@ -1,26 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
-import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
+import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { GameServerRepository } from 'gameserver/repository/game-server.repository';
 import { PlayerId } from 'gateway/shared-types/player-id';
 //
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GameServerModel } from 'gameserver/model/game-server.model';
+import { GameServerEntity } from 'gameserver/model/game-server.entity';
 
 @Injectable()
 export class GameServerSessionRepository {
   constructor(
-    @InjectRepository(GameServerSessionModel)
+    @InjectRepository(GameServerSessionEntity)
     private readonly gameServerSessionModelRepository: Repository<
-      GameServerSessionModel
+      GameServerSessionEntity
     >,
-    @InjectRepository(GameServerModel)
-    private readonly gameServerModelRepository: Repository<GameServerModel>,
+    @InjectRepository(GameServerEntity)
+    private readonly gameServerModelRepository: Repository<GameServerEntity>,
     private readonly gameServerRepository: GameServerRepository,
   ) {}
 
-  async getAllFree(version: Dota2Version): Promise<GameServerModel[]> {
+  async getAllFree(version: Dota2Version): Promise<GameServerEntity[]> {
     return await this.gameServerModelRepository.query(`select gs.*
       from game_server_model gs
       left join game_server_session_model gssm on gs.url = gssm.url
@@ -44,7 +44,7 @@ export class GameServerSessionRepository {
 
   public async findWith(
     playerId: PlayerId,
-  ): Promise<GameServerSessionModel | undefined> {
+  ): Promise<GameServerSessionEntity | undefined> {
     const all = await this.gameServerSessionModelRepository.find();
 
     return all.find(t =>

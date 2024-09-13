@@ -1,15 +1,15 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
-import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
+import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 @EventsHandler(ServerStatusEvent)
 export class ServerStatusHandler implements IEventHandler<ServerStatusEvent> {
   constructor(
-    @InjectRepository(GameServerSessionModel)
+    @InjectRepository(GameServerSessionEntity)
     private readonly gameServerSessionModelRepository: Repository<
-      GameServerSessionModel
+      GameServerSessionEntity
     >,
   ) {}
 
@@ -22,7 +22,7 @@ export class ServerStatusHandler implements IEventHandler<ServerStatusEvent> {
 
     if (event.running) {
       if (!existingSession) {
-        existingSession = new GameServerSessionModel();
+        existingSession = new GameServerSessionEntity();
       }
       existingSession.url = event.url;
       existingSession.matchId = event.matchId;

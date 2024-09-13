@@ -1,12 +1,12 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
-@Entity()
+@Entity('match_entity')
 export class MatchEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column()
+  @Column({ default: false})
   started: boolean;
 
   @Column({ default: true })

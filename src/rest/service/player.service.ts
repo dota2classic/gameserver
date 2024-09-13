@@ -1,23 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
-import { VersionPlayer } from 'gameserver/entity/VersionPlayer';
 import { Connection, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerService } from 'gameserver/gameserver.service';
-import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { HeroStatsDto, PlayerGeneralStatsDto, PlayerHeroPerformance } from 'rest/dto/hero.dto';
 import { cached } from 'util/method-cache';
 import { PlayerSummaryDto } from 'rest/dto/player.dto';
+import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 
 // TODO: we probably need to orm this shit up
 @Injectable()
 export class PlayerService {
   constructor(
-    @InjectRepository(VersionPlayer)
-    private readonly versionPlayerRepository: Repository<VersionPlayer>,
-    @InjectRepository(PlayerInMatch)
-    private readonly playerInMatchRepository: Repository<PlayerInMatch>,
+    @InjectRepository(VersionPlayerEntity)
+    private readonly versionPlayerRepository: Repository<VersionPlayerEntity>,
+    @InjectRepository(PlayerInMatchEntity)
+    private readonly playerInMatchRepository: Repository<PlayerInMatchEntity>,
     private readonly gsService: GameServerService,
     private readonly connection: Connection,
   ) {}

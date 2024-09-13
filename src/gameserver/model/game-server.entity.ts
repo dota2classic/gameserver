@@ -1,8 +1,8 @@
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { Column, Entity, PrimaryColumn } from 'typeorm';
 
-@Entity()
-export class GameServerModel {
+@Entity('game_server_model')
+export class GameServerEntity {
   @PrimaryColumn()
   public url: string;
 

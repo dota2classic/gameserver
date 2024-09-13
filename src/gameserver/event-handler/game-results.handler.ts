@@ -3,24 +3,24 @@ import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MatchEntity } from 'gameserver/model/match.entity';
-import PlayerInMatch from 'gameserver/entity/PlayerInMatch';
 import { GameSessionFinishedEvent } from 'gateway/events/game-session-finished.event';
-import { GameServerSessionModel } from 'gameserver/model/game-server-session.model';
+import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { MatchRecordedEvent } from 'gameserver/event/match-recorded.event';
-import FinishedMatch from 'gameserver/entity/finished-match';
+import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
+import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 
 @EventsHandler(GameResultsEvent)
 export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
   constructor(
-    @InjectRepository(FinishedMatch)
-    private readonly matchRepository: Repository<FinishedMatch>,
+    @InjectRepository(FinishedMatchEntity)
+    private readonly matchRepository: Repository<FinishedMatchEntity>,
     @InjectRepository(MatchEntity)
     private readonly matchEntityRepository: Repository<MatchEntity>,
-    @InjectRepository(PlayerInMatch)
-    private readonly playerInMatchRepository: Repository<PlayerInMatch>,
-    @InjectRepository(GameServerSessionModel)
+    @InjectRepository(PlayerInMatchEntity)
+    private readonly playerInMatchRepository: Repository<PlayerInMatchEntity>,
+    @InjectRepository(GameServerSessionEntity)
     private readonly gameServerSessionModelRepository: Repository<
-      GameServerSessionModel
+      GameServerSessionEntity
     >,
     private readonly ebus: EventBus,
   ) {}
@@ -32,7 +32,7 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
 
     if (!mInfo) return;
 
-    const m = new FinishedMatch(
+    const m = new FinishedMatchEntity(
       mInfo.id,
       event.winner,
       new Date(event.timestamp * 1000).toUTCString(),
@@ -48,7 +48,7 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
       const t = event.players[i];
 
       if (!t) continue;
-      const pim = new PlayerInMatch();
+      const pim = new PlayerInMatchEntity();
 
       pim.match = m;
       // kda
