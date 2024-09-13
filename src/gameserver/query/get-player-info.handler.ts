@@ -1,18 +1,12 @@
 import { CommandBus, IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import {
-  BanStatus,
-  GetPlayerInfoQueryResult,
-  PlayerOverviewSummary,
-} from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
+import { BanStatus, GetPlayerInfoQueryResult } from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
 import { GetPlayerInfoQuery } from 'gateway/queries/GetPlayerInfo/get-player-info.query';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import { PlayerService } from 'rest/service/player.service';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { HeroStatsDto } from 'rest/dto/hero.dto';
-import { UNRANKED_GAMES_REQUIRED_FOR_RANKED } from 'gateway/shared-types/timings';
 import { cached } from 'util/method-cache';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
@@ -41,79 +35,55 @@ export class GetPlayerInfoHandler
   ): Promise<GetPlayerInfoQueryResult> {
     await this.cbus.execute(new MakeSureExistsCommand(command.playerId));
 
-    // deprecate multi version mmr
-    const mmr = (
-      await this.versionPlayerRepository.findOne({
-        where: {
-          steam_id: command.playerId.value,
-          version: Dota2Version.Dota_681,
-        },
-      })
-    ).mmr;
-
-    const rank = await this.playerService.getRank(
-      command.version,
-      command.playerId.value,
-    );
-    const rankedGamesPlayed = await this.playerService.gamesPlayed(
-      command.playerId.value,
-      MatchmakingMode.RANKED,
-    );
-    const winrate = await this.playerService.winrate(
-      command.playerId.value,
-      MatchmakingMode.RANKED,
-    );
-    const bestHeroes = await this.playerService.heroStats(
-      command.version,
-      command.playerId.value,
-    );
-
-    const recentWinrate = await this.playerService.winrateLastRankedGames(
-      command.playerId.value,
-    );
-    const recentKDA = await this.playerService.kdaLastRankedGames(
-      command.playerId.value,
-    );
-
-    const bestHeroScore = (it: HeroStatsDto): number => {
-      const wr = Number(it.wins) / Number(it.games);
-      const gamesPlayed = Number(it.games);
-      const avgKda = Number(it.kda);
-      return gamesPlayed * avgKda + wr * 100;
-    };
-
-    const summary = new PlayerOverviewSummary(
-      rankedGamesPlayed,
-      winrate * 100,
-      rank + 1,
-      bestHeroes
-        .sort((a, b) => bestHeroScore(b) - bestHeroScore(a))
-        .slice(0, 3)
-        .map(t => t.hero),
-      // if there are ranked games played already, this dude can play ranked
-      // otherwise we count unranked games left to play
-      rankedGamesPlayed > 0
-        ? 0
-        : Math.max(
-            UNRANKED_GAMES_REQUIRED_FOR_RANKED -
-              (await this.playerService.getNonRankedGamesPlayed(
-                command.playerId.value,
-              )),
-            0,
-          ),
-    );
 
     const ban = await this.playerBanRepository.findOne({
       where: { steam_id: command.playerId.value },
     });
 
+    interface QueryResult {
+      version: Dota2Version;
+      steam_id: string;
+      mmr: number;
+      winrate: number;
+      recentKDA: number;
+    }
+
+    const query: QueryResult = (await this.playerBanRepository.query(
+      `with recent_games as (select (pim.team = fm.winner)    as win,
+                             (pim.team != fm.winner)   as loss,
+                             (pim.kills + pim.assists) as ka,
+                             (pim.deaths)              as deaths
+                      from player_in_match pim
+                               inner join finished_match fm on fm.id = pim."matchId"
+                      where pim."playerId" = $1
+                        and fm.matchmaking_mode in (0, 1)
+                      order by fm.timestamp desc
+                      limit $2)
+select vp.steam_id                                               as steam_id,
+       vp.mmr::int                                                    as mmr,
+       vp.version                                                as version,
+       (sum(rg.win::int)::float / greatest(1, count(rg)))::float as winrate,
+       avg(rg.ka / greatest(rg.deaths, 1))::float                as recentKDA
+from version_player vp,
+     recent_games rg
+
+where vp.steam_id = $1
+group by vp.steam_id, vp.mmr, vp.version`,
+      [command.playerId.value, 20],
+    ))[0];
+    const rankedGamesPlayed = await this.playerService.gamesPlayed(
+      command.playerId.value,
+      MatchmakingMode.RANKED,
+    );
+
+
     return new GetPlayerInfoQueryResult(
       command.playerId,
       command.version,
-      mmr,
-      recentWinrate,
-      recentKDA,
-      summary,
+      query.mmr,
+      query.winrate,
+      query.recentKDA,
+      rankedGamesPlayed,
       ban?.asBanStatus() || BanStatus.NOT_BANNED,
     );
   }
