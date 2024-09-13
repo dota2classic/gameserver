@@ -2,8 +2,8 @@ import { Index, ViewColumn, ViewEntity } from 'typeorm';
 
 @ViewEntity({
   expression: `with cte as (select plr."playerId"                                                                   as steam_id,
-                    count(m)                                                                         as games,
-                    sum((m.winner = plr.team)::int)                                                  as wins,
+                    count(m)::int                                                                         as games,
+                    sum((m.winner = plr.team)::int)::int                                                  as wins,
                     sum((m.matchmaking_mode = 0 and m.timestamp > now() - '14 days'::interval)::int) as recent_ranked_games,
                     coalesce(p.mmr, -1)                                                              as mmr
              from player_in_match plr

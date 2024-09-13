@@ -112,20 +112,20 @@ where m.matchmaking_mode = ${mode} and pim."playerId" = '${steam_id}' and m.radi
   ): Promise<HeroStatsDto[]> {
     return await this.playerInMatchRepository.query(`
 select pim."playerId",
-       CAST(avg(pim.gpm) as FLOAT)                                             as gpm,
-       CAST(avg(pim.xpm) as FLOAT)                                             as xpm,
-       avg(cast((pim.kills + pim.assists) as FLOAT) / greatest(pim.deaths, 1)) as kda,
-       CAST(count(*) as INT) as games,
-       avg(pim.last_hits) as last_hits,
-       avg(pim.denies) as denies,
-       CAST(sum((pim.team = match.winner)::int) as INT) as wins,
-       CAST(sum((pim.team != match.winner)::int) as INT) as loss,
+       avg(pim.gpm)::float                                             as gpm,
+       avg(pim.xpm)::float                                              as xpm,
+       avg((pim.kills + pim.assists)::float / greatest(pim.deaths, 1))::float  as kda,
+       count(*)::int as games,
+       avg(pim.last_hits)::float as last_hits,
+       avg(pim.denies)::float as denies,
+       sum((pim.team = match.winner)::int)::int as wins,
+       sum((pim.team != match.winner)::int)::int as loss,
        pim.hero
 from player_in_match pim
 inner join finished_match match on "matchId" = match.id
-where pim."playerId" = '${steam_id}' and (match.matchmaking_mode = ${MatchmakingMode.RANKED} or match.matchmaking_mode = ${MatchmakingMode.UNRANKED})
+where pim."playerId" = $3 and match.matchmaking_mode in ($1, $2)
 group by pim.hero, pim."playerId"
-`);
+`, [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED, steam_id]);
   }
 
   @cached(100, 'winrateLastRankedGames')
