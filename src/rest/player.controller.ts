@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { CacheTTL } from '@nestjs/cache-manager';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Mapper } from 'rest/mapper';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
@@ -10,6 +10,7 @@ import {
   LeaderboardEntryDto,
   PlayerSummaryDto,
   PlayerTeammateDto,
+  PlayerTeammatePage,
   ReportPlayerDto,
 } from 'rest/dto/player.dto';
 import { CommandBus, EventBus } from '@nestjs/cqrs';
@@ -25,6 +26,7 @@ import { LeaderboardView } from 'gameserver/model/leaderboard.view';
 import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
+import { NullableIntPipe } from 'util/pipes';
 
 @Controller('player')
 @ApiTags('player')
@@ -48,10 +50,34 @@ export class PlayerController {
     private readonly leaderboardViewRepository: Repository<LeaderboardView>,
   ) {}
 
-
+  @ApiQuery({
+    name: 'page',
+    required: true,
+  })
+  @ApiQuery({
+    name: 'per_page',
+    required: false,
+  })
   @Get(`/:id/teammates`)
-  async playerTeammates(@Param('id') id: string){
-    return this.connection.query<PlayerTeammateDto[]>(`with teammates as (select distinct pim."playerId",
+  async playerTeammates(
+    @Param('id') steamId: string,
+    @Query('page', NullableIntPipe) page: number,
+    @Query('per_page', NullableIntPipe) perPage: number = 25,
+  ): Promise<PlayerTeammatePage> {
+    const totalEntries = await this.connection.query<{ count: number }[]>(
+      `select count(distinct pim."playerId")::int
+from player_in_match pim
+         inner join finished_match fm on fm.id = pim."matchId"
+         inner join player_in_match match_players
+                    on match_players."matchId" = fm.id and match_players."playerId" = $1
+
+where match_players.team = pim.team
+  and pim."playerId" != $1`,
+      [steamId],
+    );
+
+    const data = await this.connection.query<PlayerTeammateDto[]>(
+      `with teammates as (select distinct pim."playerId",
                                    count(pim)                        as games,
                                    sum((pim.team = fm.winner)::int)  as wins,
                                    sum((pim.team != fm.winner)::int) as losses
@@ -72,8 +98,18 @@ select p."playerId"                                                             
 
 from teammates p
 -- order by p.wins desc, p.losses asc;
-order by ABS((p.wins - p.losses)) desc
-limit 50`, [id])
+order by p.wins - p.losses desc
+offset $2
+limit $3`,
+      [steamId, perPage * page, perPage],
+    );
+
+    return {
+      data,
+      page,
+      perPage,
+      pages: Math.ceil(totalEntries[0].count / perPage),
+    };
   }
 
   @CacheTTL(120)
@@ -158,8 +194,6 @@ limit 50`, [id])
     return await this.playerService.heroStats(version, steam_id);
   }
 
-
-
   @Get('/hero/:hero/players')
   async getHeroPlayers(@Param('hero') hero: string) {
     return this.playerService.getHeroPlayers(hero);
@@ -185,7 +219,4 @@ limit 50`, [id])
       new PlayerReportEvent(dto.matchId, dto.reporter, dto.reported, dto.text),
     );
   }
-
-
-
 }
