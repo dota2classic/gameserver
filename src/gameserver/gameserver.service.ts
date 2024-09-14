@@ -350,7 +350,7 @@ export class GameServerService {
     fm = new FinishedMatchEntity(
       realId,
       j.winner,
-      new Date(j.timestamp).toString(),
+      new Date(j.timestamp).toUTCString(),
       Dota_GameMode.ALLPICK,
       j.matchmaking_mode as MatchmakingMode,
       j.duration,
