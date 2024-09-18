@@ -67,7 +67,7 @@ export class GameServerService {
     // this.migrateShit();
     // this.migrateItems();
     // this.migrated2com();
-    // this.migratePendoSite();
+    this.migratePendoSite();
     this.refreshLeaderboardView();
   }
 
@@ -451,7 +451,7 @@ export class GameServerService {
         // if has 'k' in it, remove it
         let rawGold = $el.find('.player-gold').text().replace('k', '');
         // if is float, a.k. was thousands, mult
-        const gold = rawGold.includes('\.') ? Number(rawGold) * 1000 : Number(rawGold);
+        const gold = Math.round(rawGold.includes('\.') ? Number(rawGold) * 1000 : Number(rawGold));
         const last_hits = parseInt($el.find('.player-lasthits').text());
         const denies = parseInt($el.find('.player-denies').text());
 
