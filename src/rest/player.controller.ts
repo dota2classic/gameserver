@@ -93,12 +93,11 @@ select p."playerId"                                                             
        p.games::int                                                                                         as games,
        p.wins::int                                                                                          as wins,
        p.losses::int                                                                                        as losses,
-       (p.wins::float / greatest(1, p.wins + p.losses))::float                                              as winrate,
-       (row_number() over (partition by sign(p.wins - p.losses) order by abs(p.wins - p.losses) desc))::int as rank
+       (p.wins::float / greatest(1, p.wins + p.losses))::float                                              as winrate
 
 from teammates p
 -- order by p.wins desc, p.losses asc;
-order by p.wins - p.losses desc
+order by p.wins - p.losses desc, p.games desc, steam_id desc
 offset $2
 limit $3`,
       [steamId, perPage * page, perPage],

@@ -446,7 +446,12 @@ export class GameServerService {
         const xpm = parseInt($el.find('.player-xpm').text());
         const hd = parseInt($el.find('.player-hd').text());
         const td = parseInt($el.find('.player-td').text());
-        const gold = parseInt($el.find('.player-gold').text());
+        // const gold = parseInt();
+        // 14.2k
+        // if has 'k' in it, remove it
+        let rawGold = $el.find('.player-gold').text().replace('k', '');
+        // if is float, a.k. was thousands, mult
+        const gold = rawGold.includes('\.') ? Number(rawGold) * 1000 : Number(rawGold);
         const last_hits = parseInt($el.find('.player-lasthits').text());
         const denies = parseInt($el.find('.player-denies').text());
 
