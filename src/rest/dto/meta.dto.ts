@@ -10,6 +10,7 @@ export class HeroSummaryDto {
   last_hits: number;
   denies: number;
   hero: string;
+  pickrate: number;
 }
 
 

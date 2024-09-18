@@ -15,7 +15,7 @@ export class MetaService {
     private readonly playerInMatchRepository: Repository<PlayerInMatchEntity>,
     @InjectRepository(FinishedMatchEntity)
     private readonly matchRepository: Repository<FinishedMatchEntity>,
-    private readonly connection: Connection
+    private readonly connection: Connection,
   ) {}
 
   @cached(60 * 24, 'meta_heroMatches')
@@ -54,25 +54,27 @@ export class MetaService {
   // 24 hours
   @cached(60 * 24, 'meta_heroesSummary')
   public async heroesSummary(): Promise<HeroSummaryDto[]> {
-    return this.playerInMatchRepository
-      .createQueryBuilder('pim')
-      .innerJoin(`pim.match`, 'm')
-      .select('pim.hero', 'hero')
-      .where('m.matchmaking_mode in (:...modes)', {
-        modes: [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],
-      })
-      .addSelect('cast(sum((pim.team = m.winner)::int) as integer)', 'wins')
-      .addSelect('cast(sum((pim.team != m.winner)::int) as integer)', 'losses')
-      .addSelect('cast(count(pim) as integer)', 'games')
-      .addSelect('cast(avg(pim.kills) as float)', 'kills')
-      .addSelect('cast(avg(pim.deaths) as float)', 'deaths')
-      .addSelect('cast(avg(pim.assists) as float)', 'assists')
-      .addSelect('cast(avg(pim.last_hits) as float)', 'last_hits')
-      .addSelect('cast(avg(pim.denies) as float)', 'denies')
-      .addSelect('cast(avg(pim.gpm) as float)', 'gpm')
-      .addSelect('cast(avg(pim.xpm) as float)', 'xpm')
-      .addGroupBy('pim.hero')
-      .getRawMany();
+    return this.connection.query(
+      `with picks as (select count(*) as cnt from player_in_match p)
+SELECT "pim"."hero"                                      AS "hero",
+       (count(pim.hero)::float / greatest(1, s.cnt))::float       as pickrate,
+       sum(("pim"."team" = "m"."winner")::int)::integer  AS "wins",
+       sum(("pim"."team" != "m"."winner")::int)::integer AS "losses",
+       count(pim)::integer                               AS "games",
+       avg("pim"."kills")::float                         AS "kills",
+       avg("pim"."deaths")::float                        AS "deaths",
+       avg("pim"."assists")::float                       AS "assists",
+       avg("pim"."last_hits")::float                     AS "last_hits",
+       avg("pim"."denies")::float                        AS "denies",
+       avg("pim"."gpm")::float                           AS "gpm",
+       avg("pim"."xpm")::float                           AS "xpm"
+FROM "player_in_match" "pim"
+         left join picks s on true
+         INNER JOIN "finished_match" "m" ON "m"."id" = "pim"."matchId"
+WHERE "m"."matchmaking_mode" in ($1, $2)
+GROUP BY "pim"."hero", s.cnt`,
+      [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],
+    );
   }
 
   /**
@@ -97,10 +99,8 @@ export class MetaService {
               games g
          where i.item_id in (g.item0, g.item1, g.item2, g.item3, g.item4, g.item5)
          group by i.item_id) select w.item, w.wins::int, w.game_count::int, w.winrate::float from winrates w where w.game_count > 10 and w.item != 0 
-order by w.game_count desc`
-
+order by w.game_count desc`;
 
     return this.connection.query<HeroItemDto[]>(query, [hero]);
-
   }
 }
