@@ -93,11 +93,12 @@ select p."playerId"                                                             
        p.games::int                                                                                         as games,
        p.wins::int                                                                                          as wins,
        p.losses::int                                                                                        as losses,
-       (p.wins::float / greatest(1, p.wins + p.losses))::float                                              as winrate
+       (p.wins::float / greatest(1, p.wins + p.losses))::float                                              as winrate,
+       (log(p.games + 1) * (p.wins::float / greatest(1, p.games)) * (p.wins - p.losses))::float                                as score2
 
 from teammates p
 -- order by p.wins desc, p.losses asc;
-order by p.wins - p.losses desc, p.games desc, steam_id desc
+order by score2 desc, steam_id desc
 offset $2
 limit $3`,
       [steamId, perPage * page, perPage],
