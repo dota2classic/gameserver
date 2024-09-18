@@ -88,25 +88,32 @@ export class GameServerService {
     // while we get new matches from api, we do
     // when we receive existing match, we break
     // 100 pages at a time
+    // for (let page = 0; page < 100; page++) {
     for (let page = 0; page < 100; page++) {
       const { Matches } = await fetch(
         `https://dota2classic.com/API/Match/List?page=${page}`,
       ).then(it => it.json());
-      const matchIds = Matches.map(it => it.MatchHistory.match_id);
+      const matchIds: number[] = Matches.map(it => it.MatchHistory.match_id);
 
+      let hasExisting = false;
       for (let matchId of matchIds) {
         // Check for existing
         const exists = await this.finishedMatchRepository.exists({
           where: { externalMatchId: matchId },
         });
         if (exists) {
-          console.log('HOORAY! WE CAUGHT UP IN MATCHES');
-          return;
+          hasExisting = true;
+          // return;
+          continue;
         }
 
         const scrappedMatch = await this.scrapMatch(matchId);
         await this.migrateMatch(scrappedMatch);
-        console.log(`Migrated match ${matchId}`);
+      }
+      this.logger.verbose(`Migrated page ${page}`)
+      if(hasExisting){
+        this.logger.log(`Caught up in matches at match ${matchIds.join(',')}`)
+        break;
       }
     }
   }
