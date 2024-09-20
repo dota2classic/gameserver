@@ -72,5 +72,7 @@ export const prodDbConfig: TypeOrmModuleOptions = {
   synchronize: true,
   maxQueryExecutionTime: 1000,
 
+  // logging: true,
+
   ssl: false,
 };

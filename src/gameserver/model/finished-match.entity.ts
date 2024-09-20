@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, OneToMany, PrimaryColumn } from 'typeorm';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
@@ -16,8 +16,11 @@ export default class FinishedMatchEntity {
   game_mode: Dota_GameMode;
 
   @CreateDateColumn()
+  @Index("match_timestamp_index")
   timestamp!: string;
+
   @Column('smallint')
+  @Index("finished_match_matchmaking_mode_index")
   matchmaking_mode: MatchmakingMode
   // On which server match was played
   @Column({ nullable: true })

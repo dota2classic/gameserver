@@ -9,6 +9,7 @@ import { MetaService } from 'rest/service/meta.service';
 import { NullableIntPipe } from 'util/pipes';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import { MatchService } from 'rest/service/match.service';
 
 
 @Controller('match')
@@ -21,6 +22,7 @@ export class MatchController {
     @InjectRepository(PlayerInMatchEntity)
     private readonly playerInMatchRepository: Repository<PlayerInMatchEntity>,
     private readonly metaService: MetaService,
+    private readonly matchService: MatchService,
   ) {}
 
   @ApiQuery({
@@ -66,25 +68,7 @@ export class MatchController {
     @Query('per_page', NullableIntPipe) perPage: number = 25,
     @Query('mode') mode?: MatchmakingMode,
   ): Promise<MatchPageDto> {
-    const slice = await this.matchRepository.find({
-      where: mode !== undefined ? { matchmaking_mode: mode } : {},
-      take: perPage,
-      skip: perPage * page,
-      order: {
-        timestamp: 'DESC',
-      },
-    });
-
-    const pages = await this.matchRepository.count({
-      where: mode !== undefined ? { matchmaking_mode: mode } : {},
-    });
-
-    return {
-      data: slice.map(this.mapper.mapMatch),
-      page,
-      perPage: perPage,
-      pages: Math.ceil(pages / perPage),
-    };
+    return this.matchService.getMatchPage(page, perPage, mode)
   }
 
   @Get('/:id')

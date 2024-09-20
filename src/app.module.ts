@@ -20,6 +20,7 @@ import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.quer
 import { outerQuery } from 'gateway/util/outerQuery';
 import { QueryCache } from 'rcache';
 import { CacheModule } from '@nestjs/cache-manager';
+import { MatchService } from 'rest/service/match.service';
 
 
 export function qCache<T, B>() {
@@ -71,6 +72,7 @@ export function qCache<T, B>() {
   providers: [
     AppService,
     MetaService,
+    MatchService,
     PlayerService,
     Mapper,
     ...GameServerDomain,

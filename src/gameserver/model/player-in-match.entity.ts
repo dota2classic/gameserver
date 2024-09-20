@@ -1,9 +1,13 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 
 @Entity('player_in_match')
+// @Index('player_match_index', ['playerId', 'matchId'])
+@Index('player_match_index', ['matchId'])
 export default class PlayerInMatchEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({
+    primaryKeyConstraintName: 'PK_pim_id_constraint',
+  })
   id!: number;
 
   /**
@@ -17,9 +21,13 @@ export default class PlayerInMatchEntity {
     match => match.players,
   )
   @JoinColumn({
-    foreignKeyConstraintName: "FK_match_player"
+    foreignKeyConstraintName: 'FK_match_player',
+    name: 'matchId',
   })
   match!: FinishedMatchEntity;
+
+  @Column('matchId')
+  matchId: number;
 
   @Column('int')
   team!: number;
@@ -51,7 +59,6 @@ export default class PlayerInMatchEntity {
   @Column('int', { default: 0 })
   denies: number = 0;
 
-
   @Column('int', { default: 0 })
   gold: number = 0;
 
@@ -81,7 +88,6 @@ export default class PlayerInMatchEntity {
 
   @Column('smallint', { default: 0 })
   item5: number;
-
 
   // constructor(playerId: string, team: number, kills: number, deaths: number, assists: number, level: number, gpm: number, xpm: number, abandoned: boolean, last_hits: number, denies: number, hero: string, items: string, item0: number, item1: number, item2: number, item3: number, item4: number, item5: number) {
   //   this.playerId = playerId;
