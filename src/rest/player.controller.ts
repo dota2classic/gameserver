@@ -17,7 +17,7 @@ import { CommandBus, EventBus } from '@nestjs/cqrs';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { GameServerService } from 'gameserver/gameserver.service';
-import { PlayerService } from 'rest/service/player.service';
+import { PlayerService, Summary } from 'rest/service/player.service';
 import { HeroStatsDto } from 'rest/dto/hero.dto';
 import { UNRANKED_GAMES_REQUIRED_FOR_RANKED } from 'gateway/shared-types/timings';
 import { BanStatus } from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
@@ -146,29 +146,29 @@ limit $3`,
       };
     }
 
-    const summary = await this.playerService.fullSummary(steam_id);
+    const summary: Summary | undefined = await this.playerService.fullSummary(steam_id);
 
     const rank = await this.playerService.getRank(version, steam_id);
 
     return {
       rank: rank,
-      mmr: summary.mmr,
-      steam_id: summary.steam_id,
+      mmr: summary?.mmr,
+      steam_id: steam_id,
 
-      games: summary.games,
-      wins: summary.wins,
+      games: summary?.games || 0,
+      wins: summary?.wins || 0,
 
-      kills: summary.kills,
-      deaths: summary.deaths,
-      assists: summary.assists,
-      play_time: summary.play_time,
+      kills: summary?.kills || 0,
+      deaths: summary?.deaths || 0,
+      assists: summary?.assists || 0,
+      play_time: summary?.play_time || 0,
 
       newbieUnrankedGamesLeft:
-        summary.ranked_games > 0
+        (summary?.ranked_games || 0) > 0
           ? 0
           : Math.max(
               0,
-              UNRANKED_GAMES_REQUIRED_FOR_RANKED - summary.unranked_games,
+              UNRANKED_GAMES_REQUIRED_FOR_RANKED - (summary?.unranked_games || 0),
             ),
     };
   }

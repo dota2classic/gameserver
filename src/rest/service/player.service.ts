@@ -10,6 +10,11 @@ import { PlayerSummaryDto } from 'rest/dto/player.dto';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 
+export type Summary = undefined | Omit<PlayerSummaryDto, 'rank' | 'newbieUnrankedGamesLeft'> & {
+  ranked_games: number;
+  unranked_games: number;
+};
+
 // TODO: we probably need to orm this shit up
 @Injectable()
 export class PlayerService {
@@ -36,7 +41,10 @@ export class PlayerService {
       },
     });
 
-    const rank2 = await this.connection.query<{ count: number; pgames: number }[]>(`
+    const rank2 = await this.connection.query<
+      { count: number; pgames: number }[]
+    >(
+      `
 with players as (select p.steam_id, p.mmr, count(pim) as games
              from version_player p
                       left outer join player_in_match pim
@@ -56,11 +64,12 @@ from players p,
      played_games pg
 where p.mmr > $3
   and p.games > 0 group by pgames
-    `, [MatchmakingMode.RANKED, steam_id, p.mmr])
+    `,
+      [MatchmakingMode.RANKED, steam_id, p.mmr],
+    );
 
-    if(rank2.length === 0) return -1;
-    if(rank2[0].pgames === 0) return -1;
-
+    if (rank2.length === 0) return -1;
+    if (rank2[0].pgames === 0) return -1;
 
     return rank2[0].count + 1;
   }
@@ -110,7 +119,8 @@ where m.matchmaking_mode = ${mode} and pim."playerId" = '${steam_id}' and m.radi
     version: Dota2Version,
     steam_id: string,
   ): Promise<HeroStatsDto[]> {
-    return await this.playerInMatchRepository.query(`
+    return await this.playerInMatchRepository.query(
+      `
 select pim."playerId",
        avg(pim.gpm)::float                                             as gpm,
        avg(pim.xpm)::float                                              as xpm,
@@ -125,7 +135,9 @@ from player_in_match pim
 inner join finished_match match on "matchId" = match.id
 where pim."playerId" = $3 and match.matchmaking_mode in ($1, $2)
 group by pim.hero, pim."playerId"
-`, [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED, steam_id]);
+`,
+      [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED, steam_id],
+    );
   }
 
   @cached(100, 'winrateLastRankedGames')
@@ -257,14 +269,7 @@ order by score desc`;
     ]);
   }
 
-  async fullSummary(
-    steam_id: string,
-  ): Promise<
-    Omit<PlayerSummaryDto, 'rank' | 'newbieUnrankedGamesLeft'> & {
-      ranked_games: number;
-      unranked_games: number;
-    }
-  > {
+  async fullSummary(steam_id: string): Promise<Summary> {
     const query = `
 select pim."playerId"                                                 as steam_id,
        vp.mmr::int                                                    as mmr,
@@ -279,10 +284,12 @@ from player_in_match pim
 where m.matchmaking_mode in (0, 1) and  pim."playerId" = $3
 group by pim."playerId", mmr;`;
 
-    return this.connection.query(query, [
-      MatchmakingMode.RANKED,
-      MatchmakingMode.UNRANKED,
-      steam_id,
-    ]).then(it => it[0]);
+    return this.connection
+      .query(query, [
+        MatchmakingMode.RANKED,
+        MatchmakingMode.UNRANKED,
+        steam_id,
+      ])
+      .then(it => it[0]);
   }
 }

@@ -35,7 +35,6 @@ export class GetPlayerInfoHandler
   ): Promise<GetPlayerInfoQueryResult> {
     await this.cbus.execute(new MakeSureExistsCommand(command.playerId));
 
-
     const ban = await this.playerBanRepository.findOne({
       where: { steam_id: command.playerId.value },
     });
@@ -48,8 +47,9 @@ export class GetPlayerInfoHandler
       recentKDA: number;
     }
 
-    const query: QueryResult = (await this.playerBanRepository.query(
-      `with recent_games as (select (pim.team = fm.winner)    as win,
+    const query: QueryResult | undefined = (
+      await this.playerBanRepository.query(
+        `with recent_games as (select (pim.team = fm.winner)    as win,
                              (pim.team != fm.winner)   as loss,
                              (pim.kills + pim.assists) as ka,
                              (pim.deaths)              as deaths
@@ -69,21 +69,22 @@ from version_player vp,
 
 where vp.steam_id = $1
 group by vp.steam_id, vp.mmr, vp.version`,
-      [command.playerId.value, 20],
-    ))[0];
+        [command.playerId.value, 20],
+      )
+    )[0];
+
     const rankedGamesPlayed = await this.playerService.gamesPlayed(
       command.playerId.value,
       MatchmakingMode.RANKED,
     );
 
-
     return new GetPlayerInfoQueryResult(
       command.playerId,
       command.version,
-      query.mmr,
-      query.winrate,
-      query.recentKDA,
-      rankedGamesPlayed,
+      query?.mmr || 0,
+      query?.winrate || 0,
+      query?.recentKDA || 0,
+      rankedGamesPlayed || 0,
       ban?.asBanStatus() || BanStatus.NOT_BANNED,
     );
   }
