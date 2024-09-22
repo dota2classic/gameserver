@@ -72,7 +72,7 @@ from player_in_match pim
                     on match_players."matchId" = fm.id and match_players."playerId" = $1
 
 where match_players.team = pim.team
-  and pim."playerId" != $1`,
+  and pim."playerId" != $1 and LENGTH(pim."playerId") > 2`,
       [steamId],
     );
 
@@ -87,7 +87,7 @@ where match_players.team = pim.team
                                       on match_players."matchId" = fm.id and match_players."playerId" = $1
                    where match_players is not null
                      and match_players.team = pim.team
-                     and pim."playerId" != $1
+                     and pim."playerId" != $1  and LENGTH(pim."playerId") > 2
                    group by pim."playerId")
 select p."playerId"                                                                                         as steam_id,
        p.games::int                                                                                         as games,
