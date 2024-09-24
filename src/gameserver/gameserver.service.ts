@@ -67,7 +67,7 @@ export class GameServerService {
     // this.migrateShit();
     // this.migrateItems();
     // this.migrated2com();
-    // this.migratePendoSite();
+    this.migratePendoSite();
     this.refreshLeaderboardView();
   }
 
@@ -89,11 +89,15 @@ export class GameServerService {
     // when we receive existing match, we break
     // 100 pages at a time
     // for (let page = 0; page < 100; page++) {
-    for (let page = 0; page < 1000; page++) {
+    for (let page = 320; page < 1000; page++) {
       const { Matches } = await fetch(
         `https://dota2classic.com/API/Match/List?page=${page}`,
       ).then(it => it.json());
       const matchIds: number[] = Matches.map(it => it.MatchHistory.match_id);
+      if(matchIds.length === 0) {
+        this.logger.log("Done syncing matches with d2com")
+        return
+      }
 
       let hasExisting = false;
       for (let matchId of matchIds) {
