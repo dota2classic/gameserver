@@ -27,6 +27,9 @@ export class Mapper {
 
     gpm: it.gpm,
     xpm: it.xpm,
+    hero_damage: it.hero_damage,
+    hero_healing: it.hero_healing,
+    tower_damage: it.tower_damage,
 
     item0: it.item0,
     item1: it.item1,
@@ -42,8 +45,12 @@ export class Mapper {
     id: match.id,
     mode: match.matchmaking_mode,
     game_mode: match.game_mode,
-    radiant: match.players.filter(t => t.team === DotaTeam.RADIANT).map(this.mapPlayerInMatch),
-    dire: match.players.filter(t => t.team === DotaTeam.DIRE).map(this.mapPlayerInMatch),
+    radiant: match.players
+      .filter(t => t.team === DotaTeam.RADIANT)
+      .map(this.mapPlayerInMatch),
+    dire: match.players
+      .filter(t => t.team === DotaTeam.DIRE)
+      .map(this.mapPlayerInMatch),
     winner: match.winner,
     duration: match.duration,
     timestamp: match.timestamp,
@@ -67,8 +74,12 @@ export class Mapper {
       version: it.matchInfoJson.version,
       roomId: it.matchInfoJson.roomId,
       averageMMR: 0,
-      radiant: it.matchInfoJson.players.filter(it => it.team == DotaTeam.RADIANT).map(t => t.playerId.value),
-      dire: it.matchInfoJson.players.filter(it => it.team == DotaTeam.DIRE).map(t => t.playerId.value),
+      radiant: it.matchInfoJson.players
+        .filter(it => it.team == DotaTeam.RADIANT)
+        .map(t => t.playerId.value),
+      dire: it.matchInfoJson.players
+        .filter(it => it.team == DotaTeam.DIRE)
+        .map(t => t.playerId.value),
     },
   });
 }

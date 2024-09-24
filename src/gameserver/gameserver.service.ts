@@ -376,6 +376,8 @@ export class GameServerService {
       pim.level = it.level;
       pim.gpm = it.gpm;
       pim.xpm = it.xpm;
+      pim.hero_damage = it.hd;
+      pim.tower_damage = it.td;
       pim.abandoned = false;
       pim.last_hits = it.last_hits;
       pim.denies = it.denies;
@@ -422,6 +424,14 @@ export class GameServerService {
 
     const date = new Date($('.match-info-date time').attr('datetime'));
 
+
+    function toCertainNumber(numberlike: string){
+      // 14.2k
+      // if has 'k' in it, remove it
+      let strippedLetters = numberlike.replace('k', '');
+      return Math.round(strippedLetters.includes('\.') ? Number(strippedLetters) * 1000 : Number(strippedLetters));
+    }
+
     const players = $('.player-row')
       .map(function(i) {
         const $el = $(this);
@@ -451,14 +461,12 @@ export class GameServerService {
         const assists = parseInt($el.find('.player-assists').text());
         const gpm = parseInt($el.find('.player-gpm').text());
         const xpm = parseInt($el.find('.player-xpm').text());
-        const hd = parseInt($el.find('.player-hd').text());
-        const td = parseInt($el.find('.player-td').text());
+        const hd = toCertainNumber($el.find('.player-hd').text());
+        const td = toCertainNumber($el.find('.player-td').text());
         // const gold = parseInt();
         // 14.2k
         // if has 'k' in it, remove it
-        let rawGold = $el.find('.player-gold').text().replace('k', '');
-        // if is float, a.k. was thousands, mult
-        const gold = Math.round(rawGold.includes('\.') ? Number(rawGold) * 1000 : Number(rawGold));
+        const gold = toCertainNumber($el.find('.player-gold').text());
         const last_hits = parseInt($el.find('.player-lasthits').text());
         const denies = parseInt($el.find('.player-denies').text());
 

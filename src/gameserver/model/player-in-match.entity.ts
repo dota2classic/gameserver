@@ -50,6 +50,16 @@ export default class PlayerInMatchEntity {
   @Column('int', { default: 0 })
   xpm: number = 0;
 
+
+  @Column('int', { default: 0 })
+  hero_damage: number = 0;
+
+  @Column('int', { default: 0 })
+  tower_damage: number = 0;
+
+  @Column('int', { default: 0 })
+  hero_healing: number = 0;
+
   @Column({ default: false })
   abandoned: boolean;
 

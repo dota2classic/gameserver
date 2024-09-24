@@ -63,12 +63,13 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
       // pm
       pim.gpm = t.gpm;
       pim.xpm = t.xpm;
+      pim.hero_damage = t.heroDamage;
+      pim.hero_healing = t.heroHealing;
+      pim.tower_damage = t.towerDamage;
 
       pim.abandoned = t.abandoned;
       pim.gold = t.networth;
       pim.items = '';
-
-
 
       pim.item0 = t.item0;
       pim.item1 = t.item1;
@@ -76,7 +77,6 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
       pim.item3 = t.item3;
       pim.item4 = t.item4;
       pim.item5 = t.item5;
-
 
       pim.level = t.level;
       pim.playerId = t.steam_id;
