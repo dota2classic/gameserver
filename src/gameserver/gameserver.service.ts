@@ -67,7 +67,7 @@ export class GameServerService {
     // this.migrateShit();
     // this.migrateItems();
     // this.migrated2com();
-    this.migratePendoSite();
+    // this.migratePendoSite();
     this.refreshLeaderboardView();
   }
 
@@ -89,7 +89,7 @@ export class GameServerService {
     // when we receive existing match, we break
     // 100 pages at a time
     // for (let page = 0; page < 100; page++) {
-    for (let page = 0; page < 100; page++) {
+    for (let page = 0; page < 1000; page++) {
       const { Matches } = await fetch(
         `https://dota2classic.com/API/Match/List?page=${page}`,
       ).then(it => it.json());
@@ -113,7 +113,7 @@ export class GameServerService {
       this.logger.verbose(`Migrated page ${page}`)
       if(hasExisting){
         this.logger.log(`Caught up in matches at match ${matchIds.join(',')}`)
-        break;
+        // break;
       }
     }
   }
@@ -400,7 +400,6 @@ export class GameServerService {
 
   private async scrapMatch(matchId: number): Promise<MatchD2Com> {
     const url = `https://dota2classic.com/Match/${matchId}`;
-    console.log('SCraping');
 
     const $ = await cheerio.fromURL(url);
 
