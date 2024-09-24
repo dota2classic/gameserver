@@ -128,8 +128,9 @@ export class FindGameServerHandler
           // server not launched for some reason
           // i guess we skip? just try next server
         }
-      } catch (e) {
+      } catch (e: Error) {
         console.log('Sadkek?', e);
+        console.error(e.stack)
         // timeout means server is DEAD
         this.ebus.publish(new ServerNotRespondingEvent(stackUrl));
         // just to make sure server is dead

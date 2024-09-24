@@ -73,7 +73,7 @@ export class MatchController {
 
   @Get('/:id')
   async getMatch(@Param('id', NullableIntPipe) id: number): Promise<MatchDto> {
-    const match = await this.matchRepository.findOne({
+    const match = await this.matchRepository.findOneOrFail({
       where: { id },
       relations: ['players'],
     });
