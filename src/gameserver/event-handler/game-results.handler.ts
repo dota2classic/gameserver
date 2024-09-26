@@ -92,6 +92,7 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
         event.winner,
         event.duration,
         event.type,
+        event.gameMode,
         event.timestamp,
         event.server,
         event.players,

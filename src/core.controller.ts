@@ -4,7 +4,6 @@ import { RoomReadyEvent } from 'gateway/events/room-ready.event';
 import { Constructor, EventBus } from '@nestjs/cqrs';
 import { GameServerNotStartedEvent, GameServerStartedEvent } from 'gateway/events/game-server-started.event';
 import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
-import { GameSessionUpdatedEvent } from 'gameserver/event/game-session-updated.event';
 import { GameServerDiscoveredEvent } from 'gateway/events/game-server-discovered.event';
 import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
 import { PlayerBanHammeredEvent } from 'gateway/events/bans/player-ban-hammered.event';
@@ -72,11 +71,6 @@ export class CoreController {
   @EventPattern(GameServerStoppedEvent.name)
   async GameServerStoppedEvent(data: GameServerStoppedEvent) {
     this.event(GameServerStoppedEvent, data);
-  }
-
-  @EventPattern(GameSessionUpdatedEvent.name)
-  async GameSessionUpdatedEvent(data: GameSessionUpdatedEvent) {
-    this.event(GameSessionUpdatedEvent, data);
   }
 
   @EventPattern(ServerSessionSyncEvent.name)

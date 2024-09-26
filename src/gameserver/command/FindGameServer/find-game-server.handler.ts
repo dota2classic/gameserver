@@ -24,6 +24,8 @@ import { MatchInfo, MatchPlayer } from 'gateway/events/room-ready.event';
 import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
 import { GetUserInfoQueryResult } from 'gateway/queries/GetUserInfo/get-user-info-query.result';
 import { MatchEntity } from 'gameserver/model/match.entity';
+import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
+import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
@@ -56,6 +58,33 @@ export class FindGameServerHandler
     this.pendingGamesPool.next(command);
   }
 
+  private getGameModeForMatchMode(mode: MatchmakingMode): Dota_GameMode {
+    switch (mode) {
+      case MatchmakingMode.RANKED:
+        return Dota_GameMode.RANKED_AP;
+      case MatchmakingMode.UNRANKED:
+        return Dota_GameMode.ALLPICK;
+      case MatchmakingMode.SOLOMID:
+        return Dota_GameMode.SOLOMID;
+      case MatchmakingMode.DIRETIDE:
+        return Dota_GameMode.DIRETIDE;
+      case MatchmakingMode.GREEVILING:
+        return Dota_GameMode.GREEVILING;
+      case MatchmakingMode.ABILITY_DRAFT:
+        return Dota_GameMode.ABILITY_DRAFT;
+      case MatchmakingMode.TOURNAMENT:
+        return Dota_GameMode.CAPTAINS_MODE;
+      case MatchmakingMode.BOTS:
+        return Dota_GameMode.ALLPICK;
+      case MatchmakingMode.HIGHROOM:
+        return Dota_GameMode.RANKED_AP;
+      case MatchmakingMode.TOURNAMENT_SOLOMID:
+        return Dota_GameMode.SOLOMID;
+      case MatchmakingMode.CAPTAINS_MODE:
+        return Dota_GameMode.CAPTAINS_MODE;
+    }
+  }
+
   private async extendMatchInfo(matchInfo: MatchInfo): Promise<GSMatchInfo> {
     const players: MatchPlayer[] = [];
 
@@ -65,8 +94,6 @@ export class FindGameServerHandler
         GetUserInfoQuery,
         GetUserInfoQueryResult
       >(new GetUserInfoQuery(t.playerId));
-      console.log(new GetUserInfoQuery(t.playerId), res)
-
       players.push(new MatchPlayer(t.playerId, res.name, t.team));
     });
 
@@ -74,6 +101,7 @@ export class FindGameServerHandler
 
     return new GSMatchInfo(
       matchInfo.mode,
+      this.getGameModeForMatchMode(matchInfo.mode),
       matchInfo.roomId,
       players,
       matchInfo.version,
@@ -86,7 +114,7 @@ export class FindGameServerHandler
       command.matchInfo.version,
     );
 
-    console.log('FindServer called, pool', freeServerPool)
+    console.log('FindServer called, pool', freeServerPool);
 
     const m = new MatchEntity();
     m.server = MatchEntity.NOT_DECIDED_SERVER;
@@ -128,9 +156,9 @@ export class FindGameServerHandler
           // server not launched for some reason
           // i guess we skip? just try next server
         }
-      } catch (e: any) {
+      } catch (e) {
         console.log('Sadkek?', e);
-        console.error(e.stack)
+        console.error(e.stack);
         // timeout means server is DEAD
         this.ebus.publish(new ServerNotRespondingEvent(stackUrl));
         // just to make sure server is dead
