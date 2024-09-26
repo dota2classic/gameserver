@@ -139,6 +139,7 @@ limit $3`,
         assists: lb.assists,
 
         play_time: lb.play_time,
+        playedAnyGame: lb.any_games > 0,
         newbieUnrankedGamesLeft:
           lb.ranked_games > 0
             ? 0
@@ -162,6 +163,8 @@ limit $3`,
       deaths: summary?.deaths || 0,
       assists: summary?.assists || 0,
       play_time: summary?.play_time || 0,
+
+      playedAnyGame: summary?.playedAnyGame || false,
 
       newbieUnrankedGamesLeft:
         (summary?.ranked_games || 0) > 0

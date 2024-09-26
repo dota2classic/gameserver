@@ -67,7 +67,7 @@ export class GameServerService {
     // this.migrateShit();
     // this.migrateItems();
     // this.migrated2com();
-    this.migratePendoSite();
+    // this.migratePendoSite();
     this.refreshLeaderboardView();
   }
 
