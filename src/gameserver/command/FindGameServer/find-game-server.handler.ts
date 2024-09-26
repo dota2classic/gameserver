@@ -127,16 +127,14 @@ export class FindGameServerHandler
     let i = 0;
     let foundServer: GameServerEntity | undefined;
 
+    const gsInfo = await this.extendMatchInfo(command.matchInfo);
+
     console.log('Free pool:', freeServerPool.length);
     while (i < freeServerPool.length) {
       const candidate = freeServerPool[i];
       const stackUrl = candidate.url;
       try {
-        const cmd = new LaunchGameServerCommand(
-          candidate.url,
-          m.id,
-          await this.extendMatchInfo(command.matchInfo),
-        );
+        const cmd = new LaunchGameServerCommand(candidate.url, m.id, gsInfo);
         console.log(JSON.stringify(cmd, null, 2));
         const req = await this.redisEventQueue
           .send<LaunchGameServerResponse, LaunchGameServerCommand>(
@@ -185,9 +183,7 @@ export class FindGameServerHandler
 
     session.matchId = m.id;
     session.matchInfoJson = {
-      ...command.matchInfo,
-      // Obsolete
-      players: command.matchInfo.players,
+      ...gsInfo,
     };
 
     await this.gameServerSessionModelRepository.save(session);
