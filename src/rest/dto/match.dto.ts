@@ -1,11 +1,17 @@
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Page } from 'rest/dto/page';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class MatchDto {
   id: number;
+
+  @ApiProperty({ enum: MatchmakingMode, enumName: 'MatchmakingMode' })
   mode: MatchmakingMode;
+
+  @ApiProperty({ enum: Dota_GameMode, enumName: 'Dota_GameMode' })
   game_mode: Dota_GameMode;
+
   radiant: PlayerInMatchDto[];
   dire: PlayerInMatchDto[];
   winner: number;
