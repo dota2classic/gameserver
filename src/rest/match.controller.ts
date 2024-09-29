@@ -68,7 +68,7 @@ export class MatchController {
     @Query('per_page', NullableIntPipe) perPage: number = 25,
     @Query('mode') mode?: MatchmakingMode,
   ): Promise<MatchPageDto> {
-    return this.matchService.getMatchPage(page, perPage, mode)
+    return this.matchService.getMatchPage(page, perPage, mode);
   }
 
   @Get('/:id')
@@ -105,23 +105,7 @@ export class MatchController {
     @Query('mode', NullableIntPipe) mode?: MatchmakingMode,
     @Query('hero') hero?: string,
   ): Promise<MatchPageDto> {
-    let query = this.playerInMatchRepository
-      .createQueryBuilder('pim')
-      .innerJoinAndSelect('pim.match', 'm')
-      .innerJoinAndSelect('m.players', 'players')
-      .where(`pim.playerId = '${steam_id}'`)
-      .orderBy('m.timestamp', 'DESC')
-      .take(perPage)
-      .skip(perPage * page);
-
-    if (mode !== undefined) {
-      query.andWhere(`m.matchmaking_mode = :mode`, { mode });
-    }
-    if (hero !== undefined) {
-      query.andWhere(`pim.hero = :hero`, { hero });
-    }
-
-    const [pims, total] = await query.getManyAndCount();
+    const [pims, total] = await this.matchService.playerMatches(steam_id, page, perPage, mode, hero);
 
     return {
       data: pims.map(t => t.match).map(this.mapper.mapMatch),

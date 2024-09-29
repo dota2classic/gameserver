@@ -13,6 +13,7 @@ import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
+import { ItemHeroView } from 'gameserver/model/item-hero.view';
 
 export interface MatchD2Com {
   id: number;
@@ -63,6 +64,8 @@ export class GameServerService {
     private readonly finishedMatchRepository: Repository<FinishedMatchEntity>,
     @InjectRepository(LeaderboardView)
     private readonly leaderboardViewRepository: Repository<LeaderboardView>,
+    @InjectRepository(ItemHeroView)
+    private readonly itemHeroViewRepository: Repository<ItemHeroView>,
   ) {
     // this.migrateShit();
     // this.migrateItems();
@@ -81,6 +84,10 @@ export class GameServerService {
       `refresh materialized view item_view`,
     );
     this.logger.log('Refreshed item_view');
+    await this.leaderboardViewRepository.query(
+      `refresh materialized view item_hero_view`,
+    );
+    this.logger.log('Refreshed item_hero_view');
   }
 
   @Cron(CronExpression.EVERY_HOUR)

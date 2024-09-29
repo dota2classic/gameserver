@@ -7,6 +7,8 @@ import { Page } from 'rest/dto/page';
 import { cached } from 'util/method-cache';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import { ItemHeroView } from 'gameserver/model/item-hero.view';
+import { ItemView } from 'gameserver/model/item.view';
 
 @Injectable()
 export class MetaService {
@@ -16,6 +18,10 @@ export class MetaService {
     @InjectRepository(FinishedMatchEntity)
     private readonly matchRepository: Repository<FinishedMatchEntity>,
     private readonly connection: Connection,
+    @InjectRepository(ItemHeroView)
+    private readonly itemHeroViewRepository: Repository<ItemHeroView>,
+    @InjectRepository(ItemView)
+    private readonly itemViewRepository: Repository<ItemView>,
   ) {}
 
   @cached(60 * 24, 'meta_heroMatches')
@@ -102,5 +108,13 @@ GROUP BY "pim"."hero", s.cnt`,
 order by w.game_count desc`;
 
     return this.connection.query<HeroItemDto[]>(query, [hero]);
+  }
+
+  public async itemHeroes(item: number): Promise<ItemHeroView[]> {
+    return this.itemHeroViewRepository.find({ where: { item_id: item } });
+  }
+
+  async items(): Promise<ItemView[]> {
+    return this.itemViewRepository.find();
   }
 }

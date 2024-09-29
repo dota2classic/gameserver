@@ -15,6 +15,7 @@ import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
 import { PlayerReportStatusEntity } from 'gameserver/model/player-report-status.entity';
 import { PlayerReportEntity } from 'gameserver/model/player-report.entity';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
+import { ItemHeroView } from 'gameserver/model/item-hero.view';
 
 export const Entities = [
   GameSeasonEntity,
@@ -37,7 +38,9 @@ export const Entities = [
 
   ReplayEntity,
   LeaderboardView,
-  ItemView
+
+  ItemView,
+  ItemHeroView,
 ];
 export const devDbConfig: any = {
   type: 'postgres',
@@ -70,9 +73,9 @@ export const prodDbConfig: TypeOrmModuleOptions = {
   password: DB_PASSWORD,
   entities: Entities,
   synchronize: true,
+  dropSchema: false,
   maxQueryExecutionTime: 1000,
 
-  // logging: true,
 
   ssl: false,
 };

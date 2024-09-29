@@ -20,3 +20,18 @@ export class HeroItemDto {
   wins: number;
   winrate: number;
 }
+
+export class ItemHeroDto {
+  item: number;
+  hero: string;
+  played: number;
+  wins: number;
+}
+
+
+export class ItemDto {
+  item: number;
+  popularity: number;
+  games: number;
+  wins: number;
+}

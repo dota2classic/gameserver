@@ -4,16 +4,18 @@ import { Connection, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerService } from 'gameserver/gameserver.service';
-import { HeroStatsDto, PlayerGeneralStatsDto, PlayerHeroPerformance } from 'rest/dto/hero.dto';
+import { HeroStatsDto, PlayerHeroPerformance } from 'rest/dto/hero.dto';
 import { cached } from 'util/method-cache';
 import { PlayerSummaryDto } from 'rest/dto/player.dto';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 
-export type Summary = undefined | Omit<PlayerSummaryDto, 'rank' | 'newbieUnrankedGamesLeft'> & {
-  ranked_games: number;
-  unranked_games: number;
-};
+export type Summary =
+  | undefined
+  | (Omit<PlayerSummaryDto, 'rank' | 'newbieUnrankedGamesLeft'> & {
+      ranked_games: number;
+      unranked_games: number;
+    });
 
 // TODO: we probably need to orm this shit up
 @Injectable()
@@ -93,27 +95,6 @@ where p.mmr > $3
       .getCount();
   }
 
-  @cached(100, 'winrate')
-  async winrate(steam_id: string, mode: MatchmakingMode) {
-    const wins = (
-      await this.playerInMatchRepository.query(`
-select count(*) as wins
-from player_in_match pim
-         inner join finished_match m on pim."matchId" = m.id
-where m.matchmaking_mode = ${mode} and pim."playerId" = '${steam_id}' and m.radiant_win = case pim.team when 2 then true else false end`)
-    )[0].wins;
-
-    const loss = (
-      await this.playerInMatchRepository.query(`
-select count(*) as wins
-from player_in_match pim
-         inner join finished_match m on pim."matchId" = m.id
-where m.matchmaking_mode = ${mode} and pim."playerId" = '${steam_id}' and m.radiant_win != case pim.team when 2 then true else false end`)
-    )[0].wins;
-
-    return parseInt(wins) / Math.max(1, parseInt(wins) + parseInt(loss));
-  }
-
   @cached(100, 'heroStats')
   async heroStats(
     version: Dota2Version,
@@ -158,85 +139,9 @@ LIMIT 20;
     return winCount / recordCount;
   }
 
-  @cached(100, 'kdaLastRankedGames')
-  async kdaLastRankedGames(steam_id: string): Promise<number> {
-    console.log('Count latest KDA');
-    const some = await this.playerInMatchRepository.find({
-      where: {
-        playerId: steam_id,
-      },
-      order: {
-        id: 'DESC',
-      },
-      take: 20,
-    });
-
-    const KDA =
-      some
-        .map(it => (it.kills + it.assists) / Math.max(1, it.deaths))
-        .reduce((a, b) => a + b, 0) / Math.max(1, some.length);
-
-    console.log('CAlculated latest kda for ', steam_id, "it's ");
-    return KDA;
-    // const winCount = some.reduce((a, b) => a + (b.is_win ? 1 : 0), 0);
-    //
-    // const recordCount = some.length;
-    //
-    // return winCount / recordCount;
-  }
-
-  @cached(100, 'generalStats')
-  async generalStats(steam_id: string): Promise<PlayerGeneralStatsDto> {
-    const totalGames = await this.playerInMatchRepository.count({
-      where: {
-        playerId: steam_id,
-      },
-    });
-
-    const wins = (
-      await this.playerInMatchRepository.query(`
-select count(*) as wins
-from player_in_match pim
-         inner join finished_match m on pim."matchId" = m.id
-where (m.matchmaking_mode = ${MatchmakingMode.RANKED} or m.matchmaking_mode = ${MatchmakingMode.UNRANKED}) and pim."playerId" = '${steam_id}' and m.winner = pim.team`)
-    )[0].wins;
-
-    const loss = (
-      await this.playerInMatchRepository.query(`
-select count(*) as wins
-from player_in_match pim
-         inner join finished_match m on pim."matchId" = m.id
-where (m.matchmaking_mode = ${MatchmakingMode.RANKED} or m.matchmaking_mode = ${MatchmakingMode.UNRANKED}) and pim."playerId" = '${steam_id}' and m.winner != pim.team`)
-    )[0].wins;
-
-    return {
-      steam_id: steam_id,
-      games_played: parseInt(wins) + parseInt(loss),
-      games_played_all: totalGames,
-      wins: parseInt(wins),
-      loss: parseInt(loss),
-    };
-  }
-
-  async getNonRankedGamesPlayed(steam_id: string): Promise<number> {
-    return this.playerInMatchRepository
-      .createQueryBuilder('pim')
-      .innerJoin('pim.match', 'm')
-      .where('pim.playerId = :steam_id', { steam_id })
-      .andWhere(
-        '(m.matchmaking_mode = :mode or m.matchmaking_mode = :mode2 or m.matchmaking_mode = :mode3 or m.matchmaking_mode = :mode4)',
-        {
-          mode: MatchmakingMode.UNRANKED,
-          mode2: MatchmakingMode.BOTS,
-          mode3: MatchmakingMode.DIRETIDE,
-          mode4: MatchmakingMode.SOLOMID,
-        },
-      )
-      .getCount();
-  }
-
   async getHeroPlayers(hero: string): Promise<PlayerHeroPerformance[]> {
-    const query = `with players as (select pim."playerId"                  as player,
+    const query = `
+with players as (select pim."playerId"                  as player,
                         sum((pim.team = m.winner)::int) as wins,
                         avg(pim.level)                  as level,
                         avg(pim.kills)                  as kills,
