@@ -1,6 +1,5 @@
 import { Index, ViewColumn, ViewEntity } from 'typeorm';
 import { ItemMap } from 'util/items';
-import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 
 @ViewEntity({
@@ -33,7 +32,7 @@ from items
          left join player_in_match pim
                    on pim.item0 = items.item_id or pim.item1 = items.item_id or pim.item2 = items.item_id or
                       pim.item3 = items.item_id or pim.item4 = items.item_id or pim.item5 = items.item_id
-         inner join finished_match fm on fm.id = pim."matchId" and fm.matchmaking_mode in (${MatchmakingMode.RANKED}, ${MatchmakingMode.UNRANKED})
+         inner join finished_match fm on fm.id = pim."matchId" and fm.matchmaking_mode in (0, 1)
 where items.item_id != 0
 group by items.item_id`
 })
