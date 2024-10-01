@@ -13,6 +13,8 @@ import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-su
 import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
 import { ServerSessionSyncEvent } from 'gateway/events/gs/server-session-sync.event';
 import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event';
+import { GameServerDiscoveredEvent } from 'gateway/events/game-server-discovered.event';
+import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
 
 export function prepareModels(publisher: EventPublisher) {
   // publisher.mergeClassContext(GameServerModel);
@@ -61,6 +63,8 @@ async function bootstrap() {
     if (e.constructor.name === ServerActualizationRequestedEvent.name) return;
     if (e.constructor.name === ServerSessionSyncEvent.name) return;
     if (e.constructor.name === LiveMatchUpdateEvent.name) return;
+    if (e.constructor.name === GameServerDiscoveredEvent.name) return;
+    if (e.constructor.name === ServerStatusEvent.name) return;
 
     elogger.log(`${inspect(e)}`);
   });

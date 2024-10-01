@@ -70,7 +70,7 @@ export class GameServerService {
     // this.migrateShit();
     // this.migrateItems();
     // this.migrated2com();
-    // this.migratePendoSite();
+    this.migratePendoSite();
     this.refreshLeaderboardView();
   }
 
@@ -100,7 +100,7 @@ export class GameServerService {
       const { Matches } = await fetch(
         `https://dota2classic.com/API/Match/List?page=${page}`,
       ).then(it => it.json());
-      const matchIds: number[] = Matches.map(it => it.MatchHistory.match_id);
+      const matchIds: number[] = Matches.map(it => it.MatchHistory.id);
       if(matchIds.length === 0) {
         this.logger.log("Done syncing matches with d2com")
         return
