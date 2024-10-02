@@ -1,8 +1,8 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Connection, In, Repository } from 'typeorm';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerService } from 'gameserver/gameserver.service';
@@ -10,11 +10,22 @@ import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
+import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
+import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 
+type GetMmr = (plr: VersionPlayerEntity) => number;
+
+interface TeamBalance {
+  winnerAverage: number;
+  loserAverage: number;
+  diffDeviationFactor: number;
+}
 @CommandHandler(ProcessRankedMatchCommand)
 export class ProcessRankedMatchHandler
   implements ICommandHandler<ProcessRankedMatchCommand> {
-  private readonly logger = new Logger(ProcessRankedMatchHandler.name);
+  private static readonly Slogger = new Logger(ProcessRankedMatchHandler.name);
+
+  private readonly logger = ProcessRankedMatchHandler.Slogger;
 
   public static readonly AVERAGE_DIFF_CAP = 300;
   public static readonly AVERAGE_DEVIATION_MAX = 15;
@@ -27,24 +38,49 @@ export class ProcessRankedMatchHandler
     private readonly mmrChangeLogEntityRepository: Repository<
       MmrChangeLogEntity
     >,
+    @InjectRepository(FinishedMatchEntity)
+    private readonly finishedMatchEntityRepository: Repository<
+      FinishedMatchEntity
+    >,
+    private readonly cbus: CommandBus,
+    private readonly connection: Connection,
   ) {}
 
-  public calculateMmrDeviation(
+  public static calculateMmrDeviation(
     winnerAverageMmr: number,
     loserAverageMmr: number,
+    max: number = ProcessRankedMatchHandler.AVERAGE_DEVIATION_MAX,
+    diffCap: number = ProcessRankedMatchHandler.AVERAGE_DIFF_CAP,
   ) {
-    const averageDiff = winnerAverageMmr - loserAverageMmr;
+    const averageDiff = Math.abs(winnerAverageMmr - loserAverageMmr);
+    const sign = winnerAverageMmr > loserAverageMmr ? -1 : 1;
 
     // how much to add to remove from winners and add to losers
-    return (
-      (ProcessRankedMatchHandler.AVERAGE_DEVIATION_MAX *
-        (averageDiff < 0 ? -1 : 1) *
-        Math.min(
-          Math.abs(averageDiff),
-          ProcessRankedMatchHandler.AVERAGE_DIFF_CAP,
-        )) /
-      ProcessRankedMatchHandler.AVERAGE_DIFF_CAP
-    );
+    return sign * ((max * Math.min(averageDiff, diffCap)) / diffCap);
+  }
+
+  public static computeMMRChange(
+    steam_id: string,
+    cbGame: number,
+    win: boolean,
+    mmrDiff: number,
+    cbGames: number = 10,
+    baseMMRChange: number = 25,
+    kindGames: number = 3,
+  ): number {
+    let baseMMR = baseMMRChange;
+
+    if (cbGame < cbGames && cbGame < kindGames) {
+      baseMMR = 50;
+    } else if (cbGame < cbGames) {
+      // gradually reducing mmr
+      baseMMR = 100;
+    }
+
+    return (win ? 1 : -1) * (baseMMR + mmrDiff);
+    // return (
+    //   (win ? baseMMRChange : -baseMMRChange) + (win ? -mmrDiff : mmrDiff)
+    // );
   }
 
   async execute(command: ProcessRankedMatchCommand) {
@@ -53,74 +89,141 @@ export class ProcessRankedMatchHandler
       Dota2Version.Dota_681,
     );
 
-    const check = await this.mmrChangeLogEntityRepository.count({
-      where: {matchId: command.matchId,}
-    });
+    if (await this.isAlreadyProcessed(command.matchId)) return;
 
-    if (check > 0) {
-      this.logger.log(
-        `RANKED MATCH ${command.matchId} TRIED TO BE PROCESSED TWICE. CANCELLING`,
+    const playerMap = await this.getVersionPlayerMap(command);
+
+    if (playerMap.size !== command.winners.length + command.losers.length) {
+      this.logger.error(
+        `Version player map did not match. Cancelling match ${command.matchId} processing`,
       );
       return;
     }
 
-    const winnerMMR = (
-      await Promise.all(
-        command.winners.map(t =>
-          this.versionPlayerRepository.findOne({
-            where: {version: Dota2Version.Dota_681,
-              steam_id: t.value,}
-          }),
-        ),
-      )
-    ).reduce((a, b) => a + b.mmr, 0);
+    const m = await this.finishedMatchEntityRepository.findOneOrFail({
+      where: {
+        id: command.matchId,
+      },
+    });
 
-    const loserMMR = (
-      await Promise.all(
-        command.losers.map(t =>
-          this.versionPlayerRepository.findOne({
-            where: { version: Dota2Version.Dota_681,
-              steam_id: t.value,}
-          }),
+    const isHiddenMmr = command.mode !== MatchmakingMode.RANKED;
+
+    const {
+      diffDeviationFactor,
+      winnerAverage,
+      loserAverage,
+    } = this.getTeamBalance(command, playerMap);
+
+    const changelogs = await Promise.all(
+      [...command.winners, ...command.losers].map((t, idx) =>
+        this.changeMMR(
+          currentSeason,
+          t,
+          idx < command.winners.length,
+          diffDeviationFactor,
+          winnerAverage,
+          loserAverage,
+          command.matchId,
+          isHiddenMmr,
+          m.timestamp,
+          playerMap,
         ),
-      )
-    ).reduce((a, b) => a + b.mmr, 0);
+      ),
+    );
+
+    const qr = this.connection.createQueryRunner();
+    await qr.startTransaction();
+    try {
+      await this.mmrChangeLogEntityRepository.save(changelogs);
+      this.logger.log('Saved mmr change log entities');
+
+      await this.versionPlayerRepository.save(Array.from(playerMap.values()));
+      this.logger.log('Saved version player changes');
+
+      await qr.commitTransaction();
+    } catch (e) {
+      this.logger.error('Error while saving mmr changes');
+      await qr.rollbackTransaction();
+    } finally {
+      await qr.release();
+    }
+  }
+
+  private async makeSureAllPlayersExist(command: ProcessRankedMatchCommand) {
+    await Promise.all(
+      [...command.winners, ...command.losers].map(id =>
+        this.cbus.execute(new MakeSureExistsCommand(id)),
+      ),
+    );
+  }
+
+  private async isAlreadyProcessed(matchId: number): Promise<boolean> {
+    const check = await this.mmrChangeLogEntityRepository.count({
+      where: { matchId: matchId },
+    });
+
+    if (check > 0) {
+      this.logger.log(
+        `MATCH ${matchId} TRIED TO BE PROCESSED TWICE. CANCELLING`,
+      );
+    }
+
+    return check > 0;
+  }
+
+  private async getVersionPlayerMap(command: ProcessRankedMatchCommand) {
+    const map = new Map<string, VersionPlayerEntity>();
+    const plrs = await this.versionPlayerRepository.find({
+      where: {
+        steam_id: In([...command.losers, ...command.winners].map(t => t.value)),
+      },
+    });
+
+    plrs.forEach(plr => map.set(plr.steam_id, plr));
+
+    // here we do some tricks
+    [...command.losers, ...command.winners].forEach(pid => {
+      if (!map.has(pid.value)) {
+        const vp = new VersionPlayerEntity();
+        vp.steam_id = pid.value;
+        vp.hidden_mmr = VersionPlayerEntity.STARTING_MMR;
+        vp.mmr = VersionPlayerEntity.STARTING_MMR;
+        vp.version = Dota2Version.Dota_681;
+        map.set(pid.value, vp);
+      }
+    });
+
+    return map;
+  }
+
+  private getTeamBalance(
+    command: ProcessRankedMatchCommand,
+    playerMap: Map<string, VersionPlayerEntity>,
+  ): TeamBalance {
+    const isHiddenMmr = command.mode !== MatchmakingMode.RANKED;
+
+    const getMmr: GetMmr = (plr: VersionPlayerEntity): number =>
+      isHiddenMmr ? plr.hidden_mmr : plr.mmr;
+
+    const winnerMMR = command.winners
+      .map(t => playerMap[t.value])
+      .reduce((a, b) => a + getMmr(b), 0);
+
+    const loserMMR = command.losers
+      .map(t => playerMap[t.value])
+      .reduce((a, b) => a + getMmr(b), 0);
 
     const winnerAverage = winnerMMR / command.winners.length;
     const loserAverage = loserMMR / command.losers.length;
 
-    const diffDeviationFactor = this.calculateMmrDeviation(
+    return {
       winnerAverage,
       loserAverage,
-    );
-
-    await Promise.all(
-      command.winners.map(t =>
-        this.changeMMR(
-          currentSeason,
-          t,
-          true,
-          diffDeviationFactor,
-          winnerAverage,
-          loserAverage,
-          command.matchId,
-        ),
+      diffDeviationFactor: ProcessRankedMatchHandler.calculateMmrDeviation(
+        winnerAverage,
+        loserAverage,
       ),
-    );
-    await Promise.all(
-      command.losers.map(t =>
-        this.changeMMR(
-          currentSeason,
-          t,
-          false,
-          diffDeviationFactor,
-          winnerAverage,
-          loserAverage,
-          command.matchId,
-        ),
-      ),
-    );
-    // let's keep it simple for now
+    };
   }
 
   private async changeMMR(
@@ -131,88 +234,55 @@ export class ProcessRankedMatchHandler
     winnerAverage: number,
     loserAverage: number,
     matchId: number,
+    hiddenMmr: boolean,
+    matchTimestamp: string,
+    playerMap: Map<string, VersionPlayerEntity>,
   ) {
     const cb = await this.gameServerService.getGamesPlayed(
       season,
       pid,
-      MatchmakingMode.RANKED,
+      undefined,
+      matchTimestamp,
     );
-    const plr = await this.versionPlayerRepository.findOneOrFail({
-      where: {
-        version: Dota2Version.Dota_681,
-        steam_id: pid.value,
-      },
-    });
+
+    const plr = playerMap[pid.value];
 
     const mmrChange = Math.round(
-      this.computeMMRChange(plr.steam_id, cb, winner, mmrDiff),
+      ProcessRankedMatchHandler.computeMMRChange(
+        plr.steam_id,
+        cb,
+        winner,
+        mmrDiff,
+        0, // CB GAMES = 0 for now
+      ),
     );
 
     this.logger.log(
-      `Updating MMR for ${plr.steam_id}. Now: ${plr.mmr}, change: ${mmrChange}`,
+      `Updating ${hiddenMmr ? 'hidden' : 'real'} MMR for ${
+        plr.steam_id
+      }. Now: ${hiddenMmr ? plr.hidden_mmr : plr.mmr}, change: ${mmrChange}`,
     );
 
-    // console.log(
-    //   `MMR Change for ${pid.value}: ${mmrChange}. Was ${
-    //     plr.mmr
-    //   } became ${plr.mmr + mmrChange}`,
-    // );
-
     try {
+      if (hiddenMmr) {
+        plr.hidden_mmr = plr.hidden_mmr + mmrChange;
+      } else {
+        plr.mmr = plr.mmr + mmrChange;
+      }
+
       const change = new MmrChangeLogEntity();
       change.playerId = pid.value;
       change.loserAverage = Number(loserAverage);
       change.winnerAverage = Number(winnerAverage);
       change.change = Number(mmrChange);
       change.winner = winner;
-      change.mmrBefore = Number(plr.mmr);
-      change.mmrAfter = Number(plr.mmr + mmrChange);
+      change.hiddenMmr = hiddenMmr;
+      change.mmrBefore = Number(hiddenMmr ? plr.hidden_mmr : plr.mmr);
+      change.mmrAfter = Number(change.mmrBefore + mmrChange);
       change.matchId = matchId;
-      await this.mmrChangeLogEntityRepository.save(change);
+      return change;
     } catch (e) {
       console.error(e);
     }
-
-    plr.mmr = plr.mmr + mmrChange;
-    await this.versionPlayerRepository.save(plr);
-    this.logger.log(`Saved mmr for ${plr.steam_id} successfully`);
-  }
-
-  public computeMMRChange(
-    steam_id: string,
-    cbGame: number,
-    win: boolean,
-    mmrDiff: number,
-  ): number {
-    let baseMMR;
-
-    // ffs
-    // return win ? 25 : -25;
-    // total calibration games
-    const cbGames = 10;
-
-    this.logger.log(
-      `${steam_id}, computing mmr change. GamesPlayed: ${cbGame}. Winner: ${win}`,
-    );
-
-    // if we're over calibration game limit, we go ±25 mmr
-    if (cbGame > cbGames) {
-      return (win ? 25 : -25) + (win ? -mmrDiff : mmrDiff);
-    }
-
-    // first 3 games are kind and 50± mmr only
-    const offset = 3;
-
-    const offsetContext = cbGames - offset;
-
-    // if in "kind" games 50 mmr
-    if (cbGame < offset) {
-      baseMMR = 50;
-    } else {
-      // gradually reducing mmr
-      baseMMR = 100;
-    }
-
-    return win ? baseMMR : -baseMMR;
   }
 }

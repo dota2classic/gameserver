@@ -75,8 +75,8 @@ export class GameserverSaga {
   processRanked = (events$: Observable<any>): Observable<ICommand> => {
     return events$.pipe(
       ofType(GameResultsEvent),
-      filter(t => t.type === MatchmakingMode.RANKED),
-      map(e => {
+      filter(t => t.type === MatchmakingMode.RANKED || t.type === MatchmakingMode.UNRANKED),
+      map((e: GameResultsEvent) => {
 
         const losers = e.players
           .filter(p => p.team !== e.winner)
@@ -85,7 +85,7 @@ export class GameserverSaga {
           .filter(p => p.team === e.winner)
           .map(t => new PlayerId(t.steam_id));
 
-        return new ProcessRankedMatchCommand(e.matchId, winners, losers);
+        return new ProcessRankedMatchCommand(e.matchId, winners, losers, e.type);
       }),
     );
   };

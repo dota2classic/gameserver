@@ -26,6 +26,9 @@ export class MmrChangeLogEntity {
   @Column({ type: "float"})
   mmrAfter: number;
 
+  @Column({ default: false })
+  hiddenMmr: boolean
+
 
   @Column({ type: "float"})
   change: number

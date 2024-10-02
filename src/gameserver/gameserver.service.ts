@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThanOrEqual, Repository } from 'typeorm';
+import { Connection, In, LessThanOrEqual, Repository } from 'typeorm';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
@@ -14,6 +14,9 @@ import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { ItemHeroView } from 'gameserver/model/item-hero.view';
+import { ProcessRankedMatchHandler } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.handler';
+import { CommandBus } from '@nestjs/cqrs';
+import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
 
 export interface MatchD2Com {
   id: number;
@@ -49,6 +52,14 @@ export interface Player {
   item5: number;
 }
 
+interface MMRConfig {
+  calibrationGames: number;
+  kindCalibrationGames: number;
+  baseMmr: number;
+  maxDeviation: number;
+  avgDiffCap: number;
+}
+
 @Injectable()
 export class GameServerService {
   private readonly logger = new Logger(GameServerService.name);
@@ -66,12 +77,15 @@ export class GameServerService {
     private readonly leaderboardViewRepository: Repository<LeaderboardView>,
     @InjectRepository(ItemHeroView)
     private readonly itemHeroViewRepository: Repository<ItemHeroView>,
+    private readonly cbus: CommandBus,
+    private readonly connection: Connection,
   ) {
     // this.migrateShit();
     // this.migrateItems();
     // this.migrated2com();
-    this.migratePendoSite();
-    this.refreshLeaderboardView();
+    // this.migratePendoSite();
+    this.testMMRPreview();
+    // this.refreshLeaderboardView();
   }
 
   @Cron(CronExpression.EVERY_HOUR)
@@ -90,50 +104,18 @@ export class GameServerService {
     this.logger.log('Refreshed item_hero_view');
   }
 
-  @Cron(CronExpression.EVERY_HOUR)
-  async migratePendoSite() {
-    // while we get new matches from api, we do
-    // when we receive existing match, we break
-    // 100 pages at a time
-    // for (let page = 0; page < 100; page++) {
-    let successfulPages = 0;
-    for (let page = 0; page < 1000; page++) {
-      const { Matches } = await fetch(
-        `https://dota2classic.com/API/Match/List?page=${page}`,
-      ).then(it => it.json());
-      const matchIds: number[] = Matches.map(it => it.MatchHistory.id);
-      if(matchIds.length === 0) {
-        this.logger.log("Done syncing matches with d2com")
-        return
-      }
+  public static calculateMmrDeviation(
+    winnerAverageMmr: number,
+    loserAverageMmr: number,
+  ) {
+    const averageDiff = Math.abs(winnerAverageMmr - loserAverageMmr);
 
-      let hasExisting = false;
-      for (let matchId of matchIds) {
-        // Check for existing
-        const exists = await this.finishedMatchRepository.exists({
-          where: { externalMatchId: matchId },
-        });
-        if (exists) {
-          hasExisting = true;
-          // return;
-          continue;
-        }
-
-        const scrappedMatch = await this.scrapMatch(matchId);
-
-        await this.migrateMatch(scrappedMatch);
-      }
-      this.logger.verbose(`Migrated page ${page}`)
-      if(hasExisting){
-        this.logger.log(`Caught up in matches at match ${matchIds.join(',')}`)
-        successfulPages++;
-        // break;
-      }
-      if(successfulPages >= 5){
-        this.logger.log("We are surely caught up: 5 successful pages in a row. Stopping scraper");
-        return;
-      }
-    }
+    // how much to add to remove from winners and add to losers
+    return (
+      (ProcessRankedMatchHandler.AVERAGE_DEVIATION_MAX *
+        Math.min(averageDiff, ProcessRankedMatchHandler.AVERAGE_DIFF_CAP)) /
+      ProcessRankedMatchHandler.AVERAGE_DIFF_CAP
+    );
   }
 
   // public async migrateShit() {
@@ -203,7 +185,57 @@ export class GameServerService {
   //
   // }
 
-  public async getCurrentSeason(version: Dota2Version): Promise<GameSeasonEntity> {
+  @Cron(CronExpression.EVERY_HOUR)
+  async migratePendoSite() {
+    // while we get new matches from api, we do
+    // when we receive existing match, we break
+    // 100 pages at a time
+    // for (let page = 0; page < 100; page++) {
+    let successfulPages = 0;
+    for (let page = 0; page < 1000; page++) {
+      const { Matches } = await fetch(
+        `https://dota2classic.com/API/Match/List?page=${page}`,
+      ).then(it => it.json());
+      const matchIds: number[] = Matches.map(it => it.MatchHistory.id);
+      if (matchIds.length === 0) {
+        this.logger.log('Done syncing matches with d2com');
+        return;
+      }
+
+      let hasExisting = false;
+      for (let matchId of matchIds) {
+        // Check for existing
+        const exists = await this.finishedMatchRepository.exists({
+          where: { externalMatchId: matchId },
+        });
+        if (exists) {
+          hasExisting = true;
+          // return;
+          continue;
+        }
+
+        const scrappedMatch = await this.scrapMatch(matchId);
+
+        await this.migrateMatch(scrappedMatch);
+      }
+      this.logger.verbose(`Migrated page ${page}`);
+      if (hasExisting) {
+        this.logger.log(`Caught up in matches at match ${matchIds.join(',')}`);
+        successfulPages++;
+        // break;
+      }
+      if (successfulPages >= 5) {
+        this.logger.log(
+          'We are surely caught up: 5 successful pages in a row. Stopping scraper',
+        );
+        return;
+      }
+    }
+  }
+
+  public async getCurrentSeason(
+    version: Dota2Version,
+  ): Promise<GameSeasonEntity> {
     return this.gameSeasonRepository.findOne({
       where: {
         start_timestamp: LessThanOrEqual(new Date()),
@@ -212,32 +244,6 @@ export class GameServerService {
         start_timestamp: 'DESC',
       },
     });
-  }
-
-  public async getGamesPlayed(
-    season: GameSeasonEntity,
-    pid: PlayerId,
-    mode: MatchmakingMode,
-  ) {
-    let plr = await this.versionPlayerRepository.findOne({
-      where: { version: Dota2Version.Dota_681, steam_id: pid.value },
-    });
-
-    if (!plr) {
-      plr = new VersionPlayerEntity();
-      plr.steam_id = pid.value;
-      plr.version = season.version;
-      plr.mmr = VersionPlayerEntity.STARTING_MMR;
-      await this.versionPlayerRepository.save(plr);
-    }
-
-    return this.playerInMatchRepository
-      .createQueryBuilder('pim')
-      .innerJoin('pim.match', 'm')
-      .where('pim.playerId = :id', { id: plr.steam_id })
-      .andWhere('m.matchmaking_mode = :mode', { mode })
-      .andWhere('m.timestamp > :season', { season: season.start_timestamp })
-      .getCount();
   }
 
   public async migratePlayerInMatch() {}
@@ -416,6 +422,40 @@ export class GameServerService {
     // console.log(pims);
   }
 
+  public async getGamesPlayed(
+    season: GameSeasonEntity,
+    pid: PlayerId,
+    mode: MatchmakingMode | undefined,
+    afterMatchTimestamp: string,
+  ) {
+    let plr = await this.versionPlayerRepository.findOne({
+      where: { version: Dota2Version.Dota_681, steam_id: pid.value },
+    });
+
+    if (!plr) {
+      plr = new VersionPlayerEntity();
+      plr.steam_id = pid.value;
+      plr.version = season.version;
+      plr.mmr = VersionPlayerEntity.STARTING_MMR;
+      plr.hidden_mmr = VersionPlayerEntity.STARTING_MMR;
+      await this.versionPlayerRepository.save(plr);
+    }
+
+    let q = this.playerInMatchRepository
+      .createQueryBuilder('pim')
+      .innerJoin('pim.match', 'm')
+      .where('pim.playerId = :id', { id: plr.steam_id })
+      .andWhere('m.timestamp > :season', { season: season.start_timestamp })
+      .andWhere('m.timestamp < :current_timestamp', {
+        current_timestamp: afterMatchTimestamp,
+      });
+
+    if (mode != undefined)
+      q = q.andWhere('m.matchmaking_mode = :mode', { mode });
+
+    return q.getCount();
+  }
+
   private async scrapMatch(matchId: number): Promise<MatchD2Com> {
     const url = `https://dota2classic.com/Match/${matchId}`;
 
@@ -441,12 +481,15 @@ export class GameServerService {
 
     const date = new Date($('.match-info-date time').attr('datetime'));
 
-
-    function toCertainNumber(numberlike: string){
+    function toCertainNumber(numberlike: string) {
       // 14.2k
       // if has 'k' in it, remove it
       let strippedLetters = numberlike.replace('k', '');
-      return Math.round(strippedLetters.includes('\.') ? Number(strippedLetters) * 1000 : Number(strippedLetters));
+      return Math.round(
+        strippedLetters.includes('.')
+          ? Number(strippedLetters) * 1000
+          : Number(strippedLetters),
+      );
     }
 
     const players = $('.player-row')
@@ -530,5 +573,181 @@ export class GameServerService {
       winner: winner,
       matchmaking_mode: isBotMatch ? 7 : 1, // 1 = unranked
     };
+  }
+
+  private async testMMRPreview() {
+    const matches = await this.finishedMatchRepository.find({
+      where: {
+        // server: 'dota2classic.com',
+        matchmaking_mode: In([
+          MatchmakingMode.UNRANKED,
+          MatchmakingMode.RANKED,
+        ]),
+      },
+      order: {
+        timestamp: 'ASC',
+      },
+      // take: 2,
+      relations: ['players'],
+    });
+    for (let i = 0; i < matches.length; i++) {
+      const match = matches[i];
+      await this.cbus.execute(
+        new ProcessRankedMatchCommand(
+          match.id,
+          match.players
+            .filter(t => t.team === match.winner)
+            .map(t => new PlayerId(t.playerId)),
+          match.players
+            .filter(t => t.team !== match.winner)
+            .map(t => new PlayerId(t.playerId)),
+          // tODO:
+          MatchmakingMode.UNRANKED,
+        ),
+      );
+      this.logger.log(`Processed match ${i + 1} / ${matches.length}`)
+    }
+  }
+
+  private async testMMRPreview2() {
+    const matches = await this.finishedMatchRepository.find({
+      where: {
+        // server: 'dota2classic.com',
+        matchmaking_mode: In([
+          MatchmakingMode.UNRANKED,
+          MatchmakingMode.RANKED,
+        ]),
+      },
+      order: {
+        timestamp: 'ASC',
+      },
+      take: 1,
+      relations: ['players'],
+    });
+
+    const usermap: {
+      steam_id: string;
+      name: string;
+    }[] = await this.connection.query(
+      `select ue.steam_id, ue.name from user_entity ue`,
+    );
+
+    const configs: Record<string, MMRConfig> = {
+      // baseline: { calibrationGames: 10, kindCalibrationGames: 3, baseMmr: 5 },
+      baseline: {
+        calibrationGames: 10,
+        kindCalibrationGames: 3,
+        baseMmr: 25,
+        avgDiffCap: 300,
+        maxDeviation: 15,
+      },
+      no_calibration: {
+        calibrationGames: 0,
+        kindCalibrationGames: 3,
+        baseMmr: 25,
+        avgDiffCap: 300,
+        maxDeviation: 15,
+      },
+      diff_cap_500: {
+        calibrationGames: 0,
+        kindCalibrationGames: 3,
+        baseMmr: 25,
+        avgDiffCap: 500,
+        maxDeviation: 15,
+      },
+      max_deviation_10: {
+        calibrationGames: 0,
+        kindCalibrationGames: 3,
+        baseMmr: 25,
+        avgDiffCap: 300,
+        maxDeviation: 10,
+      },
+      // baseline2: { calibrationGames: 10, kindCalibrationGames: 3, baseMmr: 10 },
+    };
+
+    const tmp: any = {};
+    matches.forEach(match => {
+      match.players.forEach(plr => {
+        tmp[plr.playerId] = (tmp[plr.playerId] || 0) + 1;
+      });
+    });
+
+    for (let [name, config] of Object.entries(configs)) {
+      const entries = await this.getMMRForSettings(usermap, matches, config);
+      require('fs').writeFileSync(
+        `csv/${name}.csv`,
+        'SteamID,Name,MMR,Games\n' +
+          entries
+            .map(t => `${t.steam},${t.name},${t.mmr},${t.games}`)
+            .join('\n'),
+      );
+    }
+  }
+
+  private async getMMRForSettings(
+    usermap: { steam_id: string; name: string }[],
+    matches: FinishedMatchEntity[],
+    config: MMRConfig,
+  ) {
+    const mmrMap: Record<string, number> = {};
+    const playedMatches: Record<string, number> = {};
+
+    const getMMR = (steamId: string) =>
+      mmrMap[steamId] || VersionPlayerEntity.STARTING_MMR;
+
+    const getPlayedMatches = (steamId: string) => playedMatches[steamId] || 0;
+
+    for (let i = 0; i < matches.length; i++) {
+      const match = matches[i];
+
+      const winners = match.players.filter(t => t.team === match.winner);
+      const losers = match.players.filter(t => t.team !== match.winner);
+      const winnerAvg =
+        winners.reduce((a, b) => a + getMMR(b.playerId), 0) / winners.length;
+      const loserAvg =
+        losers.reduce((a, b) => a + getMMR(b.playerId), 0) / losers.length;
+
+      const mmrDeviation = ProcessRankedMatchHandler.calculateMmrDeviation(
+        winnerAvg,
+        loserAvg,
+        config.maxDeviation,
+        config.avgDiffCap,
+      );
+
+      match.players.forEach(player => {
+        const winnerSign = player.team === match.winner ? 1 : -1;
+
+        let localDeviation = winnerSign * mmrDeviation;
+
+        const mmrChange = ProcessRankedMatchHandler.computeMMRChange(
+          player.playerId,
+          getPlayedMatches(player.playerId),
+          player.team === match.winner,
+          localDeviation,
+          config.calibrationGames,
+          config.baseMmr,
+          config.kindCalibrationGames,
+        );
+
+        if (player.team === match.winner && mmrChange < 0) {
+          console.log('Negative mmr even with win lMAO');
+        }
+
+        const wasMMR = getMMR(player.playerId);
+        mmrMap[player.playerId] = Math.max(1, Math.round(wasMMR + mmrChange));
+        playedMatches[player.playerId] = getPlayedMatches(player.playerId) + 1;
+      });
+      this.logger.log(`Processed match ${i} / ${matches.length}`);
+    }
+
+    const entries = Object.entries(mmrMap).map(([steamId, mmr]) => ({
+      name: usermap.find(t => t.steam_id === steamId)?.name || 'noname',
+      mmr: mmr,
+      steam: steamId,
+      games: playedMatches[steamId],
+    }));
+    entries.sort((a, b) => b.mmr - a.mmr);
+
+    return entries;
   }
 }

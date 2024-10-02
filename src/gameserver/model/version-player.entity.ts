@@ -9,9 +9,11 @@ export class VersionPlayerEntity {
   @PrimaryColumn()
   version: Dota2Version;
 
-  @Column({ default: VersionPlayerEntity.STARTING_MMR})
+  @Column({ default: VersionPlayerEntity.STARTING_MMR })
   mmr: number = VersionPlayerEntity.STARTING_MMR;
 
+  @Column({ default: VersionPlayerEntity.STARTING_MMR })
+  hidden_mmr: number = VersionPlayerEntity.STARTING_MMR;
 
   public static STARTING_MMR = 2500;
 }
