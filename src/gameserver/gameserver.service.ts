@@ -96,7 +96,8 @@ export class GameServerService {
     // when we receive existing match, we break
     // 100 pages at a time
     // for (let page = 0; page < 100; page++) {
-    for (let page = 320; page < 1000; page++) {
+    let successfulPages = 0;
+    for (let page = 0; page < 1000; page++) {
       const { Matches } = await fetch(
         `https://dota2classic.com/API/Match/List?page=${page}`,
       ).then(it => it.json());
@@ -119,12 +120,18 @@ export class GameServerService {
         }
 
         const scrappedMatch = await this.scrapMatch(matchId);
+
         await this.migrateMatch(scrappedMatch);
       }
       this.logger.verbose(`Migrated page ${page}`)
       if(hasExisting){
         this.logger.log(`Caught up in matches at match ${matchIds.join(',')}`)
+        successfulPages++;
         // break;
+      }
+      if(successfulPages >= 5){
+        this.logger.log("We are surely caught up: 5 successful pages in a row. Stopping scraper");
+        return;
       }
     }
   }
