@@ -720,7 +720,6 @@ export class GameServerService {
         let localDeviation = winnerSign * mmrDeviation;
 
         const mmrChange = ProcessRankedMatchHandler.computeMMRChange(
-          player.playerId,
           getPlayedMatches(player.playerId),
           player.team === match.winner,
           localDeviation,

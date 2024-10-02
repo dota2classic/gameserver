@@ -60,7 +60,6 @@ export class ProcessRankedMatchHandler
   }
 
   public static computeMMRChange(
-    steam_id: string,
     cbGame: number,
     win: boolean,
     mmrDiff: number,
@@ -247,12 +246,16 @@ export class ProcessRankedMatchHandler
 
     const plr = playerMap.get(pid.value);
 
+
+    const winnerSign = winner ? 1 : -1;
+
+    let localDeviation = winnerSign * mmrDiff;
+
     const mmrChange = Math.round(
       ProcessRankedMatchHandler.computeMMRChange(
-        plr.steam_id,
         cb,
         winner,
-        mmrDiff,
+        localDeviation,
         0, // CB GAMES = 0 for now
       ),
     );
