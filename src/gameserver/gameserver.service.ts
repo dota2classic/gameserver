@@ -84,8 +84,8 @@ export class GameServerService {
     // this.migrateItems();
     // this.migrated2com();
     // this.migratePendoSite();
-    this.testMMRPreview();
-    // this.refreshLeaderboardView();
+    // this.testMMRPreview();
+    this.refreshLeaderboardView();
   }
 
   @Cron(CronExpression.EVERY_HOUR)
@@ -419,7 +419,14 @@ export class GameServerService {
     });
 
     pims = await this.playerInMatchRepository.save(pims);
-    // console.log(pims);
+
+    // Yes
+    await this.cbus.execute(new ProcessRankedMatchCommand(
+      fm.id,
+      pims.filter(t => t.team === fm.winner).map(t => new PlayerId(t.playerId)),
+      pims.filter(t => t.team !== fm.winner).map(t => new PlayerId(t.playerId)),
+      fm.matchmaking_mode
+    ))
   }
 
   public async getGamesPlayed(
