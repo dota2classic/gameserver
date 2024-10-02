@@ -247,18 +247,16 @@ export class ProcessRankedMatchHandler
     const plr = playerMap.get(pid.value);
 
 
-    const winnerSign = winner ? 1 : -1;
-
-    let localDeviation = winnerSign * mmrDiff;
 
     const mmrChange = Math.round(
       ProcessRankedMatchHandler.computeMMRChange(
         cb,
         winner,
-        localDeviation,
+        mmrDiff,
         0, // CB GAMES = 0 for now
       ),
     );
+
 
     this.logger.log(
       `Updating ${hiddenMmr ? 'hidden' : 'real'} MMR for ${
