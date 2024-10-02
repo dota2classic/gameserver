@@ -206,11 +206,11 @@ export class ProcessRankedMatchHandler
       isHiddenMmr ? plr.hidden_mmr : plr.mmr;
 
     const winnerMMR = command.winners
-      .map(t => playerMap[t.value])
+      .map(t => playerMap.get(t.value))
       .reduce((a, b) => a + getMmr(b), 0);
 
     const loserMMR = command.losers
-      .map(t => playerMap[t.value])
+      .map(t => playerMap.get(t.value))
       .reduce((a, b) => a + getMmr(b), 0);
 
     const winnerAverage = winnerMMR / command.winners.length;
@@ -245,7 +245,7 @@ export class ProcessRankedMatchHandler
       matchTimestamp,
     );
 
-    const plr = playerMap[pid.value];
+    const plr = playerMap.get(pid.value);
 
     const mmrChange = Math.round(
       ProcessRankedMatchHandler.computeMMRChange(
