@@ -15,8 +15,11 @@ import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { ItemHeroView } from 'gameserver/model/item-hero.view';
 import { ProcessRankedMatchHandler } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.handler';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, EventBus } from '@nestjs/cqrs';
 import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
+import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
+import { DotaTeam } from 'gateway/shared-types/dota-team';
+import { ProcessAchievementsCommand } from 'gameserver/command/ProcessAchievements/process-achievements.command';
 
 export interface MatchD2Com {
   id: number;
@@ -24,8 +27,8 @@ export interface MatchD2Com {
   timestamp: number;
   duration: number;
   server: string;
-  winner: number;
-  matchmaking_mode: number;
+  winner: DotaTeam;
+  matchmaking_mode: MatchmakingMode;
 }
 
 export interface Player {
@@ -79,6 +82,7 @@ export class GameServerService {
     private readonly itemHeroViewRepository: Repository<ItemHeroView>,
     private readonly cbus: CommandBus,
     private readonly connection: Connection,
+    private readonly ebus: EventBus,
   ) {
     // this.migrateShit();
     // this.migrateItems();
@@ -86,6 +90,26 @@ export class GameServerService {
     // this.migratePendoSite();
     // this.testMMRPreview();
     this.refreshLeaderboardView();
+
+    setTimeout(async () => {
+      const matches = await this.finishedMatchRepository.find({
+        where: {
+          matchmaking_mode: In([
+            MatchmakingMode.RANKED,
+            MatchmakingMode.UNRANKED,
+          ]),
+        },
+        // take: 1000
+      });
+      for (let i = 0; i < matches.length; i++) {
+        const match = matches[i];
+        await this.cbus.execute(
+          new ProcessAchievementsCommand(match.id, MatchmakingMode.UNRANKED),
+        );
+
+        this.logger.log(`Achievements complete for ${i + 1 } / ${matches.length}`)
+      }
+    }, 100);
   }
 
   @Cron(CronExpression.EVERY_HOUR)
@@ -357,76 +381,51 @@ export class GameServerService {
   // }
 
   private async migrateMatch(j: MatchD2Com) {
+    // Emit game results
+
     const magicD2ComConstant = 1000000;
 
     const id = j.id;
     const realId = magicD2ComConstant + id;
 
-    let fm = await this.finishedMatchRepository.findOne({
-      where: { externalMatchId: id, id: realId },
-    });
-    if (fm) {
-      // return;
+    await this.ebus.publish(
+      new GameResultsEvent(
+        realId,
+        j.winner,
+        j.duration,
+        Dota_GameMode.ALLPICK,
+        j.matchmaking_mode,
+        j.timestamp,
+        'dota2classic.com',
+        j.players.map(player => ({
+          steam_id: player.playerId,
+          team: player.team,
+          kills: player.kills,
+          deaths: player.deaths,
+          assists: player.assists,
+          level: player.level,
 
-      const pims = await this.playerInMatchRepository.find({
-        where: { match: fm },
-      });
+          item0: player.item0,
+          item1: player.item1,
+          item2: player.item2,
+          item3: player.item3,
+          item4: player.item4,
+          item5: player.item5,
 
-      await this.playerInMatchRepository.remove(pims);
-
-      await this.finishedMatchRepository.remove(fm);
-      console.log(`External match ${id} already exists`);
-    }
-
-    fm = new FinishedMatchEntity(
-      realId,
-      j.winner,
-      new Date(j.timestamp).toUTCString(),
-      Dota_GameMode.ALLPICK,
-      j.matchmaking_mode as MatchmakingMode,
-      j.duration,
-      j.server,
+          gpm: player.gpm,
+          xpm: player.xpm,
+          last_hits: player.last_hits,
+          denies: player.denies,
+          networth: player.gold,
+          heroDamage: player.hd,
+          towerDamage: player.td,
+          heroHealing: 0,
+          abandoned: false,
+          hero: player.hero,
+        })),
+        j.id,
+      ),
     );
-    fm.externalMatchId = id;
-    fm = await this.finishedMatchRepository.save(fm);
-
-    let pims: PlayerInMatchEntity[] = j.players.map(it => {
-      const pim = new PlayerInMatchEntity();
-      pim.playerId = it.playerId;
-      pim.team = it.team;
-      pim.kills = it.kills;
-      pim.deaths = it.deaths;
-      pim.assists = it.assists;
-      pim.level = it.level;
-      pim.gpm = it.gpm;
-      pim.xpm = it.xpm;
-      pim.hero_damage = it.hd;
-      pim.tower_damage = it.td;
-      pim.abandoned = false;
-      pim.last_hits = it.last_hits;
-      pim.denies = it.denies;
-      pim.hero = it.hero;
-      pim.items = '';
-      pim.item0 = it.item0;
-      pim.item1 = it.item1;
-      pim.item2 = it.item2;
-      pim.item3 = it.item3;
-      pim.item4 = it.item4;
-      pim.item5 = it.item5;
-      pim.match = fm;
-      pim.gold = it.gold;
-      return pim;
-    });
-
-    pims = await this.playerInMatchRepository.save(pims);
-
-    // Yes
-    await this.cbus.execute(new ProcessRankedMatchCommand(
-      fm.id,
-      pims.filter(t => t.team === fm.winner).map(t => new PlayerId(t.playerId)),
-      pims.filter(t => t.team !== fm.winner).map(t => new PlayerId(t.playerId)),
-      fm.matchmaking_mode
-    ))
   }
 
   public async getGamesPlayed(
@@ -612,8 +611,7 @@ export class GameServerService {
           MatchmakingMode.UNRANKED,
         ),
       );
-      this.logger.log(`Processed match ${i + 1} / ${matches.length}`)
+      this.logger.log(`Processed match ${i + 1} / ${matches.length}`);
     }
   }
-
 }

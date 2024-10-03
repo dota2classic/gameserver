@@ -42,6 +42,8 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
       event.server,
     );
 
+    m.externalMatchId = event.externalMatchId;
+
     await this.matchRepository.save(m);
 
     for (let i = 0; i < event.players.length; i++) {

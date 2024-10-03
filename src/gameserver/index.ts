@@ -28,12 +28,15 @@ import { PlayerReportedHandler } from 'gameserver/event-handler/player-reported.
 import { LiveMatchUpdateHandler } from 'gameserver/event-handler/live-match-update.handler';
 import { StartFakeMatchHandler } from 'gameserver/event-handler/start-fake-match.handler';
 import { ServerStatusHandler } from 'gameserver/event-handler/server-status.handler';
+import { ProcessAchievementsHandler } from 'gameserver/command/ProcessAchievements/process-achievements.handler';
+import { AchievementService } from 'gameserver/achievement.service';
 
 const CommandHandlers = [
   FindGameServerHandler,
   UpdateGameServerHandler,
   ProcessRankedMatchHandler,
   MakeSureExistsHandler,
+  ProcessAchievementsHandler
 ];
 const EventHandlers = [
   StartFakeMatchHandler,
@@ -64,7 +67,7 @@ const EventHandlers = [
 
 const QueryHandlers = [GetPlayerInfoHandler, GetSessionByUserHandler, GetReportsAvailableHandler];
 const Repositories = [GameServerRepository, GameServerSessionRepository];
-const Services = [GameServerService];
+const Services = [GameServerService, AchievementService];
 const Sagas = [GameserverSaga];
 
 export const GameServerDomain = [

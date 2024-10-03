@@ -9,6 +9,7 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import * as uuidr from 'uuid';
+import { ProcessAchievementsCommand } from 'gameserver/command/ProcessAchievements/process-achievements.command';
 
 export const uuid = (): string => uuidr.v4();
 
@@ -86,6 +87,16 @@ export class GameserverSaga {
           .map(t => new PlayerId(t.steam_id));
 
         return new ProcessRankedMatchCommand(e.matchId, winners, losers, e.type);
+      }),
+    );
+  };
+
+  @Saga()
+  processAchievements = (events$: Observable<any>): Observable<ICommand> => {
+    return events$.pipe(
+      ofType(GameResultsEvent),
+      map((e: GameResultsEvent) => {
+        return new ProcessAchievementsCommand(e.matchId, e.type);
       }),
     );
   };

@@ -76,7 +76,7 @@ export function qCache<T, B>() {
     PlayerService,
     Mapper,
     ...GameServerDomain,
-    outerQuery(GetUserInfoQuery, 'QueryCore', qCache()),
+    outerQuery(GetUserInfoQuery, 'QueryCore', qCache())
   ],
 })
 export class AppModule {}

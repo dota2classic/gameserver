@@ -4,7 +4,6 @@ import { ItemMap } from 'util/items';
 
 @ViewEntity({
   materialized: true,
-  synchronize: true,
   name: "item_view",
   expression: `with items as (select pim.item0 as item_id
                from player_in_match pim

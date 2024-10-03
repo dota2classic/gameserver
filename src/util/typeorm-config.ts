@@ -16,6 +16,7 @@ import { PlayerReportStatusEntity } from 'gameserver/model/player-report-status.
 import { PlayerReportEntity } from 'gameserver/model/player-report.entity';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { ItemHeroView } from 'gameserver/model/item-hero.view';
+import { AchievementEntity } from 'gameserver/model/achievement.entity';
 
 export const Entities = [
   GameSeasonEntity,
@@ -35,6 +36,7 @@ export const Entities = [
   MmrChangeLogEntity,
   PlayerReportStatusEntity,
   PlayerReportEntity,
+  AchievementEntity,
 
   ReplayEntity,
   LeaderboardView,
@@ -72,9 +74,9 @@ export const prodDbConfig: TypeOrmModuleOptions = {
   username: DB_USERNAME(),
   password: DB_PASSWORD,
   entities: Entities,
-  synchronize: false,
+  synchronize: true,
   dropSchema: false,
-  maxQueryExecutionTime: 1000,
+  // maxQueryExecutionTime: 1000,
 
 
   ssl: false,
