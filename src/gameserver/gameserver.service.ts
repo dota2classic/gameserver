@@ -101,6 +101,7 @@ export class GameServerService {
         },
         // take: 1000
       });
+
       for (let i = 0; i < matches.length; i++) {
         const match = matches[i];
         await this.cbus.execute(
