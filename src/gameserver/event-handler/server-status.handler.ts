@@ -18,8 +18,6 @@ export class ServerStatusHandler implements IEventHandler<ServerStatusEvent> {
       where: { url: event.url },
     });
 
-    console.log('Sever status handler')
-
     if (event.running) {
       if (!existingSession) {
         existingSession = new GameServerSessionEntity();

@@ -51,7 +51,7 @@ export class PlayerReportUpdatedHandler
           last_id: r.updatedWithMatch || Number.MAX_SAFE_INTEGER,
         })
         .andWhere('pim.playerId = :pid', { pid: p.steam_id})
-        .andWhere('m.type in (:...modes)', {
+        .andWhere('m.matchmaking_mode in (:...modes)', {
           modes: [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],
         })
         .getCount();
