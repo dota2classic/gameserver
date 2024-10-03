@@ -4,6 +4,7 @@ import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 @Entity('player_in_match')
 // @Index('player_match_index', ['playerId', 'matchId'])
 @Index('player_match_index', ['matchId'])
+@Index('pim_player_match_idx', ['playerId', 'matchId'], { unique: true })
 export default class PlayerInMatchEntity {
   @PrimaryGeneratedColumn({
     primaryKeyConstraintName: 'PK_pim_id_constraint',

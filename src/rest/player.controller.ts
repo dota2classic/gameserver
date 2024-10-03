@@ -27,6 +27,11 @@ import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { NullableIntPipe } from 'util/pipes';
+import { AchievementService } from 'gameserver/achievement.service';
+import { AchievementEntity } from 'gameserver/model/achievement.entity';
+import { AchievementDto } from 'rest/dto/achievement.dto';
+import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 
 @Controller('player')
 @ApiTags('player')
@@ -48,7 +53,43 @@ export class PlayerController {
     private readonly connection: Connection,
     @InjectRepository(LeaderboardView)
     private readonly leaderboardViewRepository: Repository<LeaderboardView>,
+    private readonly achievements: AchievementService,
+    @InjectRepository(AchievementEntity)
+    private readonly achievementEntityRepository: Repository<AchievementEntity>,
   ) {}
+
+  @Get('/:id/achievements')
+  public async playerAchievements(
+    @Param('id') steamId: string,
+  ): Promise<AchievementDto[]> {
+    const ach = Array.from(this.achievements.achievementMap.values());
+
+    const achievementsQ = this.achievementEntityRepository
+      .createQueryBuilder('a')
+      .leftJoinAndMapOne(
+        'a.match',
+        FinishedMatchEntity,
+        'fm',
+        'fm.id = a."matchId"',
+      )
+      .leftJoinAndMapOne(
+        'a.pim',
+        PlayerInMatchEntity,
+        'pim',
+        `pim."playerId" = a.steam_id and pim."matchId" = a."matchId"`,
+      )
+      .where({ steam_id: steamId });
+
+    console.log(achievementsQ.getQuery());
+
+    const achievements = await achievementsQ.getMany();
+    return achievements.map(t => {
+      if (t.match) {
+        t.match.players = [];
+      }
+      return this.mapper.mapAchievement(t);
+    });
+  }
 
   @ApiQuery({
     name: 'page',
@@ -147,7 +188,9 @@ limit $3`,
       };
     }
 
-    const summary: Summary | undefined = await this.playerService.fullSummary(steam_id);
+    const summary: Summary | undefined = await this.playerService.fullSummary(
+      steam_id,
+    );
 
     const rank = await this.playerService.getRank(version, steam_id);
 
@@ -171,7 +214,8 @@ limit $3`,
           ? 0
           : Math.max(
               0,
-              UNRANKED_GAMES_REQUIRED_FOR_RANKED - (summary?.unranked_games || 0),
+              UNRANKED_GAMES_REQUIRED_FOR_RANKED -
+                (summary?.unranked_games || 0),
             ),
     };
   }

@@ -110,4 +110,8 @@ export class AchievementService {
 
     return map;
   }
+
+  getMaxProgressForKey(achievement_key: AchievementKey) {
+    return this.achievementMap.get(achievement_key).maxProgress;
+  }
 }

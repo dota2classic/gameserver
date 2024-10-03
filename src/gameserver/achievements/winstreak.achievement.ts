@@ -24,10 +24,10 @@ export class WinstreakAchievement extends BaseAchievement {
       .query(`select pim.team = f.winner as win, pim."playerId", f.id as matchId, pim.hero
 from player_in_match pim
          inner join finished_match f on f.id = pim."matchId" and f.matchmaking_mode in (0, 1)
-where pim."playerId" = '403423214'
-  and f.timestamp < '2021-01-23 13:10:18.000000'
+where pim."playerId" = $1
+  and f.timestamp < $2
 order by timestamp desc
-limit 9`);
+limit 9`, [pim.playerId, match.timestamp]);
 
     if (pim.team !== match.winner)
       return {

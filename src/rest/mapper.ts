@@ -6,9 +6,13 @@ import { GameServerSessionEntity } from 'gameserver/model/game-server-session.en
 import { DotaTeam } from 'gateway/shared-types/dota-team';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
+import { AchievementEntity } from 'gameserver/model/achievement.entity';
+import { AchievementDto } from 'rest/dto/achievement.dto';
+import { AchievementService } from 'gameserver/achievement.service';
 
 @Injectable()
 export class Mapper {
+  constructor(private readonly as: AchievementService) {}
   public mapPlayerInMatch = (it: PlayerInMatchEntity): PlayerInMatchDto => ({
     steam_id: it.playerId,
 
@@ -81,5 +85,14 @@ export class Mapper {
         .filter(it => it.team == DotaTeam.DIRE)
         .map(t => t.playerId.value),
     },
+  });
+
+  public mapAchievement = (it: AchievementEntity): AchievementDto => ({
+    key: it.achievement_key,
+    steamId: it.steam_id,
+    progress: it.progress,
+    maxProgress: this.as.getMaxProgressForKey(it.achievement_key),
+    isComplete: this.as.achievementMap.get(it.achievement_key).isComplete(it),
+    match: it.match ? this.mapMatch(it.match) : undefined,
   });
 }

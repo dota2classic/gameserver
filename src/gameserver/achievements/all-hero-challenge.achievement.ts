@@ -13,9 +13,9 @@ export class AllHeroChallengeAchievement extends BaseAchievement {
     const uniqueHeroes: {
       unique_heroes_played;
     }[] = await this.playerInMatchEntityRepository.query(
-      `with wins as (select p."playerId", p.hero, p.team = fm.winner as win
+      `with wins as (select p."playerId",  p.hero
               from player_in_match p
-                       inner join finished_match fm on fm.id = p."matchId"
+                       inner join finished_match fm on fm.id = p."matchId" and fm.winner = p.team
               where p."playerId" = $1
 )
 select count(distinct p.hero) as unique_heroes_played
