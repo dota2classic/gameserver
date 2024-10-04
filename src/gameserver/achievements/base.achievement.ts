@@ -3,6 +3,7 @@ import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { Repository } from 'typeorm';
 import { AchievementEntity } from 'gameserver/model/achievement.entity';
 import { Logger } from '@nestjs/common';
+import { AchievementKey } from 'gateway/shared-types/achievemen-key';
 
 export interface AchievementProgress {
   matchId?: number;
@@ -61,16 +62,5 @@ export abstract class BaseAchievement {
 }
 
 
-export enum AchievementKey {
-  HARDCORE,
-  GPM_1000,
-  XPM_1000,
-  GPM_XPM_1000,
-  LAST_HITS_1000,
-  DENIES_50,
-  WINSTREAK_10,
-  WIN_1HR_GAME,
-  WIN_1HR_GAME_AGAINST_TECHIES,
-  ALL_HERO_CHALLENGE,
-}
+
 

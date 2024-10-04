@@ -1,6 +1,7 @@
-import { AchievementKey, AchievementProgress, BaseAchievement } from 'gameserver/achievements/base.achievement';
+import { AchievementProgress, BaseAchievement } from 'gameserver/achievements/base.achievement';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
+import { AchievementKey } from 'gateway/shared-types/achievemen-key';
 
 export class AllHeroChallengeAchievement extends BaseAchievement {
   key: AchievementKey = AchievementKey.ALL_HERO_CHALLENGE;

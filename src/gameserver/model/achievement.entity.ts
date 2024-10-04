@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
-import { AchievementKey } from 'gameserver/achievements/base.achievement';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import { AchievementKey } from 'gateway/shared-types/achievemen-key';
 
 @Entity('achievement_entity')
 export class AchievementEntity {

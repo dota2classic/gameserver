@@ -3,9 +3,10 @@ import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
-import { AchievementKey, AchievementProgress, BaseAchievement } from 'gameserver/achievements/base.achievement';
+import { AchievementProgress, BaseAchievement } from 'gameserver/achievements/base.achievement';
 import { WinstreakAchievement } from 'gameserver/achievements/winstreak.achievement';
 import { AllHeroChallengeAchievement } from 'gameserver/achievements/all-hero-challenge.achievement';
+import { AchievementKey } from 'gateway/shared-types/achievemen-key';
 
 @Injectable()
 export class AchievementService {

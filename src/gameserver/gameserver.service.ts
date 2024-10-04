@@ -19,7 +19,6 @@ import { CommandBus, EventBus } from '@nestjs/cqrs';
 import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
 import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
 import { DotaTeam } from 'gateway/shared-types/dota-team';
-import { ProcessAchievementsCommand } from 'gameserver/command/ProcessAchievements/process-achievements.command';
 import { MatchEntity } from 'gameserver/model/match.entity';
 
 export interface MatchD2Com {
@@ -90,31 +89,31 @@ export class GameServerService {
     // this.migrateShit();
     // this.migrateItems();
     // this.migrated2com();
-    this.migratePendoSite();
+    // this.migratePendoSite();
     // this.testMMRPreview();
     this.refreshLeaderboardView();
 
 
-    setTimeout(async () => {
-      const matches = await this.finishedMatchRepository.find({
-        where: {
-          matchmaking_mode: In([
-            MatchmakingMode.RANKED,
-            MatchmakingMode.UNRANKED,
-          ]),
-        },
-        // take: 1000
-      });
-
-      for (let i = 0; i < matches.length; i++) {
-        const match = matches[i];
-        await this.cbus.execute(
-          new ProcessAchievementsCommand(match.id, MatchmakingMode.UNRANKED),
-        );
-
-        this.logger.log(`Achievements complete for ${i + 1 } / ${matches.length}`)
-      }
-    }, 100);
+    // setTimeout(async () => {
+    //   const matches = await this.finishedMatchRepository.find({
+    //     where: {
+    //       matchmaking_mode: In([
+    //         MatchmakingMode.RANKED,
+    //         MatchmakingMode.UNRANKED,
+    //       ]),
+    //     },
+    //     // take: 1000
+    //   });
+    //
+    //   for (let i = 0; i < matches.length; i++) {
+    //     const match = matches[i];
+    //     await this.cbus.execute(
+    //       new ProcessAchievementsCommand(match.id, MatchmakingMode.UNRANKED),
+    //     );
+    //
+    //     this.logger.log(`Achievements complete for ${i + 1 } / ${matches.length}`)
+    //   }
+    // }, 100);
   }
 
   @Cron(CronExpression.EVERY_HOUR)

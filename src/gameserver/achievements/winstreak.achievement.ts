@@ -1,7 +1,8 @@
-import { AchievementKey, AchievementProgress, BaseAchievement } from 'gameserver/achievements/base.achievement';
+import { AchievementProgress, BaseAchievement } from 'gameserver/achievements/base.achievement';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { Repository } from 'typeorm';
+import { AchievementKey } from 'gateway/shared-types/achievemen-key';
 
 export class WinstreakAchievement extends BaseAchievement {
   key: AchievementKey = AchievementKey.WINSTREAK_10;

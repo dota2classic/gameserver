@@ -1,4 +1,4 @@
-import { AchievementKey } from 'gameserver/achievements/base.achievement';
+import { AchievementKey } from 'gateway/shared-types/achievemen-key';
 
 export class AchievementCompleteEvent {
   constructor(
