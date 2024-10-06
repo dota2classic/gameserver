@@ -94,26 +94,26 @@ export class GameServerService {
     this.refreshLeaderboardView();
 
 
-    // setTimeout(async () => {
-    //   const matches = await this.finishedMatchRepository.find({
-    //     where: {
-    //       matchmaking_mode: In([
-    //         MatchmakingMode.RANKED,
-    //         MatchmakingMode.UNRANKED,
-    //       ]),
-    //     },
-    //     // take: 1000
-    //   });
-    //
-    //   for (let i = 0; i < matches.length; i++) {
-    //     const match = matches[i];
-    //     await this.cbus.execute(
-    //       new ProcessAchievementsCommand(match.id, MatchmakingMode.UNRANKED),
-    //     );
-    //
-    //     this.logger.log(`Achievements complete for ${i + 1 } / ${matches.length}`)
-    //   }
-    // }, 100);
+    setTimeout(async () => {
+      const matches = await this.finishedMatchRepository.find({
+        where: {
+          matchmaking_mode: In([
+            MatchmakingMode.RANKED,
+            MatchmakingMode.UNRANKED,
+          ]),
+        },
+        // take: 1000
+      });
+
+      for (let i = 0; i < matches.length; i++) {
+        const match = matches[i];
+        await this.cbus.execute(
+          new ProcessAchievementsCommand(match.id, MatchmakingMode.UNRANKED),
+        );
+
+        this.logger.log(`Achievements complete for ${i + 1 } / ${matches.length}`)
+      }
+    }, 100);
   }
 
   @Cron(CronExpression.EVERY_HOUR)
