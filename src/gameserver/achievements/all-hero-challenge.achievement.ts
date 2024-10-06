@@ -5,7 +5,7 @@ import { AchievementKey } from 'gateway/shared-types/achievemen-key';
 
 export class AllHeroChallengeAchievement extends BaseAchievement {
   key: AchievementKey = AchievementKey.ALL_HERO_CHALLENGE;
-  maxProgress: number = 100;
+  maxProgress: number = 110;
 
   async getProgress(
     pim: PlayerInMatchEntity,

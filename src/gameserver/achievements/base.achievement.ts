@@ -47,10 +47,13 @@ export abstract class BaseAchievement {
       return false;
     }
     const progress = await this.getProgress(pim, match);
-    achievement.progress = progress.progress;
+    if (progress.progress > achievement.progress) {
+      achievement.progress = progress.progress;
+    }
     if (this.isComplete(achievement)) {
       achievement.matchId = progress.matchId;
       achievement.hero = progress.hero;
+      achievement.progress = progress.progress;
     }
 
     return true;
@@ -60,7 +63,3 @@ export abstract class BaseAchievement {
     return ach.progress >= this.maxProgress;
   }
 }
-
-
-
-
