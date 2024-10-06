@@ -20,6 +20,7 @@ import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch
 import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
 import { DotaTeam } from 'gateway/shared-types/dota-team';
 import { MatchEntity } from 'gameserver/model/match.entity';
+import { ProcessAchievementsCommand } from 'gameserver/command/ProcessAchievements/process-achievements.command';
 
 export interface MatchD2Com {
   id: number;
