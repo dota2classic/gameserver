@@ -90,11 +90,12 @@ export class GameServerService {
     // this.migrateShit();
     // this.migrateItems();
     // this.migrated2com();
-    // this.migratePendoSite();
+    this.migratePendoSite();
     // this.testMMRPreview();
     this.refreshLeaderboardView();
 
 
+    return;
     setTimeout(async () => {
       const matches = await this.finishedMatchRepository.find({
         where: {
@@ -174,11 +175,12 @@ export class GameServerService {
         if (exists) {
           hasExisting = true;
           // return;
-          continue;
+          // continue;
         }
 
         const scrappedMatch = await this.scrapMatch(matchId);
 
+        console.log(scrappedMatch.timestamp, new Date(scrappedMatch.timestamp))
         await this.migrateMatch(scrappedMatch);
       }
       this.logger.verbose(`Migrated page ${page}`);
@@ -336,7 +338,7 @@ export class GameServerService {
         j.duration,
         Dota_GameMode.ALLPICK,
         j.matchmaking_mode,
-        j.timestamp,
+        j.timestamp / 1000, // We need to divide here because GameResultsHandler multiplies by 1000
         'dota2classic.com',
         j.players.map(player => ({
           steam_id: player.playerId,
