@@ -26,11 +26,14 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
   ) {}
 
   async handle(event: GameResultsEvent) {
-    // const mInfo = await this.matchEntityRepository.findOne({
-    //   where: { id: event.matchId },
-    // });
-    //
-    // if (!mInfo) return;
+
+    const existingRecordedMatch = await this.matchRepository.exists({
+      where: {
+        id: event.matchId
+      }
+    });
+
+    if(existingRecordedMatch) return;
 
     const m = new FinishedMatchEntity(
       event.matchId,
