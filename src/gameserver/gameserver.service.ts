@@ -94,7 +94,6 @@ export class GameServerService {
     // this.testMMRPreview();
     this.refreshLeaderboardView();
 
-
     return;
     setTimeout(async () => {
       const matches = await this.finishedMatchRepository.find({
@@ -113,7 +112,9 @@ export class GameServerService {
           new ProcessAchievementsCommand(match.id, MatchmakingMode.UNRANKED),
         );
 
-        this.logger.log(`Achievements complete for ${i + 1 } / ${matches.length}`)
+        this.logger.log(
+          `Achievements complete for ${i + 1} / ${matches.length}`,
+        );
       }
     }, 100);
   }
@@ -148,7 +149,6 @@ export class GameServerService {
     );
   }
 
-
   @Cron(CronExpression.EVERY_HOUR)
   async migratePendoSite() {
     // while we get new matches from api, we do
@@ -174,14 +174,17 @@ export class GameServerService {
         });
         if (exists) {
           hasExisting = true;
-          // return;
-          // continue;
+          continue;
         }
 
-        const scrappedMatch = await this.scrapMatch(matchId);
+        try {
+          const scrappedMatch = await this.scrapMatch(matchId);
 
-        console.log(scrappedMatch.timestamp, new Date(scrappedMatch.timestamp))
-        await this.migrateMatch(scrappedMatch);
+          await this.migrateMatch(scrappedMatch);
+        } catch (e) {
+          this.logger.error(`There was an error scrapping match ${matchId}`);
+          this.logger.error(e);
+        }
       }
       this.logger.verbose(`Migrated page ${page}`);
       if (hasExisting) {
@@ -458,8 +461,13 @@ export class GameServerService {
           : 3;
 
         const heroid = $el.find('.player-hero').data('heroid');
+
         const hero =
-          `npc_dota_hero_` + HeroMap.find(it => it.id === heroid).name;
+          `npc_dota_hero_` + HeroMap.find(it => it.id === heroid)?.name;
+
+        if (!hero) {
+          throw new Error(`Unknown hero id ${heroid}`);
+        }
         const steam64 = $el
           .find('.player-name-link')
           .attr('href')
