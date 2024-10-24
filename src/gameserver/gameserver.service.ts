@@ -444,6 +444,8 @@ export class GameServerService {
       );
     }
 
+    const gs = this;
+
     const players = $('.player-row')
       .map(function(i) {
         const $el = $(this);
@@ -462,12 +464,21 @@ export class GameServerService {
 
         const heroid = $el.find('.player-hero').data('heroid');
 
+
+        // There can be spirit bear here resulting in undefined heroid
+        if(!heroid){
+          gs.logger.warn(`Skipping spirit bear, text is: ${$el.find('.player-name-link').text()}`)
+          return null;
+        }
+
         const hero =
           `npc_dota_hero_` + HeroMap.find(it => it.id === heroid)?.name;
 
         if (!hero) {
           throw new Error(`Unknown hero id ${heroid}`);
         }
+
+
         const steam64 = $el
           .find('.player-name-link')
           .attr('href')
@@ -517,7 +528,8 @@ export class GameServerService {
           item5: itemList[5],
         };
       })
-      .toArray();
+      .toArray()
+      .filter(Boolean);
 
     const isBotMatch = players.find(it => Number(it.steam64) <= 10);
 
