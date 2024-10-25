@@ -1,4 +1,4 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 
 @Entity('player_in_match')
@@ -25,7 +25,7 @@ export default class PlayerInMatchEntity {
     foreignKeyConstraintName: 'FK_match_player',
     name: 'matchId',
   })
-  match!: FinishedMatchEntity;
+  match!: Relation<FinishedMatchEntity>;
 
   @Column('matchId')
   matchId: number;

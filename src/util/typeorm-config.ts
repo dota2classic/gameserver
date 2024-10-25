@@ -18,7 +18,7 @@ import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { ItemHeroView } from 'gameserver/model/item-hero.view';
 import { AchievementEntity } from 'gameserver/model/achievement.entity';
 
-export const Entities = [
+export const Entities: Function[] = [
   GameSeasonEntity,
   VersionPlayerEntity,
 
@@ -72,12 +72,10 @@ export const prodDbConfig: TypeOrmModuleOptions = {
   host: DB_HOST(),
   port: 5432,
   username: DB_USERNAME(),
-  password: DB_PASSWORD,
+  password: DB_PASSWORD(),
   entities: Entities,
   synchronize: true,
   dropSchema: false,
-  // maxQueryExecutionTime: 1000,
-
 
   ssl: false,
 };

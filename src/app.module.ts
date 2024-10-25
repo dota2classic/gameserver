@@ -35,13 +35,6 @@ export function qCache<T, B>() {
   imports: [
     CacheModule.register(),
     ScheduleModule.forRoot(),
-    // SentryModule.forRoot({
-    //   dsn:
-    //     'https://67345366524f4d0fb7d9be3a26d6d3f2@o435989.ingest.sentry.io/5529665',
-    //   debug: false,
-    //   environment: isDev ? 'dev' : 'production',
-    //   logLevel: 2, //based on sentry.io loglevel //
-    // }),
     CqrsModule,
     TypeOrmModule.forRoot(
       (isDev ? prodDbConfig : prodDbConfig) as TypeOrmModuleOptions,

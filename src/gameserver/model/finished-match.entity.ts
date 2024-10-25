@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, Index, OneToMany, PrimaryColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, OneToMany, PrimaryColumn, Relation } from 'typeorm';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
@@ -36,7 +36,7 @@ export default class FinishedMatchEntity {
     pim => pim.match,
     { eager: true },
   )
-  players!: PlayerInMatchEntity[];
+  players!: Relation<PlayerInMatchEntity>[];
 
   constructor(
     id: number | undefined,

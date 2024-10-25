@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, Relation } from 'typeorm';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { AchievementKey } from 'gateway/shared-types/achievemen-key';
@@ -19,7 +19,7 @@ export class AchievementEntity {
     foreignKeyConstraintName: 'FK_match_achievement',
     name: 'matchId',
   })
-  match?: FinishedMatchEntity;
+  match?: Relation<FinishedMatchEntity>;
 
   @ManyToOne(type => PlayerInMatchEntity)
   @JoinColumn([
@@ -32,7 +32,7 @@ export class AchievementEntity {
       referencedColumnName: 'playerId',
     },
   ])
-  pim?: PlayerInMatchEntity;
+  pim?: Relation<PlayerInMatchEntity>;
 
   @Column({ nullable: true, default: null })
   matchId?: number;
