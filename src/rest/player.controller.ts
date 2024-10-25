@@ -80,8 +80,6 @@ export class PlayerController {
       )
       .where({ steam_id: steamId });
 
-    console.log(achievementsQ.getQuery());
-
     const achievements = await achievementsQ.getMany();
     return achievements.map(t => {
       if (t.match) {
