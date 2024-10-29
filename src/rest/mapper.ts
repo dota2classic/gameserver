@@ -43,7 +43,7 @@ export class Mapper {
     item4: it.item4,
     item5: it.item5,
 
-    mmr: it.mmrChange.length && this.mapMmr(it.mmrChange[0]),
+    mmr: it.mmrChange?.length && this.mapMmr(it.mmrChange[0]),
     abandoned: it.abandoned,
   });
 
