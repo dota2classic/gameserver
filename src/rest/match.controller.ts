@@ -10,6 +10,7 @@ import { NullableIntPipe } from 'util/pipes';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { MatchService } from 'rest/service/match.service';
+import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 
 
 @Controller('match')
@@ -21,6 +22,8 @@ export class MatchController {
     private readonly matchRepository: Repository<FinishedMatchEntity>,
     @InjectRepository(PlayerInMatchEntity)
     private readonly playerInMatchRepository: Repository<PlayerInMatchEntity>,
+    @InjectRepository(MmrChangeLogEntity)
+    private readonly mmrChangeLogEntityRepository: Repository<MmrChangeLogEntity>,
     private readonly metaService: MetaService,
     private readonly matchService: MatchService,
   ) {}
@@ -75,7 +78,7 @@ export class MatchController {
   async getMatch(@Param('id', NullableIntPipe) id: number): Promise<MatchDto> {
     const match = await this.matchRepository.findOneOrFail({
       where: { id },
-      relations: ['players'],
+      relations: ['players', 'players.mmrChange']
     });
 
     return this.mapper.mapMatch(match);

@@ -1,35 +1,45 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, Relation } from 'typeorm';
+import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 
 @Entity()
 export class MmrChangeLogEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column()
+  @PrimaryColumn()
   playerId: string;
 
-  @Column({ default: -1 })
+  @PrimaryColumn()
   matchId: number;
 
   @Column()
   winner: boolean;
 
-  @Column({ type: "float"})
+  @Column({ type: 'float' })
   winnerAverage: number;
 
-  @Column({ type: "float"})
+  @Column({ type: 'float' })
   loserAverage: number;
 
-  @Column({ type: "float"})
+  @Column({ type: 'float' })
   mmrBefore: number;
 
-  @Column({ type: "float"})
+  @Column({ type: 'float' })
   mmrAfter: number;
 
   @Column({ default: false })
-  hiddenMmr: boolean
+  hiddenMmr: boolean;
 
+  @Column({ type: 'float' })
+  change: number;
 
-  @Column({ type: "float"})
-  change: number
+  @ManyToOne(type => PlayerInMatchEntity)
+  @JoinColumn([
+    {
+      name: 'matchId',
+      referencedColumnName: 'matchId',
+    },
+    {
+      name: 'playerId',
+      referencedColumnName: 'playerId',
+    },
+  ])
+  pim?: Relation<PlayerInMatchEntity>;
 }

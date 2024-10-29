@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MatchDto, PlayerInMatchDto } from 'rest/dto/match.dto';
+import { MatchDto, MmrChangeDto, PlayerInMatchDto } from 'rest/dto/match.dto';
 import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { GameServerDto, GameSessionDto } from 'rest/dto/info.dto';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
@@ -9,6 +9,7 @@ import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { AchievementEntity } from 'gameserver/model/achievement.entity';
 import { AchievementDto } from 'rest/dto/achievement.dto';
 import { AchievementService } from 'gameserver/achievement.service';
+import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 
 @Injectable()
 export class Mapper {
@@ -42,7 +43,15 @@ export class Mapper {
     item4: it.item4,
     item5: it.item5,
 
+    mmr: it.mmrChange.length && this.mapMmr(it.mmrChange[0]),
     abandoned: it.abandoned,
+  });
+
+  public mapMmr = (mmr: MmrChangeLogEntity): MmrChangeDto => ({
+    mmr_before: mmr.mmrBefore,
+    mmr_after: mmr.mmrAfter,
+    change: mmr.change,
+    is_hidden: mmr.hiddenMmr,
   });
 
   public mapMatch = (match: FinishedMatchEntity): MatchDto => ({

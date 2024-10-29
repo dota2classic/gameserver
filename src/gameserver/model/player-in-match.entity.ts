@@ -1,21 +1,26 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Relation } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryColumn, Relation } from 'typeorm';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
+import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 
 @Entity('player_in_match')
-// @Index('player_match_index', ['playerId', 'matchId'])
 @Index('player_match_index', ['matchId'])
-@Index('pim_player_match_idx', ['playerId', 'matchId'], { unique: true })
 export default class PlayerInMatchEntity {
-  @PrimaryGeneratedColumn({
-    primaryKeyConstraintName: 'PK_pim_id_constraint',
-  })
-  id!: number;
-
   /**
    * PlayerId
    */
-  @Column()
+  @PrimaryColumn({
+    name: 'playerId',
+    primaryKeyConstraintName: 'PK_pim_player_match_idx',
+    primary: true
+  })
   playerId!: string;
+
+  @PrimaryColumn({
+    name: 'matchId',
+    primaryKeyConstraintName: 'PK_pim_player_match_idx',
+    primary: true
+  })
+  matchId: number;
 
   @ManyToOne(
     type => FinishedMatchEntity,
@@ -26,9 +31,6 @@ export default class PlayerInMatchEntity {
     name: 'matchId',
   })
   match!: Relation<FinishedMatchEntity>;
-
-  @Column('matchId')
-  matchId: number;
 
   @Column('int')
   team!: number;
@@ -50,7 +52,6 @@ export default class PlayerInMatchEntity {
 
   @Column('int', { default: 0 })
   xpm: number = 0;
-
 
   @Column('int', { default: 0 })
   hero_damage: number = 0;
@@ -99,6 +100,9 @@ export default class PlayerInMatchEntity {
 
   @Column('smallint', { default: 0 })
   item5: number;
+
+  @OneToMany(type => MmrChangeLogEntity, t => t.pim, { eager: true })
+  mmrChange: MmrChangeLogEntity[]
 
   // constructor(playerId: string, team: number, kills: number, deaths: number, assists: number, level: number, gpm: number, xpm: number, abandoned: boolean, last_hits: number, denies: number, hero: string, items: string, item0: number, item1: number, item2: number, item3: number, item4: number, item5: number) {
   //   this.playerId = playerId;

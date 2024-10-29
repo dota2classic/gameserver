@@ -19,6 +19,18 @@ export class MatchDto {
   timestamp: string;
 }
 
+export class MmrChangeDto {
+  mmr_before: number;
+  mmr_after: number;
+  is_hidden: boolean;
+  change: number;
+}
+export class MatchMmrData {
+  id: number;
+  player_mmr_data: MmrChangeDto[];
+}
+
+
 export class PlayerInMatchDto {
   steam_id: string;
 
@@ -42,6 +54,7 @@ export class PlayerInMatchDto {
 
   gold: number;
 
+  mmr?: MmrChangeDto;
   // items: string[];
 
   item0: number;
