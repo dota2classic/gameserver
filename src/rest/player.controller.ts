@@ -162,6 +162,7 @@ limit $3`,
     const lb = await this.leaderboardViewRepository.findOne({
       where: { steam_id },
     });
+
     // if it exists in the view, we happy
     if (lb) {
       return {
@@ -205,7 +206,7 @@ limit $3`,
       assists: summary?.assists || 0,
       play_time: summary?.play_time || 0,
 
-      playedAnyGame: summary?.playedAnyGame || false,
+      playedAnyGame: summary && summary.games > 0,
 
       newbieUnrankedGamesLeft:
         (summary?.ranked_games || 0) > 0

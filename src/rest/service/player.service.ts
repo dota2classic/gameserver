@@ -175,26 +175,36 @@ order by score desc`;
   }
 
   async fullSummary(steam_id: string): Promise<Summary> {
-    const query = `
-select pim."playerId"                                                 as steam_id,
-       vp.mmr::int                                                    as mmr,
-       count(pim)::int                                                as games_played,
-       sum((pim.team = m.winner)::int)::int                           as wins,
-       sum((pim.team != m.winner)::int)::int                          as loss,
-       sum((m.matchmaking_mode = $1)::int)::int                       as ranked_games,
-       sum((m.matchmaking_mode = $2)::int)::int                       as unranked_games
-from player_in_match pim
-         inner join version_player vp on vp.steam_id = pim."playerId"
-         inner join finished_match m on m.id = pim."matchId"
-where m.matchmaking_mode in (0, 1) and  pim."playerId" = $3
-group by pim."playerId", mmr;`;
+    const some = await this.playerInMatchRepository.query(
+      `with cte as (select plr."playerId"                                                                   as steam_id,
+                    count(*)::int                                                                    as any_games,
+                    sum((m.matchmaking_mode in (0, 1))::int)::int                                    as games,
+                    sum((m.winner = plr.team and m.matchmaking_mode in (0, 1))::int)::int            as wins,
+                    sum((m.matchmaking_mode = 0 and m.timestamp > now() - '14 days'::interval)::int) as recent_ranked_games,
+                    coalesce(p.hidden_mmr, -1)                                                       as mmr
+             from player_in_match plr
+                      left join version_player p on plr."playerId" = p.steam_id
+                      inner join finished_match m on plr."matchId" = m.id
+where plr."playerId" = $1
+             group by plr."playerId", p.hidden_mmr)
+select p.steam_id,
+       p.wins,
+       p.games,
+       p.any_games,
+       p.mmr                                                                        as mmr,
+       avg(pim.kills)::float                                                        as kills,
+       avg(pim.deaths)::float                                                       as deaths,
+       avg(pim.assists)::float                                                      as assists,
+       sum(m.duration)::int                                                         as play_time,
+       sum((m.matchmaking_mode = 0)::int)                                           as ranked_games,
+       -1                             as rank
+from cte p
+         inner join player_in_match pim on pim."playerId" = p.steam_id
+         inner join finished_match m on pim."matchId" = m.id
+group by p.steam_id, p.recent_ranked_games, p.mmr, p.games, p.wins, p.any_games`,
+      [steam_id],
+    );
 
-    return this.connection
-      .query(query, [
-        MatchmakingMode.RANKED,
-        MatchmakingMode.UNRANKED,
-        steam_id,
-      ])
-      .then(it => it[0]);
+    return some[0];
   }
 }
