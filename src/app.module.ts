@@ -21,6 +21,7 @@ import { outerQuery } from 'gateway/util/outerQuery';
 import { QueryCache } from 'rcache';
 import { CacheModule } from '@nestjs/cache-manager';
 import { MatchService } from 'rest/service/match.service';
+import { CrimeController } from 'rest/crime.controller';
 
 
 export function qCache<T, B>() {
@@ -61,6 +62,7 @@ export function qCache<T, B>() {
     PlayerController,
     InfoController,
     MetaController,
+    CrimeController
   ],
   providers: [
     AppService,
