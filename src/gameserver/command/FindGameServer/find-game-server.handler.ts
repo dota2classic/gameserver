@@ -9,7 +9,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { ClientProxy } from '@nestjs/microservices';
-import { GSMatchInfo, LaunchGameServerCommand } from 'gateway/commands/LaunchGameServer/launch-game-server.command';
+import {
+  FullMatchPlayer,
+  GSMatchInfo,
+  LaunchGameServerCommand,
+} from 'gateway/commands/LaunchGameServer/launch-game-server.command';
 import { LaunchGameServerResponse } from 'gateway/commands/LaunchGameServer/launch-game-server.response';
 import { timeout } from 'rxjs/operators';
 import { ServerNotRespondingEvent } from 'gameserver/event/server-not-responding.event';
@@ -20,7 +24,7 @@ import { asyncMap } from 'rxjs-async-map';
 import { KillServerRequestedEvent } from 'gateway/events/gs/kill-server-requested.event';
 import { MatchStartedEvent } from 'gateway/events/match-started.event';
 import { GameServerInfo } from 'gateway/shared-types/game-server-info';
-import { MatchInfo, MatchPlayer } from 'gateway/events/room-ready.event';
+import { MatchInfo } from 'gateway/events/room-ready.event';
 import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
 import { GetUserInfoQueryResult } from 'gateway/queries/GetUserInfo/get-user-info-query.result';
 import { MatchEntity } from 'gameserver/model/match.entity';
@@ -86,15 +90,14 @@ export class FindGameServerHandler
   }
 
   private async extendMatchInfo(matchInfo: MatchInfo): Promise<GSMatchInfo> {
-    const players: MatchPlayer[] = [];
+    const players: FullMatchPlayer[] = [];
 
-    // todo: maybe not needed at all
     const resolves = matchInfo.players.map(async t => {
       const res = await this.qbus.execute<
         GetUserInfoQuery,
         GetUserInfoQueryResult
       >(new GetUserInfoQuery(t.playerId));
-      players.push(new MatchPlayer(t.playerId, res.name, t.team));
+      players.push(new FullMatchPlayer(t.playerId, t.team, res.name, t.partyId));
     });
 
     await Promise.all(resolves);
