@@ -104,6 +104,9 @@ export default class PlayerInMatchEntity {
   @OneToMany(type => MmrChangeLogEntity, t => t.pim, { eager: true })
   mmrChange: MmrChangeLogEntity[]
 
+  @Column('uuid', { nullable: true, default: null})
+  party_id?: string;
+
   // constructor(playerId: string, team: number, kills: number, deaths: number, assists: number, level: number, gpm: number, xpm: number, abandoned: boolean, last_hits: number, denies: number, hero: string, items: string, item0: number, item1: number, item2: number, item3: number, item4: number, item5: number) {
   //   this.playerId = playerId;
   //   this.team = team;

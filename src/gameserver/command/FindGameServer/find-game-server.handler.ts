@@ -92,12 +92,15 @@ export class FindGameServerHandler
   private async extendMatchInfo(matchInfo: MatchInfo): Promise<GSMatchInfo> {
     const players: FullMatchPlayer[] = [];
 
+    // TODO: i dont like it and want to move username resolving into operator
     const resolves = matchInfo.players.map(async t => {
       const res = await this.qbus.execute<
         GetUserInfoQuery,
         GetUserInfoQueryResult
       >(new GetUserInfoQuery(t.playerId));
-      players.push(new FullMatchPlayer(t.playerId, t.team, res.name, t.partyId));
+      players.push(
+        new FullMatchPlayer(t.playerId, t.team, res.name, t.partyId),
+      );
     });
 
     await Promise.all(resolves);
@@ -117,6 +120,8 @@ export class FindGameServerHandler
       command.matchInfo.version,
     );
 
+    const gsInfo = await this.extendMatchInfo(command.matchInfo);
+
     console.log('FindServer called, pool', freeServerPool);
 
     const m = new MatchEntity();
@@ -124,13 +129,14 @@ export class FindGameServerHandler
     m.mode = command.matchInfo.mode;
     m.started = false;
     m.finished = false;
+    m.matchInfoJson = {
+      ...gsInfo,
+    };
 
     await this.matchEntityRepository.save(m);
 
     let i = 0;
     let foundServer: GameServerEntity | undefined;
-
-    const gsInfo = await this.extendMatchInfo(command.matchInfo);
 
     console.log('Free pool:', freeServerPool.length);
     while (i < freeServerPool.length) {

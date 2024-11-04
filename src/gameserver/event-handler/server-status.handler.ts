@@ -4,15 +4,17 @@ import { GameServerSessionEntity } from 'gameserver/model/game-server-session.en
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
+import { Logger } from '@nestjs/common';
 
 @EventsHandler(ServerStatusEvent)
 export class ServerStatusHandler implements IEventHandler<ServerStatusEvent> {
+  private logger = new Logger(ServerStatusHandler.name)
   constructor(
     @InjectRepository(GameServerSessionEntity)
     private readonly gameServerSessionModelRepository: Repository<
       GameServerSessionEntity
     >,
-    private readonly ebus: EventBus
+    private readonly ebus: EventBus,
   ) {}
 
   async handle(event: ServerStatusEvent) {
@@ -20,17 +22,20 @@ export class ServerStatusHandler implements IEventHandler<ServerStatusEvent> {
       where: { url: event.url },
     });
 
-    if (event.running) {
-      if (!existingSession) {
-        existingSession = new GameServerSessionEntity();
-      }
+    if (event.running && !existingSession) {
+      this.logger.warn(`Needed to create game server session for url ${event.url}`)
+      // Server is running with session and we don't know it for some reason
+      existingSession = new GameServerSessionEntity();
       existingSession.url = event.url;
       existingSession.matchId = event.matchId;
       existingSession.matchInfoJson = event.session;
       await this.gameServerSessionModelRepository.save(existingSession);
-    } else if(existingSession) { // remove session if it exists
+    } else if (!event.running && existingSession) {
+      // remove session if it exists
       await this.gameServerSessionModelRepository.remove(existingSession);
-      this.ebus.publish(new GameServerStoppedEvent(event.url, event.session.version))
+      this.ebus.publish(
+        new GameServerStoppedEvent(event.url, existingSession.matchInfoJson.version),
+      );
     }
   }
 }

@@ -1,5 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
+import { GSMatchInfo } from 'gateway/commands/LaunchGameServer/launch-game-server.command';
 
 @Entity('match_entity')
 export class MatchEntity {
@@ -18,6 +19,9 @@ export class MatchEntity {
   @Column()
   mode: MatchmakingMode;
 
+
+  @Column({ type: "simple-json", nullable: true, default: null })
+  matchInfoJson: GSMatchInfo;
 
 
   static NOT_DECIDED_SERVER: string = "NOT_DECIDED_SERVER";
