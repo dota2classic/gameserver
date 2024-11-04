@@ -27,7 +27,7 @@ export class GameserverSaga {
               e.mode,
               e.roomId,
               e.players,
-              e.averageMMR,
+              0,
               e.version,
             ),
             0,
