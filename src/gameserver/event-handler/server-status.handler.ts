@@ -5,14 +5,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
 import { Logger } from '@nestjs/common';
+import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 
 @EventsHandler(ServerStatusEvent)
 export class ServerStatusHandler implements IEventHandler<ServerStatusEvent> {
-  private logger = new Logger(ServerStatusHandler.name)
+  private logger = new Logger(ServerStatusHandler.name);
   constructor(
     @InjectRepository(GameServerSessionEntity)
     private readonly gameServerSessionModelRepository: Repository<
       GameServerSessionEntity
+    >,
+    @InjectRepository(FinishedMatchEntity)
+    private readonly finishedMatchEntityRepository: Repository<
+      FinishedMatchEntity
     >,
     private readonly ebus: EventBus,
   ) {}
@@ -23,7 +28,19 @@ export class ServerStatusHandler implements IEventHandler<ServerStatusEvent> {
     });
 
     if (event.running && !existingSession) {
-      this.logger.warn(`Needed to create game server session for url ${event.url}`)
+      const exists = await this.finishedMatchEntityRepository.exists({
+        where: { id: event.matchId },
+      });
+      if (!exists) {
+        this.logger.warn(
+          `Needed to create game server session for url ${event.url}`,
+        );
+      } else {
+        this.logger.warn(
+          'Skipping server status: match already ended, no need to create session',
+        );
+        return;
+      }
       // Server is running with session and we don't know it for some reason
       existingSession = new GameServerSessionEntity();
       existingSession.url = event.url;
@@ -34,7 +51,10 @@ export class ServerStatusHandler implements IEventHandler<ServerStatusEvent> {
       // remove session if it exists
       await this.gameServerSessionModelRepository.remove(existingSession);
       this.ebus.publish(
-        new GameServerStoppedEvent(event.url, existingSession.matchInfoJson.version),
+        new GameServerStoppedEvent(
+          event.url,
+          existingSession.matchInfoJson.version,
+        ),
       );
     }
   }

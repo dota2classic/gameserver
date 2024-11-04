@@ -143,6 +143,8 @@ limit $3`,
       [steamId, perPage * page, perPage],
     );
 
+    //
+    // console.log(data)
     return {
       data,
       page,
