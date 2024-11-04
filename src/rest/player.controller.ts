@@ -117,29 +117,27 @@ where match_players.team = pim.team
 
     const data = await this.connection.query<PlayerTeammateDto[]>(
       `with teammates as (select distinct pim."playerId",
-                                   count(pim)                        as games,
-                                   sum((pim.team = fm.winner)::int)  as wins,
-                                   sum((pim.team != fm.winner)::int) as losses
+                          count(pim)                        as games,
+                          sum((pim.team = fm.winner)::int)  as wins,
+                          sum((pim.team != fm.winner)::int) as losses
                    from player_in_match pim
                             inner join finished_match fm on fm.id = pim."matchId"
-                            left join player_in_match match_players
-                                      on match_players."matchId" = fm.id and match_players."playerId" = $1
-                   where match_players is not null
-                     and match_players.team = pim.team
-                     and pim."playerId" != $1  and LENGTH(pim."playerId") > 2
-                   group by pim."playerId")
-select p."playerId"                                                                                         as steam_id,
-       p.games::int                                                                                         as games,
-       p.wins::int                                                                                          as wins,
-       p.losses::int                                                                                        as losses,
-       (p.wins::float / greatest(1, p.wins + p.losses))::float                                              as winrate,
-       (log(p.games + 1) * (p.wins::float / greatest(1, p.games)) * (p.wins - p.losses))::float                                as score2
+                            inner join player_in_match mp on mp."matchId" = pim."matchId" and mp.team = pim.team and
+                                                             mp."playerId" = $1
+                   where pim."playerId" != $1 and length(pim."playerId") > 2
+                   group by pim."playerId"
+                   order by wins DESC)
+select p."playerId"                                                                             as steam_id,
+       p.games::int                                                                             as games,
+       p.wins::int                                                                              as wins,
+       p.losses::int                                                                            as losses,
+       (p.wins::float / greatest(1, p.wins + p.losses))::float                                  as winrate,
+       (log(p.games + 1) * (p.wins::float / greatest(1, p.games)) * (p.wins - p.losses))::float as score2
 
 from teammates p
 -- order by p.wins desc, p.losses asc;
 order by score2 desc, steam_id desc
-offset $2
-limit $3`,
+offset $2 limit $3`,
       [steamId, perPage * page, perPage],
     );
 
