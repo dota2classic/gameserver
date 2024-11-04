@@ -49,7 +49,6 @@ export class ServerStatusHandler implements IEventHandler<ServerStatusEvent> {
       await this.gameServerSessionModelRepository.save(existingSession);
     } else if (!event.running && existingSession) {
       // remove session if it exists
-      await this.gameServerSessionModelRepository.remove(existingSession);
       this.ebus.publish(
         new GameServerStoppedEvent(
           event.url,

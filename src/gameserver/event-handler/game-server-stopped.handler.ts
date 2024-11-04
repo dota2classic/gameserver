@@ -5,10 +5,13 @@ import { GameSessionFinishedEvent } from 'gateway/events/game-session-finished.e
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Logger } from '@nestjs/common';
 
 @EventsHandler(GameServerStoppedEvent)
 export class GameServerStoppedHandler
   implements IEventHandler<GameServerStoppedEvent> {
+
+  private logger = new Logger(GameServerStoppedHandler.name)
   constructor(
     private readonly gsRepo: GameServerSessionRepository,
     @InjectRepository(GameServerSessionEntity)
@@ -20,6 +23,7 @@ export class GameServerStoppedHandler
     const runningSession = await this.gameServerSessionModelRepository.findOne({
       where: { url: event.url }
     });
+
     if (runningSession) {
       await this.gameServerSessionModelRepository.delete(runningSession.url);
       this.ebus.publish(
