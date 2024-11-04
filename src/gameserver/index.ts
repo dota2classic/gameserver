@@ -30,6 +30,7 @@ import { StartFakeMatchHandler } from 'gameserver/event-handler/start-fake-match
 import { ServerStatusHandler } from 'gameserver/event-handler/server-status.handler';
 import { ProcessAchievementsHandler } from 'gameserver/command/ProcessAchievements/process-achievements.handler';
 import { AchievementService } from 'gameserver/achievement.service';
+import { MatchFailedHandler } from 'gameserver/event-handler/match-failed.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -62,7 +63,8 @@ const EventHandlers = [
   ServerNotRespondingHandler,
   PlayerReportUpdatedHandler,
   PlayerReportHandler,
-  PlayerReportedHandler
+  PlayerReportedHandler,
+  MatchFailedHandler
 ];
 
 const QueryHandlers = [GetPlayerInfoHandler, GetSessionByUserHandler, GetReportsAvailableHandler];

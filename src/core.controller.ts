@@ -15,27 +15,8 @@ import { TournamentGameReadyEvent } from 'gateway/events/tournament/tournament-g
 import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event';
 import { StartFakeMatchEvent } from 'gateway/events/start-fake-match.event';
 import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
+import { MatchFailedEvent } from 'gateway/events/match-failed.event';
 
-export enum Dota_GameState {
-  DOTA_GAMERULES_STATE_INIT = 0,
-  DOTA_GAMERULES_STATE_WAIT_FOR_PLAYERS_TO_LOAD = 1,
-  DOTA_GAMERULES_STATE_CUSTOM_GAME_SETUP = 2,
-  DOTA_GAMERULES_STATE_HERO_SELECTION = 3,
-  DOTA_GAMERULES_STATE_STRATEGY_TIME = 4,
-  DOTA_GAMERULES_STATE_TEAM_SHOWCASE = 5,
-  DOTA_GAMERULES_STATE_PRE_GAME = 6,
-  DOTA_GAMERULES_STATE_GAME_IN_PROGRESS = 7,
-  DOTA_GAMERULES_STATE_POST_GAME = 8,
-  DOTA_GAMERULES_STATE_DISCONNECT = 9,
-}
-
-class UpdateServerDTO {
-  constructor(
-    public readonly url: string,
-    public readonly state: Dota_GameState,
-    public readonly matchId: number,
-  ) {}
-}
 
 @Controller()
 export class CoreController {
@@ -117,5 +98,10 @@ export class CoreController {
   @EventPattern(ServerStatusEvent.name)
   async ServerStatusEvent(data: ServerStatusEvent) {
     this.event(ServerStatusEvent, data);
+  }
+
+  @EventPattern(MatchFailedEvent.name)
+  async MatchFailedEvent(data: MatchFailedEvent) {
+    this.event(MatchFailedEvent, data);
   }
 }
