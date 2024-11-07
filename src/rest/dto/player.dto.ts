@@ -1,6 +1,6 @@
 import { BanReason } from 'gateway/shared-types/ban';
 import { PlayerId } from 'gateway/shared-types/player-id';
-import { Page } from 'rest/dto/page';
+import { Page } from 'gateway/shared-types/page';
 
 export class LeaderboardEntryDto {
   rank: number | null;
@@ -16,6 +16,13 @@ export class LeaderboardEntryDto {
   assists: number;
 
   play_time: number;
+}
+
+export class LeaderboardEntryPageDto extends Page<LeaderboardEntryDto> {
+  data: LeaderboardEntryDto[]
+  page: number;
+  perPage: number;
+  pages: number;
 }
 
 export class PlayerSummaryDto extends LeaderboardEntryDto {

@@ -7,7 +7,7 @@ import { Connection, Repository } from 'typeorm';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import {
   BanStatusDto,
-  LeaderboardEntryDto,
+  LeaderboardEntryPageDto,
   PlayerSummaryDto,
   PlayerTeammateDto,
   PlayerTeammatePage,
@@ -32,6 +32,7 @@ import { AchievementEntity } from 'gameserver/model/achievement.entity';
 import { AchievementDto } from 'rest/dto/achievement.dto';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
+import { makePage } from 'gateway/util/make-page';
 
 @Controller('player')
 @ApiTags('player')
@@ -219,14 +220,29 @@ offset $2 limit $3`,
     };
   }
 
-  @Get('/leaderboard/:version')
+  @Get('/leaderboard')
   @CacheTTL(60 * 30)
+  @ApiQuery({
+    name: 'page',
+    required: true,
+  })
+  @ApiQuery({
+    name: 'per_page',
+    required: false,
+  })
   async leaderboard(
-    @Param('version') version: Dota2Version,
-  ): Promise<LeaderboardEntryDto[]> {
-    return this.leaderboardViewRepository.find({
-      take: 500,
+    @Query('page', NullableIntPipe) page: number,
+    @Query('per_page', NullableIntPipe) perPage: number = 100,
+  ): Promise<LeaderboardEntryPageDto> {
+    const [data, total] = await this.leaderboardViewRepository.findAndCount({
+      order: {
+        mmr: 'DESC',
+      },
+      take: perPage,
+      skip: perPage * page,
     });
+
+    return makePage(data, total, page, perPage);
   }
 
   @CacheTTL(120)
