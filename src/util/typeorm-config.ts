@@ -76,6 +76,7 @@ export const prodDbConfig: TypeOrmModuleOptions = {
   entities: Entities,
   synchronize: true,
   dropSchema: false,
+  poolSize: 50,
 
   ssl: false,
 };

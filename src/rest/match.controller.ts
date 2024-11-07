@@ -11,6 +11,7 @@ import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { MatchService } from 'rest/service/match.service';
 import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
+import { makePage } from 'gateway/util/make-page';
 
 
 @Controller('match')
@@ -71,8 +72,10 @@ export class MatchController {
     @Query('per_page', NullableIntPipe) perPage: number = 25,
     @Query('mode') mode?: MatchmakingMode,
   ): Promise<MatchPageDto> {
-    return this.matchService.getMatchPage(page, perPage, mode);
+    const [matches, cnt] = await this.matchService.getMatchPage2(page, perPage, mode);
+    return makePage(matches, cnt, page, perPage, this.mapper.mapMatch);
   }
+
 
   @Get('/:id')
   async getMatch(@Param('id', NullableIntPipe) id: number): Promise<MatchDto> {

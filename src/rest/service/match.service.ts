@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Connection, Repository } from 'typeorm';
 import { measure } from 'util/measure';
-import { MatchPageDto } from 'rest/dto/match.dto';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Mapper } from 'rest/mapper';
@@ -17,7 +16,9 @@ export class MatchService {
       FinishedMatchEntity
     >,
     @InjectRepository(PlayerInMatchEntity)
-    private readonly playerInMatchEntityRepository: Repository<PlayerInMatchEntity>,
+    private readonly playerInMatchEntityRepository: Repository<
+      PlayerInMatchEntity
+    >,
     private readonly mapper: Mapper,
   ) {}
 
@@ -26,11 +27,8 @@ export class MatchService {
     page: number,
     perPage: number,
     mode?: MatchmakingMode,
-  ): Promise<MatchPageDto> {
-    const [
-      slice,
-      totalCount,
-    ] = await this.finishedMatchEntityRepository.findAndCount({
+  ): Promise<[FinishedMatchEntity[], number]> {
+    return this.finishedMatchEntityRepository.findAndCount({
       where: !mode
         ? {}
         : {
@@ -42,19 +40,40 @@ export class MatchService {
         timestamp: 'DESC',
       },
     });
-
-    return {
-      data: slice.map(this.mapper.mapMatch),
-      page,
-      perPage: perPage,
-      pages: Math.ceil(totalCount / perPage),
-    };
   }
 
-  public async playerMatches(steam_id: string, page: number, perPage: number, mode?: MatchmakingMode, hero?: string): Promise<[
-    PlayerInMatchEntity[],
-    number
-  ]>{
+  @measure('getMatchPage:legacy')
+  public async getMatchPage2(
+    page: number,
+    perPage: number,
+    mode?: MatchmakingMode,
+  ): Promise<[FinishedMatchEntity[], number]> {
+    const q = this.finishedMatchEntityRepository
+      .createQueryBuilder('fm')
+      .leftJoinAndSelect('fm.players', 'players')
+      .where(
+        !mode
+          ? {}
+          : {
+              matchmaking_mode: mode,
+            },
+      )
+      .limit(perPage)
+      .offset(perPage * page)
+      .orderBy({ timestamp: 'DESC' });
+
+    console.log(q.getQuery());
+
+    return q.getManyAndCount();
+  }
+
+  public async playerMatches(
+    steam_id: string,
+    page: number,
+    perPage: number,
+    mode?: MatchmakingMode,
+    hero?: string,
+  ): Promise<[PlayerInMatchEntity[], number]> {
     let query = this.playerInMatchEntityRepository
       .createQueryBuilder('pim')
       .innerJoinAndSelect('pim.match', 'm')
@@ -73,7 +92,6 @@ export class MatchService {
 
     const [pims, total] = await query.getManyAndCount();
 
-    return [pims, total]
+    return [pims, total];
   }
-
 }
