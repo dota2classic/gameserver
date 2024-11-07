@@ -48,7 +48,7 @@ export class MatchService {
     perPage: number,
     mode?: MatchmakingMode,
   ): Promise<[FinishedMatchEntity[], number]> {
-    const q = this.finishedMatchEntityRepository
+    const items = this.finishedMatchEntityRepository
       .createQueryBuilder('fm')
       .leftJoinAndSelect('fm.players', 'players')
       .where(
@@ -60,11 +60,20 @@ export class MatchService {
       )
       .limit(perPage)
       .offset(perPage * page)
-      .orderBy({ timestamp: 'DESC' });
+      .orderBy({ timestamp: 'DESC' })
+      .getMany();
 
-    console.log(q.getQuery());
+    const count = this.finishedMatchEntityRepository
+      .createQueryBuilder('fm')
+      .where(
+        !mode
+          ? {}
+          : {
+              matchmaking_mode: mode,
+            },
+      ).getCount();
 
-    return q.getManyAndCount();
+    return Promise.combine([items, count])
   }
 
   public async playerMatches(

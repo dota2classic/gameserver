@@ -15,6 +15,7 @@ import { ServerSessionSyncEvent } from 'gateway/events/gs/server-session-sync.ev
 import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event';
 import { GameServerDiscoveredEvent } from 'gateway/events/game-server-discovered.event';
 import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
+import './util/promise';
 
 export function prepareModels(publisher: EventPublisher) {
   // publisher.mergeClassContext(GameServerModel);
