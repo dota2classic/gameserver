@@ -58,9 +58,9 @@ export class MatchService {
               matchmaking_mode: mode,
             },
       )
-      .limit(perPage)
-      .offset(perPage * page)
-      .orderBy({ timestamp: 'DESC' })
+      .take(perPage)
+      .skip(perPage * page)
+      .orderBy({ 'fm.timestamp': 'DESC' })
       .getMany();
 
     const count = this.finishedMatchEntityRepository
