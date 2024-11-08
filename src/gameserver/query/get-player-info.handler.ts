@@ -44,7 +44,7 @@ export class GetPlayerInfoHandler
       steam_id: string;
       mmr: number;
       winrate: number;
-      recentKDA: number;
+      recent_kda: number;
     }
 
     const query: QueryResult | undefined = (
@@ -63,7 +63,7 @@ select vp.steam_id                                               as steam_id,
        vp.mmr::int                                                    as mmr,
        vp.version                                                as version,
        (sum(rg.win::int)::float / greatest(1, count(rg)))::float as winrate,
-       avg(rg.ka / greatest(rg.deaths, 1))::float                as recentKDA
+       avg(rg.ka / greatest(rg.deaths, 1))::float                as recent_kda
 from version_player vp,
      recent_games rg
 
@@ -73,6 +73,9 @@ group by vp.steam_id, vp.mmr, vp.version`,
       )
     )[0];
 
+    console.log(query);
+
+
     const rankedGamesPlayed = await this.playerService.gamesPlayed(
       command.playerId.value,
       MatchmakingMode.RANKED,
@@ -81,9 +84,9 @@ group by vp.steam_id, vp.mmr, vp.version`,
     return new GetPlayerInfoQueryResult(
       command.playerId,
       command.version,
-      query?.mmr || 0,
-      query?.winrate || 0,
-      query?.recentKDA || 0,
+      query?.mmr || 2500,
+      query?.winrate || 0.5,
+      query?.recent_kda || 1,
       rankedGamesPlayed || 0,
       ban?.asBanStatus() || BanStatus.NOT_BANNED,
     );
