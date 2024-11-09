@@ -76,25 +76,6 @@ where p.mmr > $3
     return rank2[0].count + 1;
   }
 
-  @cached(100, 'gamesPlayed')
-  public async gamesPlayed(
-    steam_id: string,
-    mode?: MatchmakingMode,
-  ): Promise<number> {
-    if (mode === undefined) {
-      return this.playerInMatchRepository.count({
-        where: { playerId: steam_id },
-      });
-    }
-
-    return this.playerInMatchRepository
-      .createQueryBuilder('pim')
-      .innerJoin('pim.match', 'm')
-      .where('m.matchmaking_mode = :mode', { mode })
-      .andWhere('pim.playerId = :steam_id', { steam_id })
-      .getCount();
-  }
-
   @cached(100, 'heroStats')
   async heroStats(
     version: Dota2Version,

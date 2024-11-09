@@ -3,7 +3,7 @@ import { Logger } from '@nestjs/common';
 import { BanStatus, GetPlayerInfoQueryResult } from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
 import { GetPlayerInfoQuery } from 'gateway/queries/GetPlayerInfo/get-player-info.query';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import { PlayerService } from 'rest/service/player.service';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
@@ -73,13 +73,7 @@ group by vp.steam_id, vp.mmr, vp.version`,
       )
     )[0];
 
-    console.log(query);
-
-
-    const rankedGamesPlayed = await this.playerService.gamesPlayed(
-      command.playerId.value,
-      MatchmakingMode.RANKED,
-    );
+    const humanGamesPlayed = await this.getPlayedGames(command.playerId.value);
 
     return new GetPlayerInfoQueryResult(
       command.playerId,
@@ -87,8 +81,20 @@ group by vp.steam_id, vp.mmr, vp.version`,
       query?.mmr || 2500,
       query?.winrate || 0.5,
       query?.recent_kda || 1,
-      rankedGamesPlayed || 0,
+      humanGamesPlayed || 0,
       ban?.asBanStatus() || BanStatus.NOT_BANNED,
     );
+  }
+
+  private async getPlayedGames(steamId: string): Promise<number> {
+    return this.playerInMatchRepository
+      .createQueryBuilder('pim')
+      .innerJoin('pim.match', 'm')
+      .where(
+        'm.matchmaking_mode',
+        In([MatchmakingMode.RANKED, MatchmakingMode.UNRANKED]),
+      )
+      .andWhere('pim.playerId = :steam_id', { steam_id: steamId })
+      .getCount();
   }
 }
