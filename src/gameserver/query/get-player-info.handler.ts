@@ -3,7 +3,7 @@ import { Logger } from '@nestjs/common';
 import { BanStatus, GetPlayerInfoQueryResult } from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
 import { GetPlayerInfoQuery } from 'gateway/queries/GetPlayerInfo/get-player-info.query';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import { PlayerService } from 'rest/service/player.service';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
@@ -90,10 +90,9 @@ group by vp.steam_id, vp.mmr, vp.version`,
     return this.playerInMatchRepository
       .createQueryBuilder('pim')
       .innerJoin('pim.match', 'm')
-      .where(
-        'm.matchmaking_mode',
-        In([MatchmakingMode.RANKED, MatchmakingMode.UNRANKED]),
-      )
+      .where('m.matchmaking_mode in (:...modes)', {
+        modes: [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],
+      })
       .andWhere('pim.playerId = :steam_id', { steam_id: steamId })
       .getCount();
   }
