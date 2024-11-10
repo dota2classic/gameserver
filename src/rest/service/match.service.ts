@@ -66,10 +66,10 @@ export class MatchService {
       .where('players.playerId = :steam_id', { steam_id });
 
     if (mode !== undefined) {
-      query.andWhere(`m.matchmaking_mode = :mode`, { mode });
+      query.andWhere(`fm.matchmaking_mode = :mode`, { mode });
     }
     if (hero !== undefined) {
-      query.andWhere(`pim.hero = :hero`, { hero });
+      query.andWhere(`players.hero = :hero`, { hero });
     }
 
     const pims = query
