@@ -96,9 +96,6 @@ export class CrimeLogCreatedHandler
     frequentCrimesCount: PlayerCrimeLogEntity[],
   ) {
 
-    // TODO: PLEASE UNLOCK THIS AFTER U DONE
-    return;
-
     let ban = await this.playerBanRepository.findOne({
       where: {
         steam_id: steam_id,

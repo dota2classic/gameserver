@@ -8,6 +8,8 @@ import { GameServerSessionEntity } from 'gameserver/model/game-server-session.en
 import { MatchRecordedEvent } from 'gameserver/event/match-recorded.event';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import { PlayerAbandonedEvent } from 'gateway/events/bans/player-abandoned.event';
+import { PlayerId } from 'gateway/shared-types/player-id';
 
 @EventsHandler(GameResultsEvent)
 export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
@@ -26,15 +28,15 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
   ) {}
 
   async handle(event: GameResultsEvent) {
-
     const existingRecordedMatch = await this.matchRepository.exists({
       where: {
-        id: event.matchId
-      }
+        id: event.matchId,
+      },
     });
 
-    if(existingRecordedMatch) return;
+    if (existingRecordedMatch) return;
 
+    // TODO: maybe we should make a transaction here....
     const m = new FinishedMatchEntity(
       event.matchId,
       event.winner,
@@ -89,6 +91,11 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
       pim.hero = t.hero;
 
       await this.playerInMatchRepository.save(pim);
+      if (pim.abandoned) {
+        this.ebus.publish(
+          new PlayerAbandonedEvent(new PlayerId(pim.playerId), pim.matchId),
+        );
+      }
     }
 
     await this.ebus.publish(

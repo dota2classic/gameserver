@@ -31,6 +31,7 @@ import { ServerStatusHandler } from 'gameserver/event-handler/server-status.hand
 import { ProcessAchievementsHandler } from 'gameserver/command/ProcessAchievements/process-achievements.handler';
 import { AchievementService } from 'gameserver/achievement.service';
 import { MatchFailedHandler } from 'gameserver/event-handler/match-failed.handler';
+import { PlayerAbandonedHandler } from 'gameserver/event-handler/player-abandoned.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -58,6 +59,7 @@ const EventHandlers = [
   ServerStatusHandler,
   PlayerNotLoadedHandler,
   PlayerDeclinedGameHandler,
+  PlayerAbandonedHandler,
   CrimeLogCreatedHandler,
 
   ServerNotRespondingHandler,
