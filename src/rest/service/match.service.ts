@@ -72,12 +72,14 @@ export class MatchService {
       query.andWhere(`pim.hero = :hero`, { hero });
     }
 
-    const [items, count] = query
+    const pims = query
       .take(perPage)
       .skip(perPage * page)
       .orderBy({ 'fm.timestamp': 'DESC' })
-      .getManyAndCount();
+      .getMany()
 
-    return Promise.combine([items, count]);
+    const total = query.getCount()
+
+    return Promise.combine([pims, total])
   }
 }
