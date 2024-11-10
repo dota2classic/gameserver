@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { AppService } from 'app.service';
 import { CqrsModule } from '@nestjs/cqrs';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { isDev, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_URL } from 'env';
+import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_URL } from 'env';
 import { GameServerDomain } from 'gameserver';
 import { CoreController } from 'core.controller';
-import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { Entities, prodDbConfig } from 'util/typeorm-config';
 import { QueryController } from 'query.controller';
 import { MatchController } from 'rest/match.controller';
@@ -38,7 +38,7 @@ export function qCache<T, B>() {
     ScheduleModule.forRoot(),
     CqrsModule,
     TypeOrmModule.forRoot(
-      (isDev ? prodDbConfig : prodDbConfig) as TypeOrmModuleOptions,
+      prodDbConfig
     ),
     TypeOrmModule.forFeature(Entities),
     ClientsModule.register([

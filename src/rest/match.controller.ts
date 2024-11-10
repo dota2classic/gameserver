@@ -72,7 +72,7 @@ export class MatchController {
     @Query('per_page', NullableIntPipe) perPage: number = 25,
     @Query('mode') mode?: MatchmakingMode,
   ): Promise<MatchPageDto> {
-    const [matches, cnt] = await this.matchService.getMatchPage2(page, perPage, mode);
+    const [matches, cnt] = await this.matchService.getMatchPage(page, perPage, mode);
     return makePage(matches, cnt, page, perPage, this.mapper.mapMatch);
   }
 
@@ -111,13 +111,21 @@ export class MatchController {
     @Query('mode', NullableIntPipe) mode?: MatchmakingMode,
     @Query('hero') hero?: string,
   ): Promise<MatchPageDto> {
-    const [pims, total] = await this.matchService.playerMatches(steam_id, page, perPage, mode, hero);
+    const [matches, total] = await this.matchService.playerMatchesNew(steam_id, page, perPage, mode, hero);
 
-    return {
-      data: pims.map(t => t.match).map(this.mapper.mapMatch),
+    return makePage(
+      matches,
+      total,
       page,
-      perPage: perPage,
-      pages: Math.ceil(total / perPage),
-    };
+      perPage,
+      this.mapper.mapMatch
+    )
+
+    // return {
+    //   data: pims.map(t => t.match).map(this.mapper.mapMatch),
+    //   page,
+    //   perPage: perPage,
+    //   pages: Math.ceil(total / perPage),
+    // };
   }
 }

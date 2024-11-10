@@ -78,5 +78,7 @@ export const prodDbConfig: TypeOrmModuleOptions = {
   dropSchema: false,
   poolSize: 50,
 
+  // logging: true,
+
   ssl: false,
 };

@@ -5,8 +5,6 @@ import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT } from 'env';
 import { Transport } from '@nestjs/microservices';
 import { inspect } from 'util';
 import { Logger } from '@nestjs/common';
-import { DiscoveryRequestedEvent } from 'gateway/events/discovery-requested.event';
-import { wait } from 'util/wait';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ServerActualizationRequestedEvent } from 'gateway/events/gs/server-actualization-requested.event';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
@@ -16,6 +14,7 @@ import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event'
 import { GameServerDiscoveredEvent } from 'gateway/events/game-server-discovered.event';
 import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
 import './util/promise';
+import { MatchService } from 'rest/service/match.service';
 
 export function prepareModels(publisher: EventPublisher) {
   // publisher.mergeClassContext(GameServerModel);
@@ -82,8 +81,23 @@ async function bootstrap() {
     );
   });
 
-  await wait(500);
-  ebus.publish(new DiscoveryRequestedEvent(Math.random()));
+
+  const ms = app.get(MatchService);
+
+  // const m = await ms.getMatchPage(0, 25)
+
+  // const m = await ms.playerMatchesNew2('362956103', 0, 25)
+  const m = await ms.playerMatchesNew('362956103', 0, 25)
+
+  console.log(m[0].length, m[1])
+
+  // assert(m[0].length == 25, "Query is fucked up")
+
+
+  // await wait(500);
+  // ebus.publish(new DiscoveryRequestedEvent(Math.random()));
+
+
 
 }
 bootstrap();

@@ -21,6 +21,7 @@ import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
 import { DotaTeam } from 'gateway/shared-types/dota-team';
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { ProcessAchievementsCommand } from 'gameserver/command/ProcessAchievements/process-achievements.command';
+import { isDev } from 'env';
 
 export interface MatchD2Com {
   id: number;
@@ -90,9 +91,11 @@ export class GameServerService {
     // this.migrateShit();
     // this.migrateItems();
     // this.migrated2com();
-    this.migratePendoSite();
-    // this.testMMRPreview();
-    this.refreshLeaderboardView();
+    if(!isDev) {
+      this.migratePendoSite();
+      // this.testMMRPreview();
+      this.refreshLeaderboardView();
+    }
 
     return;
     setTimeout(async () => {
