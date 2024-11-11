@@ -207,7 +207,7 @@ offset $2 limit $3`,
       assists: summary?.assists || 0,
       play_time: summary?.play_time || 0,
 
-      playedAnyGame: summary && summary.games > 0,
+      playedAnyGame: summary && summary.any_games > 0,
 
       newbieUnrankedGamesLeft:
         (summary?.ranked_games || 0) > 0

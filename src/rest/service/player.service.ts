@@ -15,6 +15,7 @@ export type Summary =
   | (Omit<PlayerSummaryDto, 'rank' | 'newbieUnrankedGamesLeft'> & {
       ranked_games: number;
       unranked_games: number;
+    any_games: number;
     });
 
 // TODO: we probably need to orm this shit up
