@@ -6,6 +6,7 @@ import { BanReason } from 'gateway/shared-types/ban';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
+import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 @EventsHandler(PlayerNotLoadedEvent)
 export class PlayerNotLoadedHandler
@@ -21,6 +22,9 @@ export class PlayerNotLoadedHandler
   ) {}
 
   async handle(event: PlayerNotLoadedEvent) {
+    // Bots are for learning right
+    if (event.mode === MatchmakingMode.BOTS) return;
+
     const crime = new PlayerCrimeLogEntity();
     crime.steam_id = event.playerId.value;
     crime.crime = BanReason.LOAD_FAILURE;

@@ -6,7 +6,6 @@ import { Repository } from 'typeorm';
 import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
 import { Logger } from '@nestjs/common';
 import { MatchEntity } from 'gameserver/model/match.entity';
-import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 @EventsHandler(MatchFailedEvent)
 export class MatchFailedHandler implements IEventHandler<MatchFailedEvent> {
@@ -37,11 +36,9 @@ export class MatchFailedHandler implements IEventHandler<MatchFailedEvent> {
         .join(',')}`,
     );
 
-    if (match.matchInfoJson.mode === MatchmakingMode.BOTS) return;
-
     this.ebus.publishAll(
       event.failedPlayers.map(
-        pl => new PlayerNotLoadedEvent(pl, event.matchId),
+        pl => new PlayerNotLoadedEvent(pl, event.matchId, match.matchInfoJson.mode),
       ),
     );
   }
