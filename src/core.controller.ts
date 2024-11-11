@@ -16,6 +16,7 @@ import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event'
 import { StartFakeMatchEvent } from 'gateway/events/start-fake-match.event';
 import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
 import { MatchFailedEvent } from 'gateway/events/match-failed.event';
+import { PlayerAbandonedEvent } from 'gateway/events/bans/player-abandoned.event';
 
 
 @Controller()
@@ -84,6 +85,10 @@ export class CoreController {
     this.event(PlayerNotLoadedEvent, data);
   }
 
+  @EventPattern(PlayerAbandonedEvent.name)
+  async PlayerAbandonedEvent(data: PlayerAbandonedEvent) {
+    this.event(PlayerAbandonedEvent, data);
+  }
 
   @EventPattern(LiveMatchUpdateEvent.name)
   async LiveMatchUpdateEvent(data: LiveMatchUpdateEvent) {

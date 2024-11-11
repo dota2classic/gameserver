@@ -8,9 +8,6 @@ import { GameServerSessionEntity } from 'gameserver/model/game-server-session.en
 import { MatchRecordedEvent } from 'gameserver/event/match-recorded.event';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
-import { PlayerAbandonedEvent } from 'gateway/events/bans/player-abandoned.event';
-import { PlayerId } from 'gateway/shared-types/player-id';
-import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 @EventsHandler(GameResultsEvent)
 export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
@@ -92,11 +89,6 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
       pim.hero = t.hero;
 
       await this.playerInMatchRepository.save(pim);
-      if (pim.abandoned && m.matchmaking_mode !== MatchmakingMode.BOTS) {
-        this.ebus.publish(
-          new PlayerAbandonedEvent(new PlayerId(pim.playerId), pim.matchId),
-        );
-      }
     }
 
     await this.ebus.publish(
