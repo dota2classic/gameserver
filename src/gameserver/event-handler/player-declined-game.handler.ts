@@ -5,6 +5,7 @@ import { BanReason } from 'gateway/shared-types/ban';
 import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 @EventsHandler(PlayerDeclinedGameEvent)
 export class PlayerDeclinedGameHandler
@@ -18,6 +19,9 @@ export class PlayerDeclinedGameHandler
   ) {}
 
   async handle(event: PlayerDeclinedGameEvent) {
+    // We don't care about bot games: they are for education
+    if(event.mode === MatchmakingMode.BOTS) return;
+
     const crime = new PlayerCrimeLogEntity();
     crime.steam_id = event.id.value;
     crime.crime = BanReason.GAME_DECLINE;
