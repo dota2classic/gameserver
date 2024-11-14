@@ -1,3 +1,4 @@
+import { otelSDK } from 'tracer';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { CommandBus, EventBus, EventPublisher, ofType, QueryBus } from '@nestjs/cqrs';
@@ -21,6 +22,7 @@ export function prepareModels(publisher: EventPublisher) {
 }
 
 async function bootstrap() {
+  await otelSDK.start();
   const app = await NestFactory.create(AppModule);
   app.connectMicroservice({
     transport: Transport.REDIS,
