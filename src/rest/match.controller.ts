@@ -72,7 +72,7 @@ export class MatchController {
     @Query('per_page', NullableIntPipe) perPage: number = 25,
     @Query('mode') mode?: MatchmakingMode,
   ): Promise<MatchPageDto> {
-    const [matches, cnt] = await this.matchService.getMatchPage(page, perPage, mode);
+    const [matches, cnt] = await this.matchService.getMatchPageFastest(page, perPage, mode);
     return makePage(matches, cnt, page, perPage, this.mapper.mapMatch);
   }
 

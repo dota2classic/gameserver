@@ -89,9 +89,12 @@ async function bootstrap() {
   // const m = await ms.getMatchPage(0, 25)
 
   // const m = await ms.playerMatchesNew2('362956103', 0, 25)
-  const m = await ms.playerMatchesNew('362956103', 0, 25)
-
-  console.log(m[0].length, m[1])
+  // const m1 = await ms.getMatchPageFastest(100, 25)
+  // const m2 = await ms.getMatchPage(100, 25)
+  //
+  // assert(JSON.stringify(m1) === JSON.stringify(m2), "New method should return same data, but faster")
+  //
+  // console.log(m1[0].length, m1[1])
 
   // assert(m[0].length == 25, "Query is fucked up")
 

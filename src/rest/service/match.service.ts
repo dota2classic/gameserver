@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Connection, Repository } from 'typeorm';
+import { Connection, In, Repository } from 'typeorm';
 import { measure } from 'util/measure';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -50,6 +50,48 @@ export class MatchService {
     return Promise.combine([items, count]);
   }
 
+  @measure('getMatchPage:fastest')
+  public async getMatchPageFastest(
+    page: number,
+    perPage: number,
+    mode?: MatchmakingMode,
+  ): Promise<[FinishedMatchEntity[], number]> {
+    const condition = !mode
+      ? {}
+      : {
+          matchmaking_mode: mode,
+        };
+
+    const req: {
+      fm_id: number;
+    }[] = await this.finishedMatchEntityRepository.query(
+      `
+      SELECT fm.id AS "fm_id"
+      FROM "finished_match" fm
+      ORDER BY "fm"."timestamp" DESC, "fm"."id" ASC
+      LIMIT $1 OFFSET $2
+`,
+      [perPage, perPage * page],
+    );
+
+    // This query has to use take() and skip(), because we are mapping all PIMs
+    // BUT: we don't really need inner select and pim and stuff for id list
+    const items = this.finishedMatchEntityRepository
+      .createQueryBuilder('fm')
+      .leftJoinAndSelect('fm.players', 'players')
+      .where(condition)
+      .andWhere({ id: In(req.map(d => d.fm_id )) })
+      .orderBy({ 'fm.timestamp': 'DESC' })
+      .getMany();
+
+    const count = this.finishedMatchEntityRepository
+      .createQueryBuilder('fm')
+      .where(condition)
+      .getCount();
+
+    return Promise.combine([items, count]);
+  }
+
   // http_req_waiting...............: avg=218.18ms min=46.31ms med=176.7ms  max=1.07s   p(90)=348.67ms p(95)=641.38ms
   // http_reqs......................: 1695   80.493324/s
   @measure('playerMatches:new')
@@ -76,10 +118,10 @@ export class MatchService {
       .take(perPage)
       .skip(perPage * page)
       .orderBy({ 'fm.timestamp': 'DESC' })
-      .getMany()
+      .getMany();
 
-    const total = query.getCount()
+    const total = query.getCount();
 
-    return Promise.combine([pims, total])
+    return Promise.combine([pims, total]);
   }
 }

@@ -1,6 +1,5 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import * as process from 'process';
-import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
 import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core';
@@ -20,7 +19,7 @@ export const otelSDK = new NodeSDK({
   traceExporter,
   instrumentations: [
     getNodeAutoInstrumentations(),
-    new HttpInstrumentation(),
+    // new HttpInstrumentation(),
     new ExpressInstrumentation(),
     new NestInstrumentation(),
     new PgInstrumentation(),
