@@ -34,7 +34,7 @@ export default class FinishedMatchEntity {
   @OneToMany(
     type => PlayerInMatchEntity,
     pim => pim.match,
-    { eager: false },
+    { eager: true },
   )
   players!: Relation<PlayerInMatchEntity>[];
 
