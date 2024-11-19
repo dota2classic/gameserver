@@ -72,6 +72,7 @@ export class CoreController {
 
   @EventPattern(PlayerBanHammeredEvent.name)
   async PlayerBanHammeredEvent(data: PlayerBanHammeredEvent) {
+    console.log("H?", data)
     this.event(PlayerBanHammeredEvent, data);
   }
 

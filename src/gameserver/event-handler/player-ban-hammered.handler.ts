@@ -2,7 +2,6 @@ import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { PlayerBanHammeredEvent } from 'gateway/events/bans/player-ban-hammered.event';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BanReason } from 'gateway/shared-types/ban';
 import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
 
 @EventsHandler(PlayerBanHammeredEvent)
@@ -18,10 +17,11 @@ export class PlayerBanHammeredHandler
       where: { steam_id: event.playerId.value, }
     });
 
+    console.log("Handling", JSON.stringify(event))
     if (!banEnt) {
       banEnt = new PlayerBanEntity();
       banEnt.steam_id = event.playerId.value;
-      banEnt.reason = BanReason.INFINITE_BAN;
+      banEnt.reason = event.reason
     }
 
     banEnt.endTime = new Date(event.endTime);

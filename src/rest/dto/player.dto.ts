@@ -1,6 +1,7 @@
 import { BanReason } from 'gateway/shared-types/ban';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { Page } from 'gateway/shared-types/page';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class LeaderboardEntryDto {
   rank: number | null;
@@ -34,6 +35,8 @@ export class BanStatusDto {
   public readonly steam_id: string;
   public readonly isBanned: boolean;
   public readonly bannedUntil: number;
+
+  @ApiProperty({ enum: BanReason, enumName: 'BanReason' })
   public readonly status: BanReason;
 }
 
