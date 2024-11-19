@@ -240,7 +240,7 @@ export class ProcessRankedMatchHandler
     const cb = await this.gameServerService.getGamesPlayed(
       season,
       pid,
-      undefined,
+      [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],
       matchTimestamp,
     );
 

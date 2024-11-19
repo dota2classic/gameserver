@@ -380,7 +380,7 @@ export class GameServerService {
   public async getGamesPlayed(
     season: GameSeasonEntity,
     pid: PlayerId,
-    mode: MatchmakingMode | undefined,
+    modes: MatchmakingMode[] | undefined,
     afterMatchTimestamp: string,
   ) {
     let plr = await this.versionPlayerRepository.findOne({
@@ -405,8 +405,8 @@ export class GameServerService {
         current_timestamp: afterMatchTimestamp,
       });
 
-    if (mode != undefined)
-      q = q.andWhere('m.matchmaking_mode = :mode', { mode });
+    if (modes != undefined)
+      q = q.andWhere('m.matchmaking_mode = in(...:modes)', { modes });
 
     return q.getCount();
   }
