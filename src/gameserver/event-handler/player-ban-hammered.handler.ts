@@ -20,10 +20,10 @@ export class PlayerBanHammeredHandler
     if (!banEnt) {
       banEnt = new PlayerBanEntity();
       banEnt.steam_id = event.playerId.value;
-      banEnt.reason = event.reason
     }
 
     banEnt.endTime = new Date(event.endTime);
+    banEnt.reason = event.reason
     await this.playerBanRepository.save(banEnt);
   }
 }
