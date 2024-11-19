@@ -17,7 +17,6 @@ export class PlayerBanHammeredHandler
       where: { steam_id: event.playerId.value, }
     });
 
-    console.log("Handling", JSON.stringify(event))
     if (!banEnt) {
       banEnt = new PlayerBanEntity();
       banEnt.steam_id = event.playerId.value;
