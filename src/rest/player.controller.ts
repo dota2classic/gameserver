@@ -124,7 +124,7 @@ where match_players.team = pim.team
                    from player_in_match pim
                             inner join finished_match fm on fm.id = pim."matchId"
                             inner join player_in_match mp on mp."matchId" = pim."matchId" and mp.team = pim.team and
-                                                             mp."playerId" = $1
+                                                             mp."playerId" = $1 and fm.matchmaking_mode in (0, 1)
                    where pim."playerId" != $1 and length(pim."playerId") > 2
                    group by pim."playerId"
                    order by wins DESC)

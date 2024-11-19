@@ -253,7 +253,7 @@ export class ProcessRankedMatchHandler
         cb,
         winner,
         mmrDiff,
-        0, // CB GAMES = 0 for now
+        5, // CB GAMES = 0 for now
       ),
     );
 
