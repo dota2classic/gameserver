@@ -406,7 +406,7 @@ export class GameServerService {
       });
 
     if (modes != undefined)
-      q = q.andWhere('m.matchmaking_mode = in (...:modes)', { modes });
+      q = q.andWhere('m.matchmaking_mode in (:...modes)', { modes });
 
     return q.getCount();
   }

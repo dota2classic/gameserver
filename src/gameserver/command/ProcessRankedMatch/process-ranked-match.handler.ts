@@ -130,6 +130,7 @@ export class ProcessRankedMatchHandler
       ),
     );
 
+
     const qr = this.connection.createQueryRunner();
     await qr.startTransaction();
     try {
