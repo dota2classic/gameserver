@@ -80,7 +80,7 @@ export class MatchService {
       ORDER BY "fm"."timestamp" DESC, "fm"."id" ASC
       LIMIT $1 OFFSET $2
 `,
-      [perPage, perPage * page, mode],
+      [perPage, perPage * page, mode].slice(0, mode !== undefined ? 3 : 2),
     );
 
     // This query has to use take() and skip(), because we are mapping all PIMs

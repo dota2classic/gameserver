@@ -14,7 +14,6 @@ import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event'
 import { GameServerDiscoveredEvent } from 'gateway/events/game-server-discovered.event';
 import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
 import './util/promise';
-import { MatchService } from 'rest/service/match.service';
 
 export function prepareModels(publisher: EventPublisher) {
   // publisher.mergeClassContext(GameServerModel);
@@ -81,8 +80,8 @@ async function bootstrap() {
     );
   });
 
-  const ms = app.get(MatchService);
-
+  // const ms = app.get(MatchService);
+  //
   // const [data, cnt] = await ms.getMatchPageFastest(0, 25, MatchmakingMode.UNRANKED);
   // if(data.length !== 25){
   //
