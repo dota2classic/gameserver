@@ -15,6 +15,9 @@ export class PlayerCrimeLogEntity {
   @Column({ default: true })
   handled: boolean
 
+  @Column({ default: 0 })
+  banTime: number;
+
   @CreateDateColumn()
   created_at: Date;
 

@@ -69,9 +69,9 @@ async function bootstrap() {
     elogger.log(`${inspect(e)}`);
   });
 
-  qbus.subscribe(e => {
-    qlogger.log(`${inspect(e)}`);
-  });
+  // qbus.subscribe(e => {
+  //   qlogger.log(`${inspect(e)}`);
+  // });
 
   cbus.pipe(ofType(FindGameServerCommand)).subscribe(e => {
     clogger.log(

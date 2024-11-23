@@ -65,13 +65,11 @@ export class ProcessRankedMatchHandler
     mmrDiff: number,
     cbGames: number = 10,
     baseMMRChange: number = 25,
-    kindGames: number = 3,
+    kindGames: number = 0,
   ): number {
     let baseMMR = baseMMRChange;
 
-    if (cbGame < cbGames && cbGame < kindGames) {
-      baseMMR = 50;
-    } else if (cbGame < cbGames) {
+    if (cbGame < cbGames) {
       // gradually reducing mmr
       baseMMR = 100;
     }
@@ -254,7 +252,7 @@ export class ProcessRankedMatchHandler
         cb,
         winner,
         mmrDiff,
-        5, // CB GAMES = 0 for now
+        10, // CB GAMES = 0 for now
       ),
     );
 
