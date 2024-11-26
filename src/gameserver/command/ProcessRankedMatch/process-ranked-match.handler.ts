@@ -10,7 +10,6 @@ import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
-import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 
 type GetMmr = (plr: VersionPlayerEntity) => number;
@@ -124,35 +123,29 @@ export class ProcessRankedMatchHandler
           isHiddenMmr,
           m.timestamp,
           playerMap,
+          m.players.find(it => it.playerId === t.value)?.abandoned || false,
         ),
       ),
     );
 
+    // TODO: use real $transaction shit
 
     const qr = this.connection.createQueryRunner();
     await qr.startTransaction();
     try {
       await this.mmrChangeLogEntityRepository.save(changelogs);
-      this.logger.log('Saved mmr change log entities');
+      this.logger.log("Saved mmr change log entities");
 
       await this.versionPlayerRepository.save(Array.from(playerMap.values()));
-      this.logger.log('Saved version player changes');
+      this.logger.log("Saved version player changes");
 
       await qr.commitTransaction();
     } catch (e) {
-      this.logger.error('Error while saving mmr changes');
+      this.logger.error("Error while saving mmr changes");
       await qr.rollbackTransaction();
     } finally {
       await qr.release();
     }
-  }
-
-  private async makeSureAllPlayersExist(command: ProcessRankedMatchCommand) {
-    await Promise.all(
-      [...command.winners, ...command.losers].map(id =>
-        this.cbus.execute(new MakeSureExistsCommand(id)),
-      ),
-    );
   }
 
   private async isAlreadyProcessed(matchId: number): Promise<boolean> {
@@ -235,6 +228,7 @@ export class ProcessRankedMatchHandler
     hiddenMmr: boolean,
     matchTimestamp: string,
     playerMap: Map<string, VersionPlayerEntity>,
+    didAbandon: boolean,
   ) {
     const cb = await this.gameServerService.getGamesPlayed(
       season,
@@ -245,9 +239,7 @@ export class ProcessRankedMatchHandler
 
     const plr = playerMap.get(pid.value);
 
-
-
-    const mmrChange = Math.round(
+    let mmrChange = Math.round(
       ProcessRankedMatchHandler.computeMMRChange(
         cb,
         winner,
@@ -256,9 +248,12 @@ export class ProcessRankedMatchHandler
       ),
     );
 
+    if (didAbandon) {
+      mmrChange = -Math.abs(mmrChange);
+    }
 
     this.logger.log(
-      `Updating ${hiddenMmr ? 'hidden' : 'real'} MMR for ${
+      `Updating ${hiddenMmr ? "hidden" : "real"} MMR for ${
         plr.steam_id
       }. Now: ${hiddenMmr ? plr.hidden_mmr : plr.mmr}, change: ${mmrChange}`,
     );
