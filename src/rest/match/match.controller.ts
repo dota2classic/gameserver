@@ -1,58 +1,59 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseFilters } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { MatchDto, MatchPageDto } from 'rest/dto/match.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Mapper } from 'rest/mapper';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { MetaService } from 'rest/service/meta.service';
 import { NullableIntPipe } from 'util/pipes';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { MatchService } from 'rest/service/match.service';
 import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 import { makePage } from 'gateway/util/make-page';
+import { MatchMapper } from 'rest/match/match.mapper';
+import { EntityNotFoundFilter } from 'rest/exception/entity-not-found.filter';
 
 
 @Controller('match')
 @ApiTags('match')
 export class MatchController {
   constructor(
-    private readonly mapper: Mapper,
+    private readonly mapper: MatchMapper,
     @InjectRepository(FinishedMatchEntity)
     private readonly matchRepository: Repository<FinishedMatchEntity>,
     @InjectRepository(PlayerInMatchEntity)
     private readonly playerInMatchRepository: Repository<PlayerInMatchEntity>,
     @InjectRepository(MmrChangeLogEntity)
     private readonly mmrChangeLogEntityRepository: Repository<MmrChangeLogEntity>,
-    private readonly metaService: MetaService,
+    // private readonly metaService: MetaService,
     private readonly matchService: MatchService,
   ) {}
 
-  @ApiQuery({
-    name: 'page',
-    required: true,
-  })
-  @ApiQuery({
-    name: 'per_page',
-    required: false,
-  })
-  @ApiQuery({
-    name: 'hero',
-  })
-  @Get('/by_hero')
-  async heroMatches(
-    @Query('page', NullableIntPipe) page: number,
-    @Query('per_page', NullableIntPipe) perPage: number = 25,
-    @Query('hero') hero: string,
-  ): Promise<MatchPageDto> {
-    const raw = await this.metaService.heroMatches(page, perPage, hero);
-
-    return {
-      ...raw,
-      data: raw.data.map(this.mapper.mapMatch),
-    };
-  }
+  // remove meta service from here
+  // @ApiQuery({
+  //   name: 'page',
+  //   required: true,
+  // })
+  // @ApiQuery({
+  //   name: 'per_page',
+  //   required: false,
+  // })
+  // @ApiQuery({
+  //   name: 'hero',
+  // })
+  // @Get('/by_hero')
+  // async heroMatches(
+  //   @Query('page', NullableIntPipe) page: number,
+  //   @Query('per_page', NullableIntPipe) perPage: number = 25,
+  //   @Query('hero') hero: string,
+  // ): Promise<MatchPageDto> {
+  //   const raw = await this.metaService.heroMatches(page, perPage, hero);
+  //
+  //   return {
+  //     ...raw,
+  //     data: raw.data.map(this.mapper.mapMatch),
+  //   };
+  // }
 
   @ApiQuery({
     name: 'page',
@@ -78,6 +79,7 @@ export class MatchController {
 
 
   @Get('/:id')
+  @UseFilters(new EntityNotFoundFilter())
   async getMatch(@Param('id', NullableIntPipe) id: number): Promise<MatchDto> {
     const match = await this.matchRepository.findOneOrFail({
       where: { id },
@@ -120,12 +122,5 @@ export class MatchController {
       perPage,
       this.mapper.mapMatch
     )
-
-    // return {
-    //   data: pims.map(t => t.match).map(this.mapper.mapMatch),
-    //   page,
-    //   perPage: perPage,
-    //   pages: Math.ceil(total / perPage),
-    // };
   }
 }

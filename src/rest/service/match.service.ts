@@ -27,36 +27,6 @@ export class MatchService {
     private readonly mmrChangeLogEntityRepository: Repository<MmrChangeLogEntity>,
   ) {}
 
-  @measure("getMatchPage")
-  public async getMatchPage(
-    page: number,
-    perPage: number,
-    mode?: MatchmakingMode,
-  ): Promise<[FinishedMatchEntity[], number]> {
-    const condition = !mode
-      ? {}
-      : {
-          matchmaking_mode: mode,
-        };
-
-    // This query has to use take() and skip(), because we are mapping all PIMs
-    const items = this.finishedMatchEntityRepository
-      .createQueryBuilder("fm")
-      .leftJoinAndSelect("fm.players", "players")
-      .where(condition)
-      .take(perPage)
-      .skip(perPage * page)
-      .orderBy({ "fm.timestamp": "DESC" })
-      .getMany();
-
-    const count = this.finishedMatchEntityRepository
-      .createQueryBuilder("fm")
-      .where(condition)
-      .getCount();
-
-    return Promise.combine([items, count]);
-  }
-
   @measure("getMatchPage:fastest")
   public async getMatchPageFastest(
     page: number,

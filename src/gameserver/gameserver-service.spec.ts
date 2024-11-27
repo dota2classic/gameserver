@@ -8,7 +8,7 @@ import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import { Repository } from 'typeorm';
 
-describe("gameserver service with testcontainers", () => {
+describe("GameserverService", () => {
   jest.setTimeout(60000);
 
   let container: StartedPostgreSqlContainer;
@@ -60,8 +60,14 @@ describe("gameserver service with testcontainers", () => {
     gs1.version = Dota2Version.Dota_684;
     await repo.save(gs1);
 
+    const gs2 = new GameSeasonEntity();
+    gs2.id = 2;
+    gs2.start_timestamp = new Date("2022-07-07 00:00:00.000000");
+    gs2.version = Dota2Version.Dota_684;
+    await repo.save(gs2);
+
     const season = await gs.getCurrentSeason(Dota2Version.Dota_684);
     expect(season).toBeDefined();
-    expect(season).toEqual(gs1);
+    expect(season).toEqual(gs2);
   });
 });
