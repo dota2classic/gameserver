@@ -381,7 +381,7 @@ export class GameServerService {
     season: GameSeasonEntity,
     pid: PlayerId,
     modes: MatchmakingMode[] | undefined,
-    afterMatchTimestamp: string,
+    beforeTimestamp: string,
   ) {
     let plr = await this.versionPlayerRepository.findOne({
       where: { version: Dota2Version.Dota_681, steam_id: pid.value },
@@ -402,7 +402,7 @@ export class GameServerService {
       .where('pim.playerId = :id', { id: plr.steam_id })
       .andWhere('m.timestamp > :season', { season: season.start_timestamp })
       .andWhere('m.timestamp < :current_timestamp', {
-        current_timestamp: afterMatchTimestamp,
+        current_timestamp: beforeTimestamp,
       });
 
     if (modes != undefined)

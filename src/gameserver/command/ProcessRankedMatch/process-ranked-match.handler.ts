@@ -21,7 +21,8 @@ interface TeamBalance {
 }
 @CommandHandler(ProcessRankedMatchCommand)
 export class ProcessRankedMatchHandler
-  implements ICommandHandler<ProcessRankedMatchCommand> {
+  implements ICommandHandler<ProcessRankedMatchCommand>
+{
   private static readonly Slogger = new Logger(ProcessRankedMatchHandler.name);
 
   private readonly logger = ProcessRankedMatchHandler.Slogger;
@@ -34,13 +35,9 @@ export class ProcessRankedMatchHandler
     private readonly versionPlayerRepository: Repository<VersionPlayerEntity>,
     private readonly gameServerService: GameServerService,
     @InjectRepository(MmrChangeLogEntity)
-    private readonly mmrChangeLogEntityRepository: Repository<
-      MmrChangeLogEntity
-    >,
+    private readonly mmrChangeLogEntityRepository: Repository<MmrChangeLogEntity>,
     @InjectRepository(FinishedMatchEntity)
-    private readonly finishedMatchEntityRepository: Repository<
-      FinishedMatchEntity
-    >,
+    private readonly finishedMatchEntityRepository: Repository<FinishedMatchEntity>,
     private readonly cbus: CommandBus,
     private readonly connection: Connection,
   ) {}
@@ -104,11 +101,8 @@ export class ProcessRankedMatchHandler
 
     const isHiddenMmr = command.mode !== MatchmakingMode.RANKED;
 
-    const {
-      diffDeviationFactor,
-      winnerAverage,
-      loserAverage,
-    } = this.getTeamBalance(command, playerMap);
+    const { diffDeviationFactor, winnerAverage, loserAverage } =
+      this.getTeamBalance(command, playerMap);
 
     const changelogs = await Promise.all(
       [...command.winners, ...command.losers].map((t, idx) =>
@@ -123,7 +117,7 @@ export class ProcessRankedMatchHandler
           isHiddenMmr,
           m.timestamp,
           playerMap,
-          m.players.find(it => it.playerId === t.value)?.abandoned || false,
+          m.players.find((it) => it.playerId === t.value)?.abandoned || false,
         ),
       ),
     );
@@ -166,14 +160,16 @@ export class ProcessRankedMatchHandler
     const map = new Map<string, VersionPlayerEntity>();
     const plrs = await this.versionPlayerRepository.find({
       where: {
-        steam_id: In([...command.losers, ...command.winners].map(t => t.value)),
+        steam_id: In(
+          [...command.losers, ...command.winners].map((t) => t.value),
+        ),
       },
     });
 
-    plrs.forEach(plr => map.set(plr.steam_id, plr));
+    plrs.forEach((plr) => map.set(plr.steam_id, plr));
 
     // here we do some tricks
-    [...command.losers, ...command.winners].forEach(pid => {
+    [...command.losers, ...command.winners].forEach((pid) => {
       if (!map.has(pid.value)) {
         const vp = new VersionPlayerEntity();
         vp.steam_id = pid.value;
@@ -197,11 +193,11 @@ export class ProcessRankedMatchHandler
       isHiddenMmr ? plr.hidden_mmr : plr.mmr;
 
     const winnerMMR = command.winners
-      .map(t => playerMap.get(t.value))
+      .map((t) => playerMap.get(t.value))
       .reduce((a, b) => a + getMmr(b), 0);
 
     const loserMMR = command.losers
-      .map(t => playerMap.get(t.value))
+      .map((t) => playerMap.get(t.value))
       .reduce((a, b) => a + getMmr(b), 0);
 
     const winnerAverage = winnerMMR / command.winners.length;
@@ -245,6 +241,8 @@ export class ProcessRankedMatchHandler
         winner,
         mmrDiff,
         10, // CB GAMES = 0 for now
+        25,
+        0,
       ),
     );
 

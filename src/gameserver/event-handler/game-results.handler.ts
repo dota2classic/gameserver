@@ -8,6 +8,7 @@ import { GameServerSessionEntity } from 'gameserver/model/game-server-session.en
 import { MatchRecordedEvent } from 'gameserver/event/match-recorded.event';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 @EventsHandler(GameResultsEvent)
 export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
@@ -34,13 +35,16 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
 
     if (existingRecordedMatch) return;
 
+    let modeOverride = (event.type === MatchmakingMode.UNRANKED || event.type === MatchmakingMode.RANKED) && event.players.length !== 10 ? MatchmakingMode.BOTS : event.type;
+
+
     // TODO: maybe we should make a transaction here....
     const m = new FinishedMatchEntity(
       event.matchId,
       event.winner,
       new Date(event.timestamp * 1000).toUTCString(),
       event.gameMode,
-      event.type,
+      modeOverride,
       event.duration,
       event.server,
     );
@@ -91,13 +95,14 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
       await this.playerInMatchRepository.save(pim);
     }
 
+
     await this.ebus.publish(
       new MatchRecordedEvent(
         event.matchId,
         event.winner,
         event.duration,
-        event.type,
-        event.gameMode,
+        m.matchmaking_mode,
+        m.game_mode,
         event.timestamp,
         event.server,
         event.players,

@@ -64,6 +64,7 @@ export const testDbConfig: TypeOrmModuleOptions = {
   synchronize: true,
   keepConnectionAlive: true,
   dropSchema: true,
+  logging: true
 };
 
 export const prodDbConfig: TypeOrmModuleOptions = {
