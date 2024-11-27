@@ -65,6 +65,7 @@
     "@nestjs/testing": "^10.4.10",
     "@swc/cli": "^0.5.1",
     "@swc/core": "^1.9.3",
+    "@testcontainers/postgresql": "^10.15.0",
     "@types/cron": "^2.4.3",
     "@types/express": "^5.0.0",
     "@types/jest": "29.5.14",
