@@ -12,6 +12,7 @@ import { MatchMapper } from 'rest/match/match.mapper';
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { NestApplication } from '@nestjs/core';
 import * as request from 'supertest';
+import { makePage } from 'gateway/util/make-page';
 
 describe("MatchController", () => {
   jest.setTimeout(60000);
@@ -85,18 +86,35 @@ describe("MatchController", () => {
     it(`should return 404 and an error if match doesn't exist`, async () => {
       const matchId = -2;
 
+      await request(app.getHttpServer()).get(`/match/${matchId}`).expect(404);
+    });
+  });
+
+  describe("/GET /match/player/:id", () => {
+    it(`should return matches for given player`, async () => {
+      const fm = await createFakeMatch(module);
+      const pims = await fillMatch(module, fm, 10);
+
       await request(app.getHttpServer())
-        .get(`/match/${matchId}`)
-        .expect(404);
+        .get(`/match/player/${pims[0].playerId}`)
+        .query({ page: 0})
+        .expect(200)
+        .expect(
+          JSON.stringify(
+            await makePage([mapper.mapMatch({ ...fm, players: [pims[0]] })], 1, 0, 25),
+          ),
+        );
     });
 
+    it(`should return empty if no matches available for player`, async () => {
+      const fm = await createFakeMatch(module);
+      const pims = await fillMatch(module, fm, 10);
 
-
-
-    // it("should return 404 if match doesnt exist", async () => {
-    //   const fm2 = await controller.getMatch(-5);
-    //   expect(fm2).toBeDefined();
-    //   expect(fm2).toEqual(mapper.mapMatch({ ...fm, players: pims }));
-    // });
+      await request(app.getHttpServer())
+        .get(`/match/player/-41234213`)
+        .query({ page: 0})
+        .expect(200)
+        .expect(JSON.stringify(await makePage([], 0, 0, 25)));
+    });
   });
 });

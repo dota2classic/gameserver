@@ -1,6 +1,6 @@
-import { Page } from 'rest/dto/page';
 import { BanReason } from 'gateway/shared-types/ban';
 import { ApiProperty } from '@nestjs/swagger';
+import { Page } from 'gateway/shared-types/page';
 
 
 export class CrimeLogDto {

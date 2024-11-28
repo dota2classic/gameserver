@@ -24,6 +24,7 @@ export async function createSeason(module: TestingModule) {
 export async function createFakeMatch(
   module: TestingModule,
   winner: DotaTeam = DotaTeam.RADIANT,
+  mode: MatchmakingMode = MatchmakingMode.UNRANKED,
   duration: number = 100
 ): Promise<FinishedMatchEntity> {
   const matchRep = module.get<Repository<FinishedMatchEntity>>(
@@ -40,7 +41,7 @@ export async function createFakeMatch(
   me.finished = true;
   me.started = true;
   me.server = "";
-  me.mode = MatchmakingMode.RANKED;
+  me.mode = mode;
   await meRep.save(me);
 
   const match = new FinishedMatchEntity(
@@ -48,7 +49,7 @@ export async function createFakeMatch(
     winner,
     new Date().toISOString(),
     Dota_GameMode.RANKED_AP,
-    MatchmakingMode.RANKED,
+    mode,
     duration,
     "",
   );
@@ -70,7 +71,7 @@ export async function fillMatch(module: TestingModule, fm: FinishedMatchEntity, 
   for (let i = 0; i < count; i++) {
     const pim = new PlayerInMatchEntity();
     pim.match = fm;
-    pim.playerId = (Math.random() * 10000 + 1000000).toString();
+    pim.playerId = Math.round((Math.random() * 10000 + 1000000)).toString();
     pim.abandoned = false;
     pim.denies = randInt(50)
     pim.last_hits = randInt(250)
