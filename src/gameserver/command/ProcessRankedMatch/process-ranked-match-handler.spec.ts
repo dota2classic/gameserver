@@ -1,3 +1,5 @@
+// noinspection DuplicatedCode
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { TestEnvironment } from '@test/cqrs';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
@@ -35,11 +37,20 @@ describe("MatchController", () => {
       season.version = Dota2Version.Dota_684;
       return Promise.resolve(season);
     },
-    getGamesPlayed: jest.fn(),
+    getGamesPlayed: jest.fn(
+      (
+        season: GameSeasonEntity,
+        pid: PlayerId,
+        modes: MatchmakingMode[] | undefined,
+        beforeTimestamp: string,
+      ) => 100,
+    ),
   };
 
-
-  const processRanked = async (fm: FinishedMatchEntity, pims: PlayerInMatchEntity[]) => {
+  const processRanked = async (
+    fm: FinishedMatchEntity,
+    pims: PlayerInMatchEntity[],
+  ) => {
     await app.get(ProcessRankedMatchHandler).execute(
       new ProcessRankedMatchCommand(
         fm.id,
@@ -52,7 +63,7 @@ describe("MatchController", () => {
         fm.matchmaking_mode,
       ),
     );
-  }
+  };
 
   beforeAll(async () => {
     container = await new PostgreSqlContainer()
@@ -108,7 +119,7 @@ describe("MatchController", () => {
       },
     );
 
-   await processRanked(fm, pims);
+    await processRanked(fm, pims);
 
     const mmrRepo: Repository<MmrChangeLogEntity> = app.get(
       getRepositoryToken(MmrChangeLogEntity),
@@ -116,9 +127,9 @@ describe("MatchController", () => {
     const changes = await mmrRepo.find({ where: { matchId: fm.id } });
     expect(changes).toHaveLength(10);
 
-    changes.forEach(change => {
-      expect(change.mmrBefore).toEqual(VersionPlayerEntity.STARTING_MMR)
-    })
+    changes.forEach((change) => {
+      expect(change.mmrBefore).toEqual(VersionPlayerEntity.STARTING_MMR);
+    });
 
     changes
       .filter((t) => t.winner)
@@ -132,25 +143,23 @@ describe("MatchController", () => {
         expect(loser.change).toBeLessThan(0);
       });
 
+    const calib = changes.find((t) => t.playerId === pims[0].playerId);
+    expect(calib.change).toBeGreaterThan(90);
 
-    const calib = changes.find(t => t.playerId === pims[0].playerId);
-    expect(calib.change).toBeGreaterThan(90)
+    const nonCalib = changes.find((t) => t.playerId === pims[1].playerId);
 
-    const nonCalib = changes.find(t => t.playerId === pims[1].playerId);
-
-
-    expect(nonCalib.change).toBeGreaterThan(10)
-    expect(nonCalib.change).toBeLessThan(50)
+    expect(nonCalib.change).toBeGreaterThan(10);
+    expect(nonCalib.change).toBeLessThan(50);
   });
 
-  it('should always subtract mmr for leavers', async () => {
+  it("should always subtract mmr for leavers", async () => {
     const fm = await createFakeMatch(module, DotaTeam.RADIANT);
     const pims = await fillMatch(module, fm, 10);
 
     const pimRep = module.get(getRepositoryToken(PlayerInMatchEntity));
-    pims[3].abandoned = true
-    pims[7].abandoned = true
-    pimRep.save(pims)
+    pims[3].abandoned = true;
+    pims[7].abandoned = true;
+    pimRep.save(pims);
 
     gsServiceMock.getGamesPlayed = jest.fn(
       (
@@ -165,26 +174,59 @@ describe("MatchController", () => {
 
     await processRanked(fm, pims);
 
-
     const mmrRepo: Repository<MmrChangeLogEntity> = app.get(
       getRepositoryToken(MmrChangeLogEntity),
     );
     const changes = await mmrRepo.find({ where: { matchId: fm.id } });
     expect(changes).toHaveLength(10);
 
+    expect(changes[0].change).toBeGreaterThan(0);
+    expect(changes[1].change).toBeGreaterThan(0);
+    expect(changes[2].change).toBeGreaterThan(0);
+    expect(changes[3].change).toBeLessThan(0);
+    expect(changes[4].change).toBeGreaterThan(0);
 
-    expect(changes[0].change).toBeGreaterThan(0)
-    expect(changes[1].change).toBeGreaterThan(0)
-    expect(changes[2].change).toBeGreaterThan(0)
-    expect(changes[3].change).toBeLessThan(0)
-    expect(changes[4].change).toBeGreaterThan(0)
+    expect(changes[5].change).toBeLessThan(0);
+    expect(changes[6].change).toBeLessThan(0);
+    expect(changes[7].change).toBeLessThan(0);
+    expect(changes[8].change).toBeLessThan(0);
+    expect(changes[9].change).toBeLessThan(0);
+  });
 
-    expect(changes[5].change).toBeLessThan(0)
-    expect(changes[6].change).toBeLessThan(0)
-    expect(changes[7].change).toBeLessThan(0)
-    expect(changes[8].change).toBeLessThan(0)
-    expect(changes[9].change).toBeLessThan(0)
+  it("should not update mmr for already processed match", async () => {
+    const fm = await createFakeMatch(module, DotaTeam.RADIANT);
+    const pims = await fillMatch(module, fm, 10);
 
+    await processRanked(fm, pims);
 
+    const mmrRepo: Repository<MmrChangeLogEntity> = app.get(
+      getRepositoryToken(MmrChangeLogEntity),
+    );
+
+    const changes = await mmrRepo.find({ where: { matchId: fm.id } });
+    expect(changes).toHaveLength(10);
+
+    // When
+    await processRanked(fm, pims);
+
+    // Then
+    expect(await mmrRepo.find({ where: { matchId: fm.id } })).toHaveLength(10);
+  });
+
+  it("should not process bot match", async () => {
+    const fm = await createFakeMatch(
+      module,
+      DotaTeam.RADIANT,
+      MatchmakingMode.BOTS,
+    );
+    const pims = await fillMatch(module, fm, 10);
+    await processRanked(fm, pims);
+
+    const mmrRepo: Repository<MmrChangeLogEntity> = app.get(
+      getRepositoryToken(MmrChangeLogEntity),
+    );
+
+    const changes = await mmrRepo.find({ where: { matchId: fm.id } });
+    expect(changes).toHaveLength(0);
   });
 });

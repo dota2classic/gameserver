@@ -77,6 +77,9 @@ export class ProcessRankedMatchHandler
   }
 
   async execute(command: ProcessRankedMatchCommand) {
+
+    if(command.mode !== MatchmakingMode.UNRANKED && command.mode !== MatchmakingMode.RANKED) return;
+
     // find latest season which start_timestamp > now
     const currentSeason = await this.gameServerService.getCurrentSeason(
       Dota2Version.Dota_681,
