@@ -7,7 +7,7 @@ export class PlayerBanEntity {
   @PrimaryColumn()
   steam_id: string;
 
-  @Column()
+  @Column({ type: "timestamptz" })
   endTime: Date;
 
   @Column()
@@ -16,7 +16,7 @@ export class PlayerBanEntity {
   public asBanStatus(): BanStatus {
     return new BanStatus(
       new Date().getTime() < this.endTime.getTime(),
-      this.endTime.getTime(),
+      this.endTime.toISOString(),
       this.reason,
     );
   }
