@@ -2,7 +2,7 @@ import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, In, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerService } from 'gameserver/gameserver.service';
@@ -33,13 +33,13 @@ export class ProcessRankedMatchHandler
   constructor(
     @InjectRepository(VersionPlayerEntity)
     private readonly versionPlayerRepository: Repository<VersionPlayerEntity>,
-    private readonly gameServerService: GameServerService,
     @InjectRepository(MmrChangeLogEntity)
     private readonly mmrChangeLogEntityRepository: Repository<MmrChangeLogEntity>,
     @InjectRepository(FinishedMatchEntity)
     private readonly finishedMatchEntityRepository: Repository<FinishedMatchEntity>,
+    private readonly gameServerService: GameServerService,
     private readonly cbus: CommandBus,
-    private readonly connection: Connection,
+    private readonly datasource: DataSource,
   ) {}
 
   public static calculateMmrDeviation(
@@ -122,24 +122,13 @@ export class ProcessRankedMatchHandler
       ),
     );
 
-    // TODO: use real $transaction shit
-
-    const qr = this.connection.createQueryRunner();
-    await qr.startTransaction();
-    try {
-      await this.mmrChangeLogEntityRepository.save(changelogs);
+    await this.datasource.transaction(async ($em) => {
+      await $em.save(changelogs);
       this.logger.log("Saved mmr change log entities");
 
-      await this.versionPlayerRepository.save(Array.from(playerMap.values()));
+      await $em.save(Array.from(playerMap.values()));
       this.logger.log("Saved version player changes");
-
-      await qr.commitTransaction();
-    } catch (e) {
-      this.logger.error("Error while saving mmr changes");
-      await qr.rollbackTransaction();
-    } finally {
-      await qr.release();
-    }
+    });
   }
 
   private async isAlreadyProcessed(matchId: number): Promise<boolean> {
@@ -257,9 +246,12 @@ export class ProcessRankedMatchHandler
     );
 
     try {
+      let mmrBefore: number;
       if (hiddenMmr) {
+        mmrBefore = plr.hidden_mmr;
         plr.hidden_mmr = plr.hidden_mmr + mmrChange;
       } else {
+        mmrBefore = plr.mmr;
         plr.mmr = plr.mmr + mmrChange;
       }
 
@@ -270,12 +262,12 @@ export class ProcessRankedMatchHandler
       change.change = Number(mmrChange);
       change.winner = winner;
       change.hiddenMmr = hiddenMmr;
-      change.mmrBefore = Number(hiddenMmr ? plr.hidden_mmr : plr.mmr);
-      change.mmrAfter = Number(change.mmrBefore + mmrChange);
+      change.mmrBefore = mmrBefore;
+      change.mmrAfter = Number(mmrBefore + mmrChange);
       change.matchId = matchId;
       return change;
     } catch (e) {
-      console.error(e);
+      this.logger.error("Couldn't create mmr change ", e)
     }
   }
 }

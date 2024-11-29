@@ -1,3 +1,4 @@
+import './src/util/promise';
 import { EventBus, IEvent } from '@nestjs/cqrs';
 import { inspect } from 'util';
 import { expect, jest } from '@jest/globals';

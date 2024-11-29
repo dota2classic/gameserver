@@ -4,7 +4,7 @@ import { Connection, In, LessThanOrEqual, Repository } from 'typeorm';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { HeroMap, ItemMap } from 'util/items';
+import { HeroMap } from 'util/items';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import * as cheerio from 'cheerio';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -14,7 +14,6 @@ import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { ItemHeroView } from 'gameserver/model/item-hero.view';
-import { ProcessRankedMatchHandler } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.handler';
 import { CommandBus, EventBus } from '@nestjs/cqrs';
 import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
 import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
@@ -138,20 +137,6 @@ export class GameServerService {
     this.logger.log('Refreshed item_hero_view');
   }
 
-  public static calculateMmrDeviation(
-    winnerAverageMmr: number,
-    loserAverageMmr: number,
-  ) {
-    const averageDiff = Math.abs(winnerAverageMmr - loserAverageMmr);
-
-    // how much to add to remove from winners and add to losers
-    return (
-      (ProcessRankedMatchHandler.AVERAGE_DEVIATION_MAX *
-        Math.min(averageDiff, ProcessRankedMatchHandler.AVERAGE_DIFF_CAP)) /
-      ProcessRankedMatchHandler.AVERAGE_DIFF_CAP
-    );
-  }
-
   @Cron(CronExpression.EVERY_HOUR)
   async migratePendoSite() {
     // while we get new matches from api, we do
@@ -216,116 +201,6 @@ export class GameServerService {
       },
     });
   }
-
-  public async migratePlayerInMatch() {}
-
-  // public async scrapD2com() {
-  //
-  //
-  //   for (let i = 0; i < 1; i++) {
-  //     const url = `https://dota2classic.com/API/Match/List?page=0`;
-  //     const d: any = await fetch(url).then(it => it.json());
-  //     await Promise.all(
-  //       d.Matches.map(async match => {
-  //         console.log(match);
-  //         const fm = new FinishedMatchEntity(
-  //           match.MatchHistory.match_id,
-  //           match.MatchHistory.winner ? DotaTeam.RADIANT : DotaTeam.DIRE,
-  //           match.MatchHistory.endtime,
-  //           match.MatchHistory.game_mode_id,
-  //           match.MatchHistory.game_mode_id,
-  //           match.MatchHistory.duration,
-  //           'dota2classic.com',
-  //         );
-  //
-  //         const item = id => items.find(it => it.id === id).name;
-  //
-  //         // @ts-ignore
-  //         fm.players = [
-  //           ...match.Teams.RadiantPlayers,
-  //           ...match.Teams.DirePlayers,
-  //         ].map((raw, index) => {
-  //           const d: Partial<PlayerInMatchEntity> = {
-  //             playerId: (
-  //               BigInt(raw.steam64_id) - BigInt('76561197960265728')
-  //             ).toString(),
-  //             team: raw.team ? DotaTeam.DIRE : DotaTeam.RADIANT,
-  //             kills: raw.kills,
-  //             deaths: raw.deaths,
-  //             assists: raw.assists,
-  //             level: raw.level,
-  //             hero: heromap.find(it => it.id === raw.hero_id).name, // todo: translate via id
-  //             last_hits: raw.last_hits,
-  //             denies: raw.denies,
-  //             gpm: raw.gpm,
-  //             xpm: raw.xpm,
-  //             items: [
-  //               item(raw.item1),
-  //               item(raw.item2),
-  //               item(raw.item3),
-  //               item(raw.item4),
-  //               item(raw.item5),
-  //               item(raw.item6),
-  //             ].join(','),
-  //           };
-  //
-  //           return d;
-  //         });
-  //
-  //         const f = await fs.promises.writeFile(
-  //           `matches/${match.MatchHistory.match_id}.json`,
-  //           JSON.stringify(fm),
-  //         );
-  //       }),
-  //     );
-  //   }
-  // }
-  //
-  public async migrateItems() {
-    const players = await this.playerInMatchRepository.find();
-    const chunkSize = 512;
-
-    const chunks = Math.ceil(players.length / chunkSize);
-
-    for (let i = 0; i < chunks; i++) {
-      const slice = players.slice(i * chunkSize, (i + 1) * chunkSize);
-
-      slice.forEach(it => {
-        const [item0, item1, item2, item3, item4, item5] = it.items
-          .split(',')
-          .map(
-            itemDeprecated =>
-              ItemMap.find(it => itemDeprecated.includes(it.name)).id,
-          );
-
-        it.item0 = item0;
-        it.item1 = item1;
-        it.item2 = item2;
-        it.item3 = item3;
-        it.item4 = item4;
-        it.item5 = item5;
-      });
-
-      await this.playerInMatchRepository.save(slice);
-      console.log(`Chunk ${i} of ${chunks} complete`);
-    }
-  }
-
-  // public async migrated2com() {
-  //   const matches = await fs.promises.readdir('matches');
-  //
-  //   const chunkSize = 64;
-  //   const chunks = Math.ceil(matches.length / chunkSize);
-  //   for (let i = 0; i < chunks; i++) {
-  //     const slice = matches
-  //       .slice(i * chunkSize, (i + 1) * chunkSize)
-  //       .map(it => Number(it.split('.')[0]));
-  //     const tasks = Promise.all(slice.map(it => this.migrateMatch(it)));
-  //     await tasks;
-  //
-  //     console.log(`Migrated chunk ${i} out of ${chunks} chunks`);
-  //   }
-  // }
 
   private async migrateMatch(j: MatchD2Com) {
     // Emit game results

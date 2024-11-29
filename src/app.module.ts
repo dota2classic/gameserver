@@ -8,7 +8,6 @@ import { CoreController } from 'core.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Entities, prodDbConfig } from 'util/typeorm-config';
 import { QueryController } from 'query.controller';
-import { MatchController } from 'rest/match.controller';
 import { Mapper } from 'rest/mapper';
 import { PlayerController } from 'rest/player.controller';
 import { InfoController } from 'rest/info.controller';
@@ -22,6 +21,8 @@ import { QueryCache } from 'rcache';
 import { CacheModule } from '@nestjs/cache-manager';
 import { MatchService } from 'rest/service/match.service';
 import { CrimeController } from 'rest/crime.controller';
+import { MatchMapper } from 'rest/match/match.mapper';
+import { MatchController } from 'rest/match/match.controller';
 
 
 export function qCache<T, B>() {
@@ -69,6 +70,7 @@ export function qCache<T, B>() {
     MetaService,
     MatchService,
     PlayerService,
+    MatchMapper,
     Mapper,
     ...GameServerDomain,
     outerQuery(GetUserInfoQuery, 'QueryCore', qCache())

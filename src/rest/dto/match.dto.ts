@@ -54,7 +54,7 @@ export class PlayerInMatchDto {
 
   gold: number;
 
-  mmr?: MmrChangeDto;
+  mmr: MmrChangeDto | null;
   // items: string[];
 
   item0: number;

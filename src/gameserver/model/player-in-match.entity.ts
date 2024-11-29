@@ -77,12 +77,6 @@ export default class PlayerInMatchEntity {
   @Column('varchar')
   hero!: string;
 
-  /**
-   * @deprecated
-   */
-  @Column('varchar')
-  items!: string;
-
   @Column('smallint', { default: 0 })
   item0: number;
 

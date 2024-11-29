@@ -78,7 +78,6 @@ export class GameResultsHandler implements IEventHandler<GameResultsEvent> {
 
       pim.abandoned = t.abandoned;
       pim.gold = t.networth;
-      pim.items = '';
 
       pim.item0 = t.item0;
       pim.item1 = t.item1;

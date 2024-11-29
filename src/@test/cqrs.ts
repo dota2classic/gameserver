@@ -7,10 +7,9 @@ import {
   ofType,
   QueryBus,
   QueryHandler,
-} from "@nestjs/cqrs";
-import { Provider, Type } from "@nestjs/common";
+} from '@nestjs/cqrs';
+import { Provider, Type } from '@nestjs/common';
 import { RuntimeRepository } from 'util/runtime-repository';
-import { TestDataService } from '@test/test-util';
 
 const ebusProvider: Provider = {
   provide: EventBus,
@@ -41,8 +40,7 @@ export const TestEnvironment = () => [
   TestEventBus(),
   TestCommandBus(),
   TestQueryBus(),
-  EventPublisher,
-  TestDataService
+  EventPublisher
 ];
 
 export function clearRepositories() {
