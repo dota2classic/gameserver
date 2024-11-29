@@ -75,6 +75,7 @@ export default class PlayerInMatchEntity {
   gold: number = 0;
 
   @Column('varchar')
+  @Index('player_in_match_hero_hash_index', { synchronize: false })
   hero!: string;
 
   @Column('smallint', { default: 0 })
@@ -100,28 +101,6 @@ export default class PlayerInMatchEntity {
 
   @Column('uuid', { nullable: true, default: null})
   party_id?: string;
-
-  // constructor(playerId: string, team: number, kills: number, deaths: number, assists: number, level: number, gpm: number, xpm: number, abandoned: boolean, last_hits: number, denies: number, hero: string, items: string, item0: number, item1: number, item2: number, item3: number, item4: number, item5: number) {
-  //   this.playerId = playerId;
-  //   this.team = team;
-  //   this.kills = kills;
-  //   this.deaths = deaths;
-  //   this.assists = assists;
-  //   this.level = level;
-  //   this.gpm = gpm;
-  //   this.xpm = xpm;
-  //   this.abandoned = abandoned;
-  //   this.last_hits = last_hits;
-  //   this.denies = denies;
-  //   this.hero = hero;
-  //   this.items = items;
-  //   this.item0 = item0;
-  //   this.item1 = item1;
-  //   this.item2 = item2;
-  //   this.item3 = item3;
-  //   this.item4 = item4;
-  //   this.item5 = item5;
-  // }
 }
 
 /**

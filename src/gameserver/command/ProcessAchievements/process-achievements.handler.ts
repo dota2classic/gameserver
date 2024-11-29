@@ -13,18 +13,15 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 @CommandHandler(ProcessAchievementsCommand)
 export class ProcessAchievementsHandler
-  implements ICommandHandler<ProcessAchievementsCommand> {
+  implements ICommandHandler<ProcessAchievementsCommand>
+{
   private readonly logger = new Logger(ProcessAchievementsHandler.name);
 
   constructor(
     @InjectRepository(FinishedMatchEntity)
-    private readonly finishedMatchEntityRepository: Repository<
-      FinishedMatchEntity
-    >,
+    private readonly finishedMatchEntityRepository: Repository<FinishedMatchEntity>,
     @InjectRepository(PlayerInMatchEntity)
-    private readonly playerInMatchEntityRepository: Repository<
-      PlayerInMatchEntity
-    >,
+    private readonly playerInMatchEntityRepository: Repository<PlayerInMatchEntity>,
     @InjectRepository(AchievementEntity)
     private readonly achievementEntityRepository: Repository<AchievementEntity>,
     private readonly ebus: EventBus,
@@ -69,7 +66,7 @@ export class ProcessAchievementsHandler
               player.hero,
               ach.matchId,
             ),
-          ); // todo maybe shit
+          );
         }
       }
     });

@@ -30,30 +30,30 @@ export class MatchController {
   ) {}
 
   // remove meta service from here
-  // @ApiQuery({
-  //   name: 'page',
-  //   required: true,
-  // })
-  // @ApiQuery({
-  //   name: 'per_page',
-  //   required: false,
-  // })
-  // @ApiQuery({
-  //   name: 'hero',
-  // })
-  // @Get('/by_hero')
-  // async heroMatches(
-  //   @Query('page', NullableIntPipe) page: number,
-  //   @Query('per_page', NullableIntPipe) perPage: number = 25,
-  //   @Query('hero') hero: string,
-  // ): Promise<MatchPageDto> {
-  //   const raw = await this.metaService.heroMatches(page, perPage, hero);
-  //
-  //   return {
-  //     ...raw,
-  //     data: raw.data.map(this.mapper.mapMatch),
-  //   };
-  // }
+  @ApiQuery({
+    name: 'page',
+    required: true,
+  })
+  @ApiQuery({
+    name: 'per_page',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'hero',
+  })
+  @Get('/by_hero')
+  async heroMatches(
+    @Query('page', NullableIntPipe) page: number,
+    @Query('per_page', NullableIntPipe) perPage: number = 25,
+    @Query('hero') hero: string,
+  ): Promise<MatchPageDto> {
+    const raw = await this.matchService.heroMatches(page, perPage, hero);
+
+    return {
+      ...raw,
+      data: raw.data.map(this.mapper.mapMatch),
+    };
+  }
 
   @ApiQuery({
     name: 'page',
@@ -73,7 +73,7 @@ export class MatchController {
     @Query('per_page', NullableIntPipe) perPage: number = 25,
     @Query('mode') mode?: MatchmakingMode,
   ): Promise<MatchPageDto> {
-    const [matches, cnt] = await this.matchService.getMatchPageFastest(page, perPage, mode);
+    const [matches, cnt] = await this.matchService.getMatchPage(page, perPage, mode);
     return makePage(matches, cnt, page, perPage, this.mapper.mapMatch);
   }
 
@@ -113,7 +113,7 @@ export class MatchController {
     @Query('mode', NullableIntPipe) mode?: MatchmakingMode,
     @Query('hero') hero?: string,
   ): Promise<MatchPageDto> {
-    const [matches, total] = await this.matchService.playerMatchesNew(steam_id, page, perPage, mode, hero);
+    const [matches, total] = await this.matchService.getPlayerMatches(steam_id, page, perPage, mode, hero);
 
     return makePage(
       matches,
