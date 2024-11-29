@@ -38,6 +38,22 @@ describe("MatchController", () => {
     getGamesPlayed: jest.fn(),
   };
 
+
+  const processRanked = async (fm: FinishedMatchEntity, pims: PlayerInMatchEntity[]) => {
+    await app.get(ProcessRankedMatchHandler).execute(
+      new ProcessRankedMatchCommand(
+        fm.id,
+        pims
+          .filter((t) => t.team === DotaTeam.RADIANT)
+          .map((it) => new PlayerId(it.playerId)),
+        pims
+          .filter((t) => t.team === DotaTeam.DIRE)
+          .map((it) => new PlayerId(it.playerId)),
+        fm.matchmaking_mode,
+      ),
+    );
+  }
+
   beforeAll(async () => {
     container = await new PostgreSqlContainer()
       .withUsername("username")
@@ -92,18 +108,7 @@ describe("MatchController", () => {
       },
     );
 
-    await app.get(ProcessRankedMatchHandler).execute(
-      new ProcessRankedMatchCommand(
-        fm.id,
-        pims
-          .filter((t) => t.team === DotaTeam.RADIANT)
-          .map((it) => new PlayerId(it.playerId)),
-        pims
-          .filter((t) => t.team === DotaTeam.DIRE)
-          .map((it) => new PlayerId(it.playerId)),
-        fm.matchmaking_mode,
-      ),
-    );
+   await processRanked(fm, pims);
 
     const mmrRepo: Repository<MmrChangeLogEntity> = app.get(
       getRepositoryToken(MmrChangeLogEntity),
@@ -136,5 +141,50 @@ describe("MatchController", () => {
 
     expect(nonCalib.change).toBeGreaterThan(10)
     expect(nonCalib.change).toBeLessThan(50)
+  });
+
+  it('should always subtract mmr for leavers', async () => {
+    const fm = await createFakeMatch(module, DotaTeam.RADIANT);
+    const pims = await fillMatch(module, fm, 10);
+
+    const pimRep = module.get(getRepositoryToken(PlayerInMatchEntity));
+    pims[3].abandoned = true
+    pims[7].abandoned = true
+    pimRep.save(pims)
+
+    gsServiceMock.getGamesPlayed = jest.fn(
+      (
+        season: GameSeasonEntity,
+        pid: PlayerId,
+        modes: MatchmakingMode[] | undefined,
+        beforeTimestamp: string,
+      ) => {
+        return 100;
+      },
+    );
+
+    await processRanked(fm, pims);
+
+
+    const mmrRepo: Repository<MmrChangeLogEntity> = app.get(
+      getRepositoryToken(MmrChangeLogEntity),
+    );
+    const changes = await mmrRepo.find({ where: { matchId: fm.id } });
+    expect(changes).toHaveLength(10);
+
+
+    expect(changes[0].change).toBeGreaterThan(0)
+    expect(changes[1].change).toBeGreaterThan(0)
+    expect(changes[2].change).toBeGreaterThan(0)
+    expect(changes[3].change).toBeLessThan(0)
+    expect(changes[4].change).toBeGreaterThan(0)
+
+    expect(changes[5].change).toBeLessThan(0)
+    expect(changes[6].change).toBeLessThan(0)
+    expect(changes[7].change).toBeLessThan(0)
+    expect(changes[8].change).toBeLessThan(0)
+    expect(changes[9].change).toBeLessThan(0)
+
+
   });
 });
