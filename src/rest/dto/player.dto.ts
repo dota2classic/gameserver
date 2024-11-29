@@ -34,7 +34,8 @@ export class PlayerSummaryDto extends LeaderboardEntryDto {
 export class BanStatusDto {
   public readonly steam_id: string;
   public readonly isBanned: boolean;
-  public readonly bannedUntil: number;
+  // iso
+  public readonly bannedUntil: string;
 
   @ApiProperty({ enum: BanReason, enumName: 'BanReason' })
   public readonly status: BanReason;
