@@ -79,7 +79,7 @@ export const prodDbConfig: TypeOrmModuleOptions = {
   dropSchema: false,
   poolSize: 50,
 
-  // maxQueryExecutionTime: 10,
+  // maxQueryExecutionTime: 100,
 
   ssl: false,
 };

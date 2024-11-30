@@ -6,13 +6,13 @@ import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { MatchController } from './match.controller';
 import { createFakeMatch, fillMatch } from '@test/create-fake-match';
-import { MatchService } from 'rest/service/match.service';
 import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 import { MatchMapper } from 'rest/match/match.mapper';
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { NestApplication } from '@nestjs/core';
 import * as request from 'supertest';
 import { makePage } from 'gateway/util/make-page';
+import { MatchService } from 'rest/match/match.service';
 
 describe("MatchController", () => {
   jest.setTimeout(60000);

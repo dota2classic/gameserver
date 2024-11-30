@@ -13,16 +13,17 @@ import { PlayerController } from 'rest/player.controller';
 import { InfoController } from 'rest/info.controller';
 import { PlayerService } from 'rest/service/player.service';
 import { ScheduleModule } from '@nestjs/schedule';
-import { MetaController } from 'rest/meta.controller';
-import { MetaService } from 'rest/service/meta.service';
+import { MetaController } from 'rest/meta/meta.controller';
+import { MetaService } from 'rest/meta/meta.service';
 import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
 import { outerQuery } from 'gateway/util/outerQuery';
 import { QueryCache } from 'rcache';
 import { CacheModule } from '@nestjs/cache-manager';
-import { MatchService } from 'rest/service/match.service';
+import { MatchService } from 'rest/match/match.service';
 import { CrimeController } from 'rest/crime.controller';
 import { MatchMapper } from 'rest/match/match.mapper';
 import { MatchController } from 'rest/match/match.controller';
+import { MetaMapper } from 'rest/meta/meta.mapper';
 
 
 export function qCache<T, B>() {
@@ -71,6 +72,7 @@ export function qCache<T, B>() {
     MatchService,
     PlayerService,
     MatchMapper,
+    MetaMapper,
     Mapper,
     ...GameServerDomain,
     outerQuery(GetUserInfoQuery, 'QueryCore', qCache())

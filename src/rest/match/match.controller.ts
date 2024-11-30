@@ -7,7 +7,7 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { NullableIntPipe } from 'util/pipes';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
-import { MatchService } from 'rest/service/match.service';
+import { MatchService } from './match.service';
 import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 import { makePage } from 'gateway/util/make-page';
 import { MatchMapper } from 'rest/match/match.mapper';
