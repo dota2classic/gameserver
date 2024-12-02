@@ -67,7 +67,7 @@ export class FindGameServerHandler
       case MatchmakingMode.RANKED:
         return Dota_GameMode.RANKED_AP;
       case MatchmakingMode.UNRANKED:
-        return Dota_GameMode.ALLPICK;
+        return Dota_GameMode.RANKED_AP;
       case MatchmakingMode.SOLOMID:
         return Dota_GameMode.SOLOMID;
       case MatchmakingMode.DIRETIDE:
