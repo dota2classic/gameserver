@@ -20,7 +20,7 @@ select p.steam_id,
        avg(pim.deaths)::float                                                       as deaths,
        avg(pim.assists)::float                                                      as assists,
        sum(m.duration)::int                                                         as play_time,
-       sum((m.matchmaking_mode = 0)::int)                                           as ranked_games,
+       sum((m.matchmaking_mode in (0, 1))::int)                                     as ranked_games,
        (row_number() over ( order by p.mmr desc))::int                              as rank
 from cte p
          inner join player_in_match pim on pim."playerId" = p.steam_id

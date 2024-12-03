@@ -25,6 +25,8 @@ export class ProcessRankedMatchHandler
 {
   private static readonly Slogger = new Logger(ProcessRankedMatchHandler.name);
 
+  public static TOTAL_CALIBRATION_GAMES = 10;
+
   private readonly logger = ProcessRankedMatchHandler.Slogger;
 
   public static readonly AVERAGE_DIFF_CAP = 300;
@@ -232,7 +234,7 @@ export class ProcessRankedMatchHandler
         cb,
         winner,
         mmrDiff,
-        10, // CB GAMES = 0 for now
+        ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES, // CB GAMES = 0 for now
         25,
         0,
       ),

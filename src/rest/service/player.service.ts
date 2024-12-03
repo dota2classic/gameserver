@@ -12,10 +12,10 @@ import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 
 export type Summary =
   | undefined
-  | (Omit<PlayerSummaryDto, 'rank' | 'newbieUnrankedGamesLeft'> & {
+  | (Omit<PlayerSummaryDto, "rank" | "newbieUnrankedGamesLeft"> & {
       ranked_games: number;
       unranked_games: number;
-    any_games: number;
+      any_games: number;
     });
 
 // TODO: we probably need to orm this shit up
@@ -30,7 +30,7 @@ export class PlayerService {
     private readonly connection: Connection,
   ) {}
 
-  @cached(100, 'getRank')
+  @cached(100, "getRank")
   public async getRank(
     version: Dota2Version,
     steam_id: string,
@@ -77,7 +77,7 @@ where p.mmr > $3
     return rank2[0].count + 1;
   }
 
-  @cached(100, 'heroStats')
+  @cached(100, "heroStats")
   async heroStats(
     version: Dota2Version,
     steam_id: string,
@@ -103,7 +103,7 @@ group by pim.hero, pim."playerId"
     );
   }
 
-  @cached(100, 'winrateLastRankedGames')
+  @cached(100, "winrateLastRankedGames")
   async winrateLastRankedGames(steam_id: string): Promise<number> {
     const some: { is_win: boolean }[] = await this.playerInMatchRepository
       .query(`
@@ -178,13 +178,13 @@ select p.steam_id,
        avg(pim.deaths)::float                                                       as deaths,
        avg(pim.assists)::float                                                      as assists,
        sum(m.duration)::int                                                         as play_time,
-       sum((m.matchmaking_mode = 0)::int)                                           as ranked_games,
+       sum((m.matchmaking_mode in ($2, $3))::int)                                   as ranked_games,
        -1                             as rank
 from cte p
          inner join player_in_match pim on pim."playerId" = p.steam_id
          inner join finished_match m on pim."matchId" = m.id
 group by p.steam_id, p.recent_ranked_games, p.mmr, p.games, p.wins, p.any_games`,
-      [steam_id],
+      [steam_id, MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],
     );
 
     return some[0];
