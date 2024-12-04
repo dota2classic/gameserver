@@ -197,8 +197,6 @@ offset $2 limit $3`,
 
     const rank = await this.playerService.getRank(version, steam_id);
 
-    console.log(summary.ranked_games)
-
     return {
       rank: rank,
       mmr: summary?.mmr,
