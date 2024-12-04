@@ -6,22 +6,21 @@ import { DiscoveryRequestedEvent } from 'gateway/events/discovery-requested.even
 import { MatchStartedEvent } from 'gateway/events/match-started.event';
 import { MatchCancelledEvent } from 'gateway/events/match-cancelled.event';
 import { MatchFinishedEvent } from 'gateway/events/match-finished.event';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { GameServerRepository } from 'gameserver/repository/game-server.repository';
+import { Cron } from '@nestjs/schedule';
 import { ServerActualizationRequestedEvent } from 'gateway/events/gs/server-actualization-requested.event';
 import { KillServerRequestedEvent } from 'gateway/events/gs/kill-server-requested.event';
 import { BanSystemEvent } from 'gateway/events/gs/ban-system.event';
-import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event';
-import { MoreThan, Repository } from 'typeorm';
-import { construct } from 'gateway/util/construct';
+import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ReplayEntity } from 'gameserver/model/replay.entity';
+import { GameServerEntity } from 'gameserver/model/game-server.entity';
 
 @Injectable()
 export class AppService {
   constructor(
     private readonly ebus: EventBus,
-    private readonly gsRepository: GameServerRepository,
+    @InjectRepository(GameServerEntity)
+    private readonly gameServerEntityRepository: Repository<GameServerEntity>,
     @InjectRepository(ReplayEntity)
     private readonly replayEntityRepository: Repository<ReplayEntity>,
     @Inject('QueryCore') private readonly redisEventQueue: ClientProxy,
@@ -31,8 +30,7 @@ export class AppService {
   @Cron('*/30 * * * * *')
   async actualizeServers() {
     // for all servers
-    // todo uncomment
-    const all = await this.gsRepository.all();
+    const all = await this.gameServerEntityRepository.find();
 
     await Promise.all(
       all.map(async gs => {

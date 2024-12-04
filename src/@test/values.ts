@@ -1,14 +1,20 @@
-import { EventBus } from "@nestjs/cqrs";
-import Mock = jest.Mock;
-import { inspect } from "util";
+import { EventBus } from '@nestjs/cqrs';
+import { inspect } from 'util';
 import { PlayerId } from 'gateway/shared-types/player-id';
+import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
+import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
+import { Repository } from 'typeorm';
+import { NestApplicationContext } from '@nestjs/core/nest-application-context';
+import Mock = jest.Mock;
 
 export const randomUser = () => {
-  return user(`[U:1:${Math.round(Math.random() * 1000000)}]`);
+  return user(`${Math.round(Math.random() * 1000000)}`);
 };
 
-export const user1 = new PlayerId("[U:1:1062901073]");
-export const user2 = new PlayerId("[U:1:116514945]");
+export const user1 = new PlayerId("1062901073");
+export const user2 = new PlayerId("116514945");
 
 export const user = (id: string) => new PlayerId(id);
 
@@ -20,4 +26,13 @@ export function printCalls(bus: EventBus) {
 
 export function arrayOf(size: number){
   return new Array(size).fill(null)
+}
+
+export function createGameMode(app: NestApplicationContext, lobby: MatchmakingMode, mode: Dota_GameMode, enabled: boolean): Promise<MatchmakingModeMappingEntity> {
+  const rep: Repository<MatchmakingModeMappingEntity> = app.get(getRepositoryToken(MatchmakingModeMappingEntity))
+  return rep.save({
+    lobbyType: lobby,
+    dotaGameMode: mode,
+    enabled
+  })
 }

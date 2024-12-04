@@ -10,7 +10,7 @@ import { Entities, prodDbConfig } from 'util/typeorm-config';
 import { QueryController } from 'query.controller';
 import { Mapper } from 'rest/mapper';
 import { PlayerController } from 'rest/player.controller';
-import { InfoController } from 'rest/info.controller';
+import { InfoController } from 'rest/info/info.controller';
 import { PlayerService } from 'rest/service/player.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MetaController } from 'rest/meta/meta.controller';
@@ -24,6 +24,8 @@ import { CrimeController } from 'rest/crime.controller';
 import { MatchMapper } from 'rest/match/match.mapper';
 import { MatchController } from 'rest/match/match.controller';
 import { MetaMapper } from 'rest/meta/meta.mapper';
+import { InfoMapper } from 'rest/info/info.mapper';
+import { InfoService } from 'rest/info/info.service';
 
 
 export function qCache<T, B>() {
@@ -73,6 +75,8 @@ export function qCache<T, B>() {
     PlayerService,
     MatchMapper,
     MetaMapper,
+    InfoMapper,
+    InfoService,
     Mapper,
     ...GameServerDomain,
     outerQuery(GetUserInfoQuery, 'QueryCore', qCache())

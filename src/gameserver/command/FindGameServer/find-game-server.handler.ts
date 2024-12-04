@@ -1,7 +1,6 @@
 import { CommandHandler, EventBus, ICommandHandler, QueryBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
-import { GameServerRepository } from 'gameserver/repository/game-server.repository';
 import { GameSessionCreatedEvent } from 'gateway/events/game-session-created.event';
 import { GameServerSessionRepository } from 'gameserver/repository/game-server-session.repository';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
@@ -30,6 +29,7 @@ import { GetUserInfoQueryResult } from 'gateway/queries/GetUserInfo/get-user-inf
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
+import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
@@ -41,7 +41,6 @@ export class FindGameServerHandler
   >();
 
   constructor(
-    private readonly gsRepository: GameServerRepository,
     private readonly gsSessionRepository: GameServerSessionRepository,
     @InjectRepository(GameServerSessionEntity)
     private readonly gameServerSessionModelRepository: Repository<
@@ -52,6 +51,8 @@ export class FindGameServerHandler
     private readonly matchEntityRepository: Repository<MatchEntity>,
     private readonly qbus: QueryBus,
     @Inject('QueryCore') private readonly redisEventQueue: ClientProxy,
+    @InjectRepository(MatchmakingModeMappingEntity)
+    private readonly matchmakingModeMappingEntityRepository: Repository<MatchmakingModeMappingEntity>,
   ) {
     this.pendingGamesPool
       .pipe(asyncMap(cmd => this.findServer(cmd), 1))
@@ -62,31 +63,18 @@ export class FindGameServerHandler
     this.pendingGamesPool.next(command);
   }
 
-  private getGameModeForMatchMode(mode: MatchmakingMode): Dota_GameMode {
-    switch (mode) {
-      case MatchmakingMode.RANKED:
-        return Dota_GameMode.RANKED_AP;
-      case MatchmakingMode.UNRANKED:
-        return Dota_GameMode.RANKED_AP;
-      case MatchmakingMode.SOLOMID:
-        return Dota_GameMode.SOLOMID;
-      case MatchmakingMode.DIRETIDE:
-        return Dota_GameMode.DIRETIDE;
-      case MatchmakingMode.GREEVILING:
-        return Dota_GameMode.GREEVILING;
-      case MatchmakingMode.ABILITY_DRAFT:
-        return Dota_GameMode.ABILITY_DRAFT;
-      case MatchmakingMode.TOURNAMENT:
-        return Dota_GameMode.CAPTAINS_MODE;
-      case MatchmakingMode.BOTS:
-        return Dota_GameMode.ALLPICK;
-      case MatchmakingMode.HIGHROOM:
-        return Dota_GameMode.RANKED_AP;
-      case MatchmakingMode.TOURNAMENT_SOLOMID:
-        return Dota_GameMode.SOLOMID;
-      case MatchmakingMode.CAPTAINS_MODE:
-        return Dota_GameMode.CAPTAINS_MODE;
+  private async getGameModeForMatchMode(mode: MatchmakingMode): Promise<Dota_GameMode> {
+    const mapping = await this.matchmakingModeMappingEntityRepository.findOne({
+      where: {
+        lobbyType: mode
+      }
+    });
+
+    if(!mapping){
+      this.logger.error(`No mapping found for lobby type ${mode}! Returning all pick`);
+      return Dota_GameMode.ALLPICK;
     }
+    return mapping.dotaGameMode;
   }
 
   private async extendMatchInfo(matchInfo: MatchInfo): Promise<GSMatchInfo> {
@@ -107,7 +95,7 @@ export class FindGameServerHandler
 
     return new GSMatchInfo(
       matchInfo.mode,
-      this.getGameModeForMatchMode(matchInfo.mode),
+      await this.getGameModeForMatchMode(matchInfo.mode),
       matchInfo.roomId,
       players,
       matchInfo.version,

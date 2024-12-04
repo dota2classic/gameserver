@@ -1,4 +1,3 @@
-import { GameServerRepository } from 'gameserver/repository/game-server.repository';
 import { GameserverSaga } from 'gameserver/saga/gameserver.saga';
 import { FindGameServerHandler } from 'gameserver/command/FindGameServer/find-game-server.handler';
 import { GameServerSessionRepository } from 'gameserver/repository/game-server-session.repository';
@@ -68,7 +67,7 @@ const EventHandlers = [
 ];
 
 const QueryHandlers = [GetPlayerInfoHandler, GetSessionByUserHandler, GetReportsAvailableHandler];
-const Repositories = [GameServerRepository, GameServerSessionRepository];
+const Repositories = [GameServerSessionRepository];
 const Services = [GameServerService, AchievementService];
 const Sagas = [GameserverSaga];
 

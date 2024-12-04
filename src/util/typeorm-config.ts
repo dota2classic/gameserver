@@ -17,10 +17,12 @@ import { PlayerReportEntity } from 'gameserver/model/player-report.entity';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { ItemHeroView } from 'gameserver/model/item-hero.view';
 import { AchievementEntity } from 'gameserver/model/achievement.entity';
+import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
 
 export const Entities: Function[] = [
   GameSeasonEntity,
   VersionPlayerEntity,
+  MatchmakingModeMappingEntity,
 
   MatchEntity,
   FinishedMatchEntity,
@@ -44,28 +46,7 @@ export const Entities: Function[] = [
   ItemView,
   ItemHeroView,
 ];
-export const devDbConfig: any = {
-  type: 'postgres',
-  database: 'postgres',
-  host: 'localhost',
-  port: 5400,
-  username: 'postgres',
-  password: 'docker',
-  entities: Entities,
-  synchronize: true,
 
-  keepConnectionAlive: true,
-};
-
-export const testDbConfig: TypeOrmModuleOptions = {
-  type: 'sqlite',
-  database: ':memory:',
-  entities: Entities,
-  synchronize: true,
-  keepConnectionAlive: true,
-  dropSchema: true,
-  logging: true
-};
 
 export const prodDbConfig: TypeOrmModuleOptions = {
   type: 'postgres',

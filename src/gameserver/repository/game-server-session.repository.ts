@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
-import { GameServerRepository } from 'gameserver/repository/game-server.repository';
 import { PlayerId } from 'gateway/shared-types/player-id';
 //
 import { Repository } from 'typeorm';
@@ -17,7 +16,6 @@ export class GameServerSessionRepository {
     >,
     @InjectRepository(GameServerEntity)
     private readonly gameServerModelRepository: Repository<GameServerEntity>,
-    private readonly gameServerRepository: GameServerRepository,
   ) {}
 
   async getAllFree(version: Dota2Version): Promise<GameServerEntity[]> {
@@ -27,19 +25,6 @@ export class GameServerSessionRepository {
       where gs.version = '${version}'
       group by gs.url, gs.version
       having count(gssm) = 0`);
-  }
-
-  async findFree(version: Dota2Version) {
-    const compatible = await this.gameServerRepository.find(version);
-    for (let i = 0; i < compatible.length; i++) {
-      const isBusy = await this.gameServerSessionModelRepository.findOne({
-        where: { url: compatible[i].url,}
-      });
-      if (!isBusy) {
-        return compatible[i];
-      }
-    }
-    return false;
   }
 
   public async findWith(

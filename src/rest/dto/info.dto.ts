@@ -1,13 +1,12 @@
 import { Dota2Version } from 'gateway/shared-types/dota2version';
-import { MatchInfo } from 'gateway/events/room-ready.event';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { PlayerId } from 'gateway/shared-types/player-id';
+import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class GameServerDto {
   url: string;
   version: Dota2Version;
 }
-
 
 export class MatchInfoDto {
   public readonly mode: MatchmakingMode;
@@ -21,5 +20,21 @@ export class MatchInfoDto {
 export class GameSessionDto {
   url: string;
   matchId: number;
-  info: MatchInfoDto
+  info: MatchInfoDto;
+}
+
+export class MatchmakingModeInfoDto {
+  @ApiProperty({ enum: MatchmakingMode, enumName: "MatchmakingMode" })
+  lobby_type: MatchmakingMode;
+
+  @ApiProperty({ enum: Dota_GameMode, enumName: "Dota_GameMode" })
+  game_mode: Dota_GameMode;
+
+  enabled: boolean;
+}
+
+export class UpdateGamemodeDto {
+  enabled: boolean;
+  @ApiProperty({ enum: Dota_GameMode, enumName: "Dota_GameMode" })
+  game_mode: Dota_GameMode;
 }
