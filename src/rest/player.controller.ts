@@ -34,9 +34,10 @@ import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { makePage } from 'gateway/util/make-page';
 import { ProcessRankedMatchHandler } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.handler';
+import { AchievementKey } from 'gateway/shared-types/achievemen-key';
 
-@Controller('player')
-@ApiTags('player')
+@Controller("player")
+@ApiTags("player")
 export class PlayerController {
   private static leaderboardLimit = 1000;
 
@@ -60,30 +61,45 @@ export class PlayerController {
     private readonly achievementEntityRepository: Repository<AchievementEntity>,
   ) {}
 
-  @Get('/:id/achievements')
+  @Get("/:id/achievements")
   public async playerAchievements(
-    @Param('id') steamId: string,
+    @Param("id") steamId: string,
   ): Promise<AchievementDto[]> {
     const ach = Array.from(this.achievements.achievementMap.values());
 
     const achievementsQ = this.achievementEntityRepository
-      .createQueryBuilder('a')
+      .createQueryBuilder("a")
       .leftJoinAndMapOne(
-        'a.match',
+        "a.match",
         FinishedMatchEntity,
-        'fm',
+        "fm",
         'fm.id = a."matchId"',
       )
       .leftJoinAndMapOne(
-        'a.pim',
+        "a.pim",
         PlayerInMatchEntity,
-        'pim',
+        "pim",
         `pim."playerId" = a.steam_id and pim."matchId" = a."matchId"`,
       )
       .where({ steam_id: steamId });
 
     const achievements = await achievementsQ.getMany();
-    return achievements.map(t => {
+
+    const paddedAchievements = Object.keys(AchievementKey)
+      .filter(
+        (key) =>
+          isNaN(Number(key)) &&
+          achievements.findIndex(
+            (ach) => ach.achievement_key === Number(key),
+          ) === -1,
+      )
+      .map((key) => ({
+        steam_id: steamId,
+        progress: 0,
+        achievement_key: AchievementKey[key],
+      } as AchievementEntity));
+
+    return achievements.concat(paddedAchievements).map((t) => {
       if (t.match) {
         t.match.players = [];
       }
@@ -92,18 +108,18 @@ export class PlayerController {
   }
 
   @ApiQuery({
-    name: 'page',
+    name: "page",
     required: true,
   })
   @ApiQuery({
-    name: 'per_page',
+    name: "per_page",
     required: false,
   })
   @Get(`/:id/teammates`)
   async playerTeammates(
-    @Param('id') steamId: string,
-    @Query('page', NullableIntPipe) page: number,
-    @Query('per_page', NullableIntPipe) perPage: number = 25,
+    @Param("id") steamId: string,
+    @Query("page", NullableIntPipe) page: number,
+    @Query("per_page", NullableIntPipe) perPage: number = 25,
   ): Promise<PlayerTeammatePage> {
     const totalEntries = await this.connection.query<{ count: number }[]>(
       `select count(distinct pim."playerId")::int
@@ -154,10 +170,10 @@ offset $2 limit $3`,
   }
 
   @CacheTTL(120)
-  @Get('/summary/:version/:id')
+  @Get("/summary/:version/:id")
   async playerSummary(
-    @Param('version') version: Dota2Version,
-    @Param('id') steam_id: string,
+    @Param("version") version: Dota2Version,
+    @Param("id") steam_id: string,
   ): Promise<PlayerSummaryDto> {
     await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
 
@@ -187,13 +203,15 @@ offset $2 limit $3`,
             ? 0
             : Math.max(0, UNRANKED_GAMES_REQUIRED_FOR_RANKED - lb.games),
 
-        calibrationGamesLeft: Math.max(ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES - lb.ranked_games, 0)
+        calibrationGamesLeft: Math.max(
+          ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES - lb.ranked_games,
+          0,
+        ),
       };
     }
 
-    const summary: Summary | undefined = await this.playerService.fullSummary(
-      steam_id,
-    );
+    const summary: Summary | undefined =
+      await this.playerService.fullSummary(steam_id);
 
     const rank = await this.playerService.getRank(version, steam_id);
 
@@ -221,27 +239,31 @@ offset $2 limit $3`,
                 (summary?.unranked_games || 0),
             ),
 
-      calibrationGamesLeft: Math.max(ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES - (summary?.ranked_games || 0), 0)
+      calibrationGamesLeft: Math.max(
+        ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES -
+          (summary?.ranked_games || 0),
+        0,
+      ),
     };
   }
 
-  @Get('/leaderboard')
+  @Get("/leaderboard")
   @CacheTTL(60 * 30)
   @ApiQuery({
-    name: 'page',
+    name: "page",
     required: true,
   })
   @ApiQuery({
-    name: 'per_page',
+    name: "per_page",
     required: false,
   })
   async leaderboard(
-    @Query('page', NullableIntPipe) page: number,
-    @Query('per_page', NullableIntPipe) perPage: number = 100,
+    @Query("page", NullableIntPipe) page: number,
+    @Query("per_page", NullableIntPipe) perPage: number = 100,
   ): Promise<LeaderboardEntryPageDto> {
     const [data, total] = await this.leaderboardViewRepository.findAndCount({
       order: {
-        mmr: 'DESC',
+        mmr: "DESC",
       },
       take: perPage,
       skip: perPage * page,
@@ -253,21 +275,21 @@ offset $2 limit $3`,
   @CacheTTL(120)
   @Get(`/summary/heroes/:version/:id`)
   async playerHeroSummary(
-    @Param('version') version: Dota2Version,
-    @Param('id') steam_id: string,
+    @Param("version") version: Dota2Version,
+    @Param("id") steam_id: string,
   ): Promise<HeroStatsDto[]> {
     await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
 
     return await this.playerService.heroStats(version, steam_id);
   }
 
-  @Get('/hero/:hero/players')
-  async getHeroPlayers(@Param('hero') hero: string) {
+  @Get("/hero/:hero/players")
+  async getHeroPlayers(@Param("hero") hero: string) {
     return this.playerService.getHeroPlayers(hero);
   }
 
   @Get(`/ban_info/:id`)
-  async banInfo(@Param('id') steam_id: string): Promise<BanStatusDto> {
+  async banInfo(@Param("id") steam_id: string): Promise<BanStatusDto> {
     const ban = await this.playerBanRepository.findOne({
       where: { steam_id: steam_id },
     });
@@ -280,7 +302,7 @@ offset $2 limit $3`,
     };
   }
 
-  @Post('/report')
+  @Post("/report")
   async reportPlayer(@Body() dto: ReportPlayerDto) {
     this.ebus.publish(
       new PlayerReportEvent(dto.matchId, dto.reporter, dto.reported, dto.text),

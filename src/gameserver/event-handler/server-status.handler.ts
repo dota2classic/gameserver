@@ -3,6 +3,7 @@ import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
 import { Logger } from '@nestjs/common';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 
@@ -48,12 +49,12 @@ export class ServerStatusHandler implements IEventHandler<ServerStatusEvent> {
       await this.gameServerSessionModelRepository.save(existingSession);
     } else if (!event.running && existingSession) {
       // remove session if it exists
-      // this.ebus.publish(
-      //   new GameServerStoppedEvent(
-      //     event.url,
-      //     existingSession.matchInfoJson.version,
-      //   ),
-      // );
+      this.ebus.publish(
+        new GameServerStoppedEvent(
+          event.url,
+          existingSession.matchInfoJson.version,
+        ),
+      );
     }
   }
 }
