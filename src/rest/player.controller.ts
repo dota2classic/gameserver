@@ -90,7 +90,7 @@ export class PlayerController {
         (key) =>
           isNaN(Number(key)) &&
           achievements.findIndex(
-            (ach) => ach.achievement_key === Number(key),
+            (ach) => ach.achievement_key === AchievementKey[key],
           ) === -1,
       )
       .map((key) => ({
