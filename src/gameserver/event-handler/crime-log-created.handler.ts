@@ -19,7 +19,7 @@ export const getBasePunishment = (crime: BanReason) => {
       return LIGHT_PUNISHMENT;
     case BanReason.LOAD_FAILURE:
       return MEDIUM_PUNISHMENT;
-    case BanReason.REPORTS:
+    case BanReason.ABANDON:
       return HARD_PUNISHMENT;
     default:
       return 0;
@@ -29,7 +29,7 @@ export const getBasePunishment = (crime: BanReason) => {
 export const countCrimes = (crimes: PlayerCrimeLogEntity[]) => {
   const grouped: Map<BanReason, number> = new Map();
   for (let crime of crimes) {
-    grouped.set(crime.crime, +grouped.get(crime.crime) + 1);
+    grouped.set(crime.crime, (grouped.get(crime.crime) || 0) + 1);
   }
   return grouped;
 };
@@ -86,11 +86,17 @@ export class CrimeLogCreatedHandler
     const basePunishment = getBasePunishment(thisCrime.crime);
     let punishmentDuration = basePunishment * totalPunishmentCount;
 
+    console.log(countedCrimes, totalPunishmentCount, basePunishment, punishmentDuration, thisCrime)
+
     this.logger.log(
       `Punishment: ${punishmentDuration / 1000 / 60} minutes for ${
         thisCrime.steam_id
       }. Total punishment count: ${totalPunishmentCount}`,
     );
+    thisCrime.banTime = punishmentDuration;
+    thisCrime.handled = true;
+    await this.playerCrimeLogEntityRepository.save(thisCrime);
+
     await this.applyBan(
       thisCrime.steam_id,
       punishmentDuration,
