@@ -9,6 +9,7 @@ import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 import { PlayerReportEntity } from 'gameserver/model/player-report.entity';
 import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
+import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 @EventsHandler(PlayerReportedEvent)
 export class PlayerReportedHandler
@@ -45,7 +46,11 @@ from t
     );
 
     if (count >= CRITICAL_REPORT_COUNT_TO_BAN) {
-      const crime = new PlayerCrimeLogEntity();
+      const crime = new PlayerCrimeLogEntity(
+        event.reported.value,
+        BanReason.REPORTS,
+        MatchmakingMode.BOTS // TODO: fetch via event.matchId
+      );
       crime.steam_id = event.reported.value;
       crime.crime = BanReason.REPORTS;
       crime.handled = false;

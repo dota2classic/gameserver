@@ -5,24 +5,33 @@ import { BanReason } from 'gateway/shared-types/ban';
 import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
+import { Logger } from '@nestjs/common';
 
 @EventsHandler(PlayerAbandonedEvent)
-export class PlayerAbandonedHandler implements IEventHandler<PlayerAbandonedEvent> {
+export class PlayerAbandonedHandler
+  implements IEventHandler<PlayerAbandonedEvent>
+{
+  private logger = new Logger(PlayerAbandonedHandler.name);
+
   constructor(
     @InjectRepository(PlayerCrimeLogEntity)
     private readonly playerCrimeLogEntityRepository: Repository<PlayerCrimeLogEntity>,
-    private readonly ebus: EventBus
+    private readonly ebus: EventBus,
   ) {}
 
   async handle(event: PlayerAbandonedEvent) {
     // Let them abandon ffs
-    if(event.mode === MatchmakingMode.BOTS) return;
+    this.logger.log("PlayerAbandonEvent", { index: event.abandonIndex });
+    if (event.abandonIndex > 0) {
+      this.logger.log("Player abandoned not first, not creating crime");
+      return;
+    }
 
-    const crime = new PlayerCrimeLogEntity();
-    crime.steam_id = event.playerId.value;
-    crime.crime = BanReason.ABANDON;
-    crime.handled = false;
+    const crime = new PlayerCrimeLogEntity(
+      event.playerId.value,
+      BanReason.ABANDON,
+      event.mode,
+    );
 
     await this.playerCrimeLogEntityRepository.save(crime);
 
