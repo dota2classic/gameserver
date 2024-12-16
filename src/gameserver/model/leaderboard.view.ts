@@ -3,6 +3,7 @@ import { Index, ViewColumn, ViewEntity } from 'typeorm';
 @ViewEntity({
   expression: `with cte as (select plr."playerId"                                                                   as steam_id,
                     count(*)::int                                                                    as any_games,
+                    sum((m.winner = plr.team)::int)::int                                             as bot_wins,
                     sum((m.matchmaking_mode in (0, 1))::int)::int                                    as games,
                     sum((m.winner = plr.team and m.matchmaking_mode in (0, 1))::int)::int            as wins,
                     sum((m.matchmaking_mode = 0 and m.timestamp > now() - '14 days'::interval)::int) as recent_ranked_games,
@@ -15,6 +16,7 @@ select p.steam_id,
        p.wins,
        p.games,
        p.any_games,
+       p.bot_wins,
        p.mmr                                                                        as mmr,
        avg(pim.kills)::float                                                        as kills,
        avg(pim.deaths)::float                                                       as deaths,
@@ -25,7 +27,7 @@ select p.steam_id,
 from cte p
          inner join player_in_match pim on pim."playerId" = p.steam_id
          inner join finished_match m on pim."matchId" = m.id
-group by p.steam_id, p.recent_ranked_games, p.mmr, p.games, p.wins, p.any_games
+group by p.steam_id, p.recent_ranked_games, p.mmr, p.games, p.wins, p.any_games, p.bot_wins
 order by rank, games desc`,
   materialized: true,
 })
@@ -43,6 +45,9 @@ export class LeaderboardView {
 
   @ViewColumn()
   any_games: number;
+
+  @ViewColumn()
+  bot_wins: number;
 
   @Index()
   @ViewColumn()

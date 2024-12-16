@@ -93,11 +93,14 @@ export class PlayerController {
             (ach) => ach.achievement_key === AchievementKey[key],
           ) === -1,
       )
-      .map((key) => ({
-        steam_id: steamId,
-        progress: 0,
-        achievement_key: AchievementKey[key],
-      } as AchievementEntity));
+      .map(
+        (key) =>
+          ({
+            steam_id: steamId,
+            progress: 0,
+            achievement_key: AchievementKey[key],
+          }) as AchievementEntity,
+      );
 
     return achievements.concat(paddedAchievements).map((t) => {
       if (t.match) {
@@ -198,6 +201,9 @@ offset $2 limit $3`,
 
         play_time: lb.play_time,
         playedAnyGame: lb.any_games > 0,
+
+        hasUnrankedAccess: lb.bot_wins > 0,
+
         newbieUnrankedGamesLeft:
           lb.ranked_games > 0
             ? 0
@@ -229,6 +235,8 @@ offset $2 limit $3`,
       play_time: summary?.play_time || 0,
 
       playedAnyGame: summary && summary.any_games > 0,
+
+      hasUnrankedAccess: (summary?.bot_wins || 0) > 0,
 
       newbieUnrankedGamesLeft:
         (summary?.ranked_games || 0) > 0

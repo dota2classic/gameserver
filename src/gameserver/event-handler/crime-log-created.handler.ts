@@ -26,6 +26,21 @@ export const getBasePunishment = (crime: BanReason) => {
   }
 };
 
+export const getPunishmentCumulativeInterval = (crime: BanReason): string => {
+  switch (crime) {
+    case BanReason.INFINITE_BAN:
+      return "1y";
+    case BanReason.GAME_DECLINE:
+      return "4h";
+    case BanReason.LOAD_FAILURE:
+      return "24h";
+    case BanReason.ABANDON:
+      return "7d";
+    default:
+      return "1m";
+  }
+};
+
 export const countCrimes = (crimes: PlayerCrimeLogEntity[]) => {
   const grouped: Map<BanReason, number> = new Map();
   for (let crime of crimes) {
@@ -71,12 +86,13 @@ export class CrimeLogCreatedHandler
       return;
     }
 
-    // TODO: make this SQL based with interval
+    const cumInterval = getPunishmentCumulativeInterval(thisCrime.crime);
+
     const frequentCrimesCount = await this.playerCrimeLogEntityRepository
       .createQueryBuilder("pc")
       .select()
       .where("pc.steam_id = :sid", { sid: thisCrime.steam_id })
-      .andWhere("pc.created_at >= now() - '24h'::interval") // interval here
+      .andWhere(`pc.created_at >= now() - ${cumInterval}::interval`) // interval here
       .getMany();
 
     // total crimes done within 24 hours
@@ -86,7 +102,13 @@ export class CrimeLogCreatedHandler
     const basePunishment = getBasePunishment(thisCrime.crime);
     let punishmentDuration = basePunishment * totalPunishmentCount;
 
-    console.log(countedCrimes, totalPunishmentCount, basePunishment, punishmentDuration, thisCrime)
+    console.log(
+      countedCrimes,
+      totalPunishmentCount,
+      basePunishment,
+      punishmentDuration,
+      thisCrime,
+    );
 
     this.logger.log(
       `Punishment: ${punishmentDuration / 1000 / 60} minutes for ${

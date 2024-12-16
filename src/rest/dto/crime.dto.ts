@@ -25,3 +25,10 @@ export class CrimeLogPageDto extends Page<CrimeLogDto> {
   perPage: number;
   page: number;
 }
+
+
+
+export class PageRequest<T = string | number> {
+  cursor?: T;
+  perPage: number;
+}

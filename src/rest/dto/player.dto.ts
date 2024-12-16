@@ -30,6 +30,9 @@ export class PlayerSummaryDto extends LeaderboardEntryDto {
   newbieUnrankedGamesLeft: number;
   playedAnyGame: boolean;
   calibrationGamesLeft: number;
+
+
+  hasUnrankedAccess: boolean;
 }
 
 export class BanStatusDto {

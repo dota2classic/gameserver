@@ -20,12 +20,12 @@ import { outerQuery } from 'gateway/util/outerQuery';
 import { QueryCache } from 'rcache';
 import { CacheModule } from '@nestjs/cache-manager';
 import { MatchService } from 'rest/match/match.service';
-import { CrimeController } from 'rest/crime.controller';
 import { MatchMapper } from 'rest/match/match.mapper';
 import { MatchController } from 'rest/match/match.controller';
 import { MetaMapper } from 'rest/meta/meta.mapper';
 import { InfoMapper } from 'rest/info/info.mapper';
 import { InfoService } from 'rest/info/info.service';
+import { CrimeController } from 'rest/crime/crime.controller';
 
 
 export function qCache<T, B>() {
