@@ -112,10 +112,14 @@ export class CrimeLogCreatedHandler
       .andWhere(`pc.created_at >= now() - :cum_interval::interval`, {
         cum_interval: cumInterval
       }) // interval here
+      .andWhere({
+        handled: true
+      })
       .getMany();
 
     // total crimes done within 24 hours
-    const countedCrimes = countCrimes(frequentCrimesCount);
+    // We do `+1` because it doesnt count current crime, but we want to
+    const countedCrimes = countCrimes(frequentCrimesCount) + 1;
 
     let totalPunishmentCount = countedCrimes.get(thisCrime.crime) || 0;
     const basePunishment = getBasePunishment(thisCrime.crime);
