@@ -115,6 +115,7 @@ export class CrimeLogCreatedHandler
       .andWhere({
         handled: true
       })
+      .andWhere(`pc."banTime" > 0`)
       .getMany();
 
     // total crimes done within 24 hours
