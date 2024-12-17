@@ -60,7 +60,22 @@ export class CrimeLogCreatedHandler
     @InjectRepository(PlayerBanEntity)
     private readonly playerBanRepository: Repository<PlayerBanEntity>,
     private readonly ebus: EventBus,
-  ) {}
+  ) {
+    this.playerCrimeLogEntityRepository
+      .find({
+        where: {
+          handled: false,
+        },
+      })
+      .then((unhandled) =>
+        Promise.all(
+          unhandled.map((it) => this.handle(new CrimeLogCreatedEvent(it.id))),
+        ),
+      )
+      .then((proms) => {
+        this.logger.log(`Initial cathing up in crimes finished, ${proms.length} crimes handled`)
+      })
+  }
 
   async handle(event: CrimeLogCreatedEvent) {
     // ok, first we find last crime
@@ -88,11 +103,15 @@ export class CrimeLogCreatedHandler
 
     const cumInterval = getPunishmentCumulativeInterval(thisCrime.crime);
 
+    this.logger.log(`Cumulative interval for crime is ${cumInterval}`)
+
     const frequentCrimesCount = await this.playerCrimeLogEntityRepository
       .createQueryBuilder("pc")
       .select()
       .where("pc.steam_id = :sid", { sid: thisCrime.steam_id })
-      .andWhere(`pc.created_at >= now() - ${cumInterval}::interval`) // interval here
+      .andWhere(`pc.created_at >= now() - :cum_interval::interval`, {
+        cum_interval: cumInterval
+      }) // interval here
       .getMany();
 
     // total crimes done within 24 hours
