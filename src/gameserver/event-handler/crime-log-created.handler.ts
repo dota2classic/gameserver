@@ -118,20 +118,20 @@ export class CrimeLogCreatedHandler
       .getMany();
 
     // total crimes done within 24 hours
-    // We do `+1` because it doesnt count current crime, but we want to
-    const countedCrimes = countCrimes(frequentCrimesCount) + 1;
+    const countedCrimes = countCrimes(frequentCrimesCount);
 
-    let totalPunishmentCount = countedCrimes.get(thisCrime.crime) || 0;
+    // We do `+1` because it doesn't count current crime, but we want to
+    let totalPunishmentCount = (countedCrimes.get(thisCrime.crime) || 0) + 1;
     const basePunishment = getBasePunishment(thisCrime.crime);
     let punishmentDuration = basePunishment * totalPunishmentCount;
 
-    console.log(
-      countedCrimes,
-      totalPunishmentCount,
-      basePunishment,
-      punishmentDuration,
-      thisCrime,
-    );
+    // console.log(
+    //   countedCrimes,
+    //   totalPunishmentCount,
+    //   basePunishment,
+    //   punishmentDuration,
+    //   thisCrime,
+    // );
 
     this.logger.log(
       `Punishment: ${punishmentDuration / 1000 / 60} minutes for ${
