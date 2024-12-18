@@ -134,7 +134,7 @@ with players as (select pim."playerId"                  as player,
                  from player_in_match pim
                           inner join finished_match m on m.id = pim."matchId"
                  where pim.hero = $1
-                   and (pim."playerId"::int > 10)
+                   and length(pim."playerId") > 2
                    and m.matchmaking_mode in ($2, $3)
                  group by pim."playerId")
 select p.player as steam_id,
@@ -143,7 +143,7 @@ select p.player as steam_id,
        p.kills::float                                                             as kills,
        p.deaths::float                                                            as deaths,
        p.assists::float                                                           as assists,
-       (((p.kills + p.assists) / greatest(1, p.deaths)) * p.level * ((p.wins::float / p.games) ^ 2 * p.games))::int as score
+       (((p.kills + p.assists) / greatest(1, p.deaths)) * ((p.wins::float / p.games) ^ 2 * p.games))::int as score
 from players p
 where p.games > $4
 order by score desc`;
