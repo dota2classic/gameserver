@@ -180,17 +180,17 @@ describe("MatchController", () => {
     const changes = await mmrRepo.find({ where: { matchId: fm.id } });
     expect(changes).toHaveLength(10);
 
-    expect(changes[0].change).toBeGreaterThan(0);
-    expect(changes[1].change).toBeGreaterThan(0);
-    expect(changes[2].change).toBeGreaterThan(0);
-    expect(changes[3].change).toBeLessThan(0);
-    expect(changes[4].change).toBeGreaterThan(0);
-
-    expect(changes[5].change).toBeLessThan(0);
-    expect(changes[6].change).toBeLessThan(0);
-    expect(changes[7].change).toBeLessThan(0);
-    expect(changes[8].change).toBeLessThan(0);
-    expect(changes[9].change).toBeLessThan(0);
+    for (let change of changes) {
+      const pim = pims.find((pim) => pim.playerId === change.playerId);
+      // console.log("Amogus!", change, pim)
+      if (pim?.abandoned) {
+        expect(change.change).toBeLessThan(0);
+      } else if (pim.team === DotaTeam.RADIANT) {
+        expect(change.change).toBeGreaterThan(0);
+      } else {
+        expect(change.change).toBeLessThan(0);
+      }
+    }
   });
 
   it("should not update mmr for already processed match", async () => {

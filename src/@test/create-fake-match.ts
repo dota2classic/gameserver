@@ -25,7 +25,7 @@ export async function createFakeMatch(
   module: TestingModule,
   winner: DotaTeam = DotaTeam.RADIANT,
   mode: MatchmakingMode = MatchmakingMode.UNRANKED,
-  duration: number = 100
+  duration: number = 100,
 ): Promise<FinishedMatchEntity> {
   const matchRep = module.get<Repository<FinishedMatchEntity>>(
     getRepositoryToken(FinishedMatchEntity),
@@ -59,22 +59,25 @@ export async function createFakeMatch(
   return match;
 }
 
-
-export async function fillMatch(module: TestingModule, fm: FinishedMatchEntity, count: number = 10){
+export async function fillMatch(
+  module: TestingModule,
+  fm: FinishedMatchEntity,
+  count: number = 10,
+) {
   const pRep = module.get<Repository<PlayerInMatchEntity>>(
     getRepositoryToken(PlayerInMatchEntity),
   );
 
-  const randInt = (r: number) => Math.round(Math.random() * r)
+  const randInt = (r: number) => Math.round(Math.random() * r);
 
   const pims: PlayerInMatchEntity[] = [];
   for (let i = 0; i < count; i++) {
     const pim = new PlayerInMatchEntity();
     pim.match = fm;
-    pim.playerId = Math.round((Math.random() * 10000 + 1000000)).toString();
+    pim.playerId = `${fm.id}${randInt(1000000)}${i}`;
     pim.abandoned = false;
-    pim.denies = randInt(50)
-    pim.last_hits = randInt(250)
+    pim.denies = randInt(50);
+    pim.last_hits = randInt(250);
     pim.kills = randInt(20);
     pim.deaths = randInt(10);
     pim.assists = randInt(20);
@@ -82,15 +85,15 @@ export async function fillMatch(module: TestingModule, fm: FinishedMatchEntity, 
     pim.level = randInt(25);
     pim.gpm = randInt(800);
     pim.xpm = randInt(700);
-    pim.hero = 'npc_dota_hero_riki';
-    pim.item0 = randInt(100)
-    pim.item1 = randInt(100)
-    pim.item2 = randInt(100)
-    pim.item3 = randInt(100)
-    pim.item4 = randInt(100)
-    pim.item5 = randInt(100)
+    pim.hero = "npc_dota_hero_riki";
+    pim.item0 = randInt(100);
+    pim.item1 = randInt(100);
+    pim.item2 = randInt(100);
+    pim.item3 = randInt(100);
+    pim.item4 = randInt(100);
+    pim.item5 = randInt(100);
     await pRep.save(pim);
-    pims.push(pim)
+    pims.push(pim);
   }
 
   return pims;
