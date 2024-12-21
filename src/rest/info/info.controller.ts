@@ -51,7 +51,7 @@ export class InfoController {
     @Param("mode", ParseIntPipe) mode: MatchmakingMode,
     @Body() dto: UpdateGamemodeDto,
   ) {
-    await this.infoService.updateGamemode(mode, dto.game_mode, dto.enabled);
+    await this.infoService.updateGamemode(mode, dto.game_mode, dto.dota_map, dto.enabled);
   }
 
   @Get("current_online")

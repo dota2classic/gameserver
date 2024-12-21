@@ -7,6 +7,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
 import { Repository } from 'typeorm';
 import { NestApplicationContext } from '@nestjs/core/nest-application-context';
+import { Dota_Map } from 'gateway/shared-types/dota-map';
 import Mock = jest.Mock;
 
 export const randomUser = () => {
@@ -23,16 +24,24 @@ export function printCalls(bus: EventBus) {
   console.log(inspect(p.mock.calls));
 }
 
-
-export function arrayOf(size: number){
-  return new Array(size).fill(null)
+export function arrayOf(size: number) {
+  return new Array(size).fill(null);
 }
 
-export function createGameMode(app: NestApplicationContext, lobby: MatchmakingMode, mode: Dota_GameMode, enabled: boolean): Promise<MatchmakingModeMappingEntity> {
-  const rep: Repository<MatchmakingModeMappingEntity> = app.get(getRepositoryToken(MatchmakingModeMappingEntity))
+export function createGameMode(
+  app: NestApplicationContext,
+  lobby: MatchmakingMode,
+  mode: Dota_GameMode,
+  map: Dota_Map,
+  enabled: boolean,
+): Promise<MatchmakingModeMappingEntity> {
+  const rep: Repository<MatchmakingModeMappingEntity> = app.get(
+    getRepositoryToken(MatchmakingModeMappingEntity),
+  );
   return rep.save({
     lobbyType: lobby,
     dotaGameMode: mode,
-    enabled
-  })
+    dotaMap: map,
+    enabled,
+  } satisfies MatchmakingModeMappingEntity);
 }

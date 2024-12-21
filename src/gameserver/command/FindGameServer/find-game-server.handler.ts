@@ -30,32 +30,31 @@ import { MatchEntity } from 'gameserver/model/match.entity';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
+import { Dota_Map } from 'gateway/shared-types/dota-map';
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
-  implements ICommandHandler<FindGameServerCommand> {
+  implements ICommandHandler<FindGameServerCommand>
+{
   private readonly logger = new Logger(FindGameServerHandler.name);
 
-  private pendingGamesPool: Subject<FindGameServerCommand> = new Subject<
-    FindGameServerCommand
-  >();
+  private pendingGamesPool: Subject<FindGameServerCommand> =
+    new Subject<FindGameServerCommand>();
 
   constructor(
     private readonly gsSessionRepository: GameServerSessionRepository,
     @InjectRepository(GameServerSessionEntity)
-    private readonly gameServerSessionModelRepository: Repository<
-      GameServerSessionEntity
-    >,
+    private readonly gameServerSessionModelRepository: Repository<GameServerSessionEntity>,
     private readonly ebus: EventBus,
     @InjectRepository(MatchEntity)
     private readonly matchEntityRepository: Repository<MatchEntity>,
     private readonly qbus: QueryBus,
-    @Inject('QueryCore') private readonly redisEventQueue: ClientProxy,
+    @Inject("QueryCore") private readonly redisEventQueue: ClientProxy,
     @InjectRepository(MatchmakingModeMappingEntity)
     private readonly matchmakingModeMappingEntityRepository: Repository<MatchmakingModeMappingEntity>,
   ) {
     this.pendingGamesPool
-      .pipe(asyncMap(cmd => this.findServer(cmd), 1))
+      .pipe(asyncMap((cmd) => this.findServer(cmd), 1))
       .subscribe();
   }
 
@@ -63,15 +62,35 @@ export class FindGameServerHandler
     this.pendingGamesPool.next(command);
   }
 
-  private async getGameModeForMatchMode(mode: MatchmakingMode): Promise<Dota_GameMode> {
+  private async getMapForMatchMode(mode: MatchmakingMode): Promise<Dota_Map> {
     const mapping = await this.matchmakingModeMappingEntityRepository.findOne({
       where: {
-        lobbyType: mode
-      }
+        lobbyType: mode,
+      },
     });
 
-    if(!mapping){
-      this.logger.error(`No mapping found for lobby type ${mode}! Returning all pick`);
+    if (!mapping) {
+      this.logger.error(
+        `No mapping found for lobby type ${mode}! Returning all pick`,
+      );
+      return Dota_Map.DOTA;
+    }
+    return mapping.dotaMap;
+  }
+
+  private async getGameModeForMatchMode(
+    mode: MatchmakingMode,
+  ): Promise<Dota_GameMode> {
+    const mapping = await this.matchmakingModeMappingEntityRepository.findOne({
+      where: {
+        lobbyType: mode,
+      },
+    });
+
+    if (!mapping) {
+      this.logger.error(
+        `No mapping found for lobby type ${mode}! Returning all pick`,
+      );
       return Dota_GameMode.ALLPICK;
     }
     return mapping.dotaGameMode;
@@ -81,7 +100,7 @@ export class FindGameServerHandler
     const players: FullMatchPlayer[] = [];
 
     // TODO: i dont like it and want to move username resolving into operator
-    const resolves = matchInfo.players.map(async t => {
+    const resolves = matchInfo.players.map(async (t) => {
       const res = await this.qbus.execute<
         GetUserInfoQuery,
         GetUserInfoQueryResult
@@ -95,6 +114,7 @@ export class FindGameServerHandler
 
     return new GSMatchInfo(
       matchInfo.mode,
+      await this.getMapForMatchMode(matchInfo.mode),
       await this.getGameModeForMatchMode(matchInfo.mode),
       matchInfo.roomId,
       players,
@@ -110,7 +130,7 @@ export class FindGameServerHandler
 
     const gsInfo = await this.extendMatchInfo(command.matchInfo);
 
-    console.log('FindServer called, pool', freeServerPool);
+    console.log("FindServer called, pool", freeServerPool);
 
     const m = new MatchEntity();
     m.server = MatchEntity.NOT_DECIDED_SERVER;
@@ -126,7 +146,7 @@ export class FindGameServerHandler
     let i = 0;
     let foundServer: GameServerEntity | undefined;
 
-    console.log('Free pool:', freeServerPool.length);
+    console.log("Free pool:", freeServerPool.length);
     while (i < freeServerPool.length) {
       const candidate = freeServerPool[i];
       const stackUrl = candidate.url;
@@ -134,10 +154,10 @@ export class FindGameServerHandler
         const cmd = new LaunchGameServerCommand(candidate.url, m.id, gsInfo);
         console.log(JSON.stringify(cmd, null, 2));
         const req = await this.redisEventQueue
-          .send<LaunchGameServerResponse, LaunchGameServerCommand>(
-            LaunchGameServerCommand.name,
-            cmd,
-          )
+          .send<
+            LaunchGameServerResponse,
+            LaunchGameServerCommand
+          >(LaunchGameServerCommand.name, cmd)
           .pipe(timeout(15000))
           .toPromise();
 
@@ -152,7 +172,7 @@ export class FindGameServerHandler
           // i guess we skip? just try next server
         }
       } catch (e) {
-        console.log('Sadkek?', e);
+        console.log("Sadkek?", e);
         console.error(e.stack);
         // timeout means server is DEAD
         this.ebus.publish(new ServerNotRespondingEvent(stackUrl));
@@ -163,7 +183,7 @@ export class FindGameServerHandler
       i++;
     }
 
-    console.log('So: ', inspect(foundServer));
+    console.log("So: ", inspect(foundServer));
 
     if (foundServer) {
       m.server = foundServer.url;

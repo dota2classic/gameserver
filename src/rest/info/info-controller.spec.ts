@@ -15,6 +15,7 @@ import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { UpdateGamemodeDto } from 'rest/dto/info.dto';
 import { Repository } from 'typeorm';
+import { Dota_Map } from 'gateway/shared-types/dota-map';
 
 describe("InfoController", () => {
   jest.setTimeout(60000);
@@ -79,6 +80,7 @@ describe("InfoController", () => {
         app,
         MatchmakingMode.UNRANKED,
         Dota_GameMode.GREEVILING,
+        Dota_Map.DOTA_WINTER,
         true,
       );
 
@@ -89,12 +91,13 @@ describe("InfoController", () => {
     });
   });
 
-  describe("/PATCH /gamemode/:mode", () => {
+  describe("/PUT /gamemode/:mode", () => {
     it(`should update gamemode`, async () => {
       const mode = await createGameMode(
         app,
         MatchmakingMode.UNRANKED,
         Dota_GameMode.GREEVILING,
+        Dota_Map.DOTA_AUTUMN,
         true,
       );
 
@@ -102,6 +105,7 @@ describe("InfoController", () => {
         .put(`/info/gamemode/${mode.lobbyType}`)
         .send({
           game_mode: Dota_GameMode.RANKED_AP,
+          dota_map: Dota_Map.DOTA681,
           enabled: false,
         } satisfies UpdateGamemodeDto)
         .expect(200);
@@ -117,7 +121,8 @@ describe("InfoController", () => {
         lobbyType: MatchmakingMode.UNRANKED,
         enabled: false,
         dotaGameMode: Dota_GameMode.RANKED_AP,
-      });
+        dotaMap: Dota_Map.DOTA681,
+      } satisfies MatchmakingModeMappingEntity);
     });
   });
 });

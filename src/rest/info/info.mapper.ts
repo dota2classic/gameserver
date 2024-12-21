@@ -34,6 +34,7 @@ export class InfoMapper {
   ): MatchmakingModeInfoDto => ({
     lobby_type: it.lobbyType,
     game_mode: it.dotaGameMode,
+    dota_map: it.dotaMap,
     enabled: it.enabled,
   });
 }
