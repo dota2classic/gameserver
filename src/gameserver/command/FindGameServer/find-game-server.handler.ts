@@ -31,6 +31,7 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
 import { Dota_Map } from 'gateway/shared-types/dota-map';
+import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
@@ -96,7 +97,9 @@ export class FindGameServerHandler
     return mapping.dotaGameMode;
   }
 
-  private async extendMatchInfo(matchInfo: MatchInfo): Promise<GSMatchInfo> {
+  private async extendMatchInfo(
+    matchInfo: GamePreparedEvent,
+  ): Promise<GSMatchInfo> {
     const players: FullMatchPlayer[] = [];
 
     // TODO: i dont like it and want to move username resolving into operator
@@ -119,22 +122,22 @@ export class FindGameServerHandler
       matchInfo.roomId,
       players,
       matchInfo.version,
-      matchInfo.averageMMR,
+      0,
     );
   }
 
   private async findServer(command: FindGameServerCommand) {
     const freeServerPool = await this.gsSessionRepository.getAllFree(
-      command.matchInfo.version,
+      command.info.version,
     );
 
-    const gsInfo = await this.extendMatchInfo(command.matchInfo);
+    const gsInfo = await this.extendMatchInfo(command.info);
 
     console.log("FindServer called, pool", freeServerPool);
 
     const m = new MatchEntity();
     m.server = MatchEntity.NOT_DECIDED_SERVER;
-    m.mode = command.matchInfo.mode;
+    m.mode = command.info.mode;
     m.started = false;
     m.finished = false;
     m.matchInfoJson = {
@@ -190,7 +193,18 @@ export class FindGameServerHandler
       await this.matchEntityRepository.save(m);
     } else {
       // cancel match : no servers free :sadkek:
-      this.ebus.publish(new MatchCancelledEvent(m.id, command.matchInfo));
+      this.ebus.publish(
+        new MatchCancelledEvent(
+          m.id,
+          new MatchInfo(
+            command.info.mode,
+            command.info.roomId,
+            command.info.players,
+            0,
+            command.info.version,
+          ),
+        ),
+      );
       return;
     }
     // ok here we launch server

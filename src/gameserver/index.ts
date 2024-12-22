@@ -30,12 +30,15 @@ import { ProcessAchievementsHandler } from 'gameserver/command/ProcessAchievemen
 import { AchievementService } from 'gameserver/achievement.service';
 import { MatchFailedHandler } from 'gameserver/event-handler/match-failed.handler';
 import { PlayerAbandonedHandler } from 'gameserver/event-handler/player-abandoned.handler';
+import { PrepareGameHandler } from 'gameserver/command/PrepareGame/prepare-game.handler';
+import { LobbyReadyHandler } from 'gameserver/event-handler/lobby-ready.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
   ProcessRankedMatchHandler,
   MakeSureExistsHandler,
-  ProcessAchievementsHandler
+  ProcessAchievementsHandler,
+  PrepareGameHandler
 ];
 const EventHandlers = [
   StartFakeMatchHandler,
@@ -52,6 +55,7 @@ const EventHandlers = [
 
   GameResultsHandler,
   PlayerBanHammeredHandler,
+  LobbyReadyHandler,
 
   ServerStatusHandler,
   PlayerNotLoadedHandler,

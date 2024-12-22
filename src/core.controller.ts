@@ -17,6 +17,7 @@ import { StartFakeMatchEvent } from 'gateway/events/start-fake-match.event';
 import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
 import { MatchFailedEvent } from 'gateway/events/match-failed.event';
 import { PlayerAbandonedEvent } from 'gateway/events/bans/player-abandoned.event';
+import { LobbyReadyEvent } from 'gateway/events/lobby-ready.event';
 
 
 @Controller()
@@ -29,11 +30,16 @@ export class CoreController {
     buff.__proto__ = constructor.prototype;
     if (!isDev) this.ebus.publish(buff);
   }
+
   @EventPattern(RoomReadyEvent.name)
   async RoomReadyEvent(data: RoomReadyEvent) {
     this.event(RoomReadyEvent, data);
   }
 
+  @EventPattern(LobbyReadyEvent.name)
+  async LobbyReadyEvent(data: LobbyReadyEvent) {
+    this.event(LobbyReadyEvent, data);
+  }
 
   @EventPattern(TournamentGameReadyEvent.name)
   async TournamentGameReadyEvent(data: TournamentGameReadyEvent) {

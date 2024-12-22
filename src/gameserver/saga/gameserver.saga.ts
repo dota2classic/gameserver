@@ -2,40 +2,41 @@ import { Injectable } from '@nestjs/common';
 import { ICommand, ofType, Saga } from '@nestjs/cqrs';
 import { Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
-import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
-import { MatchInfo, RoomReadyEvent } from 'gateway/events/room-ready.event';
+import { RoomReadyEvent } from 'gateway/events/room-ready.event';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import * as uuidr from 'uuid';
 import { ProcessAchievementsCommand } from 'gameserver/command/ProcessAchievements/process-achievements.command';
 import { MatchRecordedEvent } from 'gameserver/event/match-recorded.event';
+import { PrepareGameCommand } from 'gameserver/command/PrepareGame/prepare-game.command';
+import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
+import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
 
 export const uuid = (): string => uuidr.v4();
-
 
 @Injectable()
 export class GameserverSaga {
   @Saga()
-  listenReactions = (events$: Observable<any>): Observable<ICommand> => {
+  prepareRoomGame = (events$: Observable<any>): Observable<ICommand> => {
     return events$.pipe(
       ofType(RoomReadyEvent),
       map(
-        e =>
-          new FindGameServerCommand(
-            new MatchInfo(
-              e.mode,
-              e.roomId,
-              e.players,
-              0,
-              e.version,
-            ),
-            0,
-          ),
+        (e: RoomReadyEvent) =>
+          new PrepareGameCommand(e.mode, e.roomId, e.players, e.version),
       ),
     );
   };
 
+  @Saga()
+  findServer = (events$: Observable<any>): Observable<ICommand> => {
+    return events$.pipe(
+      ofType(GamePreparedEvent),
+      map((e: GamePreparedEvent) => new FindGameServerCommand(e, 0)),
+    );
+  };
+
+  // GamePreparedEvent
 
   // @Saga()
   // tournamentGameReady = (events$: Observable<any>): Observable<ICommand> => {
@@ -76,17 +77,25 @@ export class GameserverSaga {
   processRanked = (events$: Observable<any>): Observable<ICommand> => {
     return events$.pipe(
       ofType(MatchRecordedEvent),
-      filter((t: MatchRecordedEvent) => t.type === MatchmakingMode.RANKED || t.type === MatchmakingMode.UNRANKED),
+      filter(
+        (t: MatchRecordedEvent) =>
+          t.type === MatchmakingMode.RANKED ||
+          t.type === MatchmakingMode.UNRANKED,
+      ),
       map((e: MatchRecordedEvent) => {
-
         const losers = e.players
-          .filter(p => p.team !== e.winner)
-          .map(t => new PlayerId(t.steam_id));
+          .filter((p) => p.team !== e.winner)
+          .map((t) => new PlayerId(t.steam_id));
         const winners = e.players
-          .filter(p => p.team === e.winner)
-          .map(t => new PlayerId(t.steam_id));
+          .filter((p) => p.team === e.winner)
+          .map((t) => new PlayerId(t.steam_id));
 
-        return new ProcessRankedMatchCommand(e.matchId, winners, losers, e.type);
+        return new ProcessRankedMatchCommand(
+          e.matchId,
+          winners,
+          losers,
+          e.type,
+        );
       }),
     );
   };
