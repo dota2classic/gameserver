@@ -35,7 +35,6 @@ import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { makePage } from 'gateway/util/make-page';
 import { ProcessRankedMatchHandler } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.handler';
 import { AchievementKey } from 'gateway/shared-types/achievemen-key';
-import { measure } from 'util/measure';
 
 @Controller("player")
 @ApiTags("player")
@@ -176,7 +175,6 @@ offset $2 limit $3`,
 
   @CacheTTL(120)
   @Get("/summary/:version/:id")
-  @measure("playerSummary")
   async playerSummary(
     @Param("version") version: Dota2Version,
     @Param("id") steam_id: string,

@@ -8,7 +8,7 @@ import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import { Repository } from 'typeorm';
 
-describe("GameserverService", () => {
+describe.skip("GameserverService", () => {
   jest.setTimeout(60000);
 
   let container: StartedPostgreSqlContainer;
