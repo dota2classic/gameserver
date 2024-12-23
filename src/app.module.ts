@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppService } from 'app.service';
 import { CqrsModule } from '@nestjs/cqrs';
-import { ClientsModule, RedisOptions, Transport } from '@nestjs/microservices';
+import { ClientsModule, RedisOptions, RmqOptions, Transport } from '@nestjs/microservices';
 import { GameServerDomain } from 'gameserver';
 import { CoreController } from 'core.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -59,6 +59,34 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm/dist/interfaces/typeorm-op
       inject: [ConfigService],
     }),
     TypeOrmModule.forFeature(Entities),
+    ClientsModule.registerAsync([
+      {
+        name: 'RMQ',
+        useFactory(config: ConfigService): RmqOptions {
+          return {
+            transport: Transport.RMQ,
+            options: {
+              urls: [
+                {
+                  hostname: config.get<string>('rabbitmq.host'),
+                  port: config.get<number>('rabbitmq.port'),
+                  protocol: 'amqp',
+                  username: config.get<string>('rabbitmq.user'),
+                  password: config.get<string>('rabbitmq.password'),
+                },
+              ],
+              queue: config.get<string>('rabbitmq.queue'),
+              queueOptions: {
+                durable: true,
+              },
+              prefetchCount: 5,
+            },
+          };
+        },
+        inject: [ConfigService],
+        imports: [],
+      },
+    ]),
     ClientsModule.registerAsync([
       {
         name: "QueryCore",

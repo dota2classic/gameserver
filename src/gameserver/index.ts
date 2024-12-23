@@ -32,6 +32,7 @@ import { MatchFailedHandler } from 'gameserver/event-handler/match-failed.handle
 import { PlayerAbandonedHandler } from 'gameserver/event-handler/player-abandoned.handler';
 import { PrepareGameHandler } from 'gameserver/command/PrepareGame/prepare-game.handler';
 import { LobbyReadyHandler } from 'gameserver/event-handler/lobby-ready.handler';
+import { SrcdsServerStartedHandler } from 'gameserver/event-handler/srcds-server-started.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -43,6 +44,7 @@ const CommandHandlers = [
 const EventHandlers = [
   StartFakeMatchHandler,
   LiveMatchUpdateHandler,
+  SrcdsServerStartedHandler,
 
   GameServerStoppedHandler,
   GameServerDiscoveredHandler,

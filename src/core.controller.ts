@@ -18,6 +18,7 @@ import { MatchFailedEvent } from 'gateway/events/match-failed.event';
 import { PlayerAbandonedEvent } from 'gateway/events/bans/player-abandoned.event';
 import { LobbyReadyEvent } from 'gateway/events/lobby-ready.event';
 import { ConfigService } from '@nestjs/config';
+import { SrcdsServerStartedEvent } from 'gateway/events/srcds-server-started.event';
 
 @Controller()
 export class CoreController {
@@ -31,6 +32,11 @@ export class CoreController {
     const buff = data;
     buff.__proto__ = constructor.prototype;
     if (this.config.get("prod")) this.ebus.publish(buff);
+  }
+
+  @EventPattern(SrcdsServerStartedEvent.name)
+  async SrcdsServerStartedEvent(data: SrcdsServerStartedEvent) {
+    this.event(SrcdsServerStartedEvent, data);
   }
 
   @EventPattern(RoomReadyEvent.name)
