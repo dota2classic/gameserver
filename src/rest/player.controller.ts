@@ -35,6 +35,7 @@ import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { makePage } from 'gateway/util/make-page';
 import { ProcessRankedMatchHandler } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.handler';
 import { AchievementKey } from 'gateway/shared-types/achievemen-key';
+import { measure } from 'util/measure';
 
 @Controller("player")
 @ApiTags("player")
@@ -172,8 +173,10 @@ offset $2 limit $3`,
     };
   }
 
+
   @CacheTTL(120)
   @Get("/summary/:version/:id")
+  @measure("playerSummary")
   async playerSummary(
     @Param("version") version: Dota2Version,
     @Param("id") steam_id: string,
@@ -185,36 +188,36 @@ offset $2 limit $3`,
     });
 
     // if it exists in the view, we happy
-    if (lb) {
-      return {
-        rank: lb.rank,
-
-        steam_id: lb.steam_id,
-        mmr: lb.mmr,
-
-        games: lb.games,
-        wins: lb.wins,
-
-        kills: lb.kills,
-        deaths: lb.deaths,
-        assists: lb.assists,
-
-        play_time: lb.play_time,
-        playedAnyGame: lb.any_games > 0,
-
-        hasUnrankedAccess: lb.bot_wins > 0,
-
-        newbieUnrankedGamesLeft:
-          lb.ranked_games > 0
-            ? 0
-            : Math.max(0, UNRANKED_GAMES_REQUIRED_FOR_RANKED - lb.games),
-
-        calibrationGamesLeft: Math.max(
-          ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES - lb.ranked_games,
-          0,
-        ),
-      };
-    }
+    // if (lb) {
+    //   return {
+    //     rank: lb.rank,
+    //
+    //     steam_id: lb.steam_id,
+    //     mmr: lb.mmr,
+    //
+    //     games: lb.games,
+    //     wins: lb.wins,
+    //
+    //     kills: lb.kills,
+    //     deaths: lb.deaths,
+    //     assists: lb.assists,
+    //
+    //     play_time: lb.play_time,
+    //     playedAnyGame: lb.any_games > 0,
+    //
+    //     hasUnrankedAccess: lb.bot_wins > 0,
+    //
+    //     newbieUnrankedGamesLeft:
+    //       lb.ranked_games > 0
+    //         ? 0
+    //         : Math.max(0, UNRANKED_GAMES_REQUIRED_FOR_RANKED - lb.games),
+    //
+    //     calibrationGamesLeft: Math.max(
+    //       ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES - lb.ranked_games,
+    //       0,
+    //     ),
+    //   };
+    // }
 
     const summary: Summary | undefined =
       await this.playerService.fullSummary(steam_id);
