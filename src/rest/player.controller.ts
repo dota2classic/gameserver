@@ -187,37 +187,41 @@ offset $2 limit $3`,
       where: { steam_id },
     });
 
+
+    // Crucial thing for newbie:
+    const hasUnrankedAccess = await this.playerService.hasUnrankedAccess(steam_id)
+
     // if it exists in the view, we happy
-    // if (lb) {
-    //   return {
-    //     rank: lb.rank,
-    //
-    //     steam_id: lb.steam_id,
-    //     mmr: lb.mmr,
-    //
-    //     games: lb.games,
-    //     wins: lb.wins,
-    //
-    //     kills: lb.kills,
-    //     deaths: lb.deaths,
-    //     assists: lb.assists,
-    //
-    //     play_time: lb.play_time,
-    //     playedAnyGame: lb.any_games > 0,
-    //
-    //     hasUnrankedAccess: lb.bot_wins > 0,
-    //
-    //     newbieUnrankedGamesLeft:
-    //       lb.ranked_games > 0
-    //         ? 0
-    //         : Math.max(0, UNRANKED_GAMES_REQUIRED_FOR_RANKED - lb.games),
-    //
-    //     calibrationGamesLeft: Math.max(
-    //       ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES - lb.ranked_games,
-    //       0,
-    //     ),
-    //   };
-    // }
+    if (lb) {
+      return {
+        rank: lb.rank,
+
+        steam_id: lb.steam_id,
+        mmr: lb.mmr,
+
+        games: lb.games,
+        wins: lb.wins,
+
+        kills: lb.kills,
+        deaths: lb.deaths,
+        assists: lb.assists,
+
+        play_time: lb.play_time,
+        playedAnyGame: lb.any_games > 0,
+
+        hasUnrankedAccess: hasUnrankedAccess,
+
+        newbieUnrankedGamesLeft:
+          lb.ranked_games > 0
+            ? 0
+            : Math.max(0, UNRANKED_GAMES_REQUIRED_FOR_RANKED - lb.games),
+
+        calibrationGamesLeft: Math.max(
+          ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES - lb.ranked_games,
+          0,
+        ),
+      };
+    }
 
     const summary: Summary | undefined =
       await this.playerService.fullSummary(steam_id);

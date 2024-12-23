@@ -192,4 +192,13 @@ group by p.steam_id, p.recent_ranked_games, p.mmr, p.games, p.wins, p.any_games,
 
     return some[0];
   }
+
+  public async hasUnrankedAccess(steam_id: string): Promise<boolean> {
+    const result: { count: number }[] =
+      await this.playerInMatchRepository.query(
+        `select count(*) from player_activity pa where pa.win and pa.steam_id = $1`,
+        [steam_id],
+      );
+    return result[0].count > 0;
+  }
 }
