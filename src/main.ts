@@ -2,7 +2,6 @@ import { otelSDK } from 'tracer';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { CommandBus, EventBus, EventPublisher, ofType, QueryBus } from '@nestjs/cqrs';
-import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT } from 'env';
 import { Transport } from '@nestjs/microservices';
 import { inspect } from 'util';
 import { Logger } from '@nestjs/common';
@@ -14,6 +13,9 @@ import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event'
 import { GameServerDiscoveredEvent } from 'gateway/events/game-server-discovered.event';
 import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
 import './util/promise';
+import configuration from 'util/configuration';
+import { ConfigService } from '@nestjs/config';
+import { WinstonWrapper } from 'util/logger';
 
 export function prepareModels(publisher: EventPublisher) {
   // publisher.mergeClassContext(GameServerModel);
@@ -21,16 +23,28 @@ export function prepareModels(publisher: EventPublisher) {
 
 async function bootstrap() {
   await otelSDK.start();
-  const app = await NestFactory.create(AppModule);
+
+  const parsedConfig = configuration();
+  const config = new ConfigService(parsedConfig);
+
+
+  const app = await NestFactory.create(AppModule, {
+    logger: new WinstonWrapper(
+      config.get("fluentbit.host"),
+      config.get<number>("fluentbit.port"),
+      config.get<boolean>("fluentbit.disabled"),
+    ),
+  });
+
   app.connectMicroservice({
     transport: Transport.REDIS,
     options: {
-      host: REDIS_HOST(),
-      port: REDIS_PORT(),
-      // url: REDIS_URL(),
+      username: 'default',
+      host: config.get('redis.host'),
+      port: 6379,
       retryAttempts: Infinity,
       retryDelay: 5000,
-      password: REDIS_PASSWORD(),
+      password: config.get('redis.password')
     },
   });
 

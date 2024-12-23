@@ -4,7 +4,6 @@ import { GetReportsAvailableQuery } from 'gateway/queries/GetReportsAvailable/ge
 import { GetReportsAvailableQueryResult } from 'gateway/queries/GetReportsAvailable/get-reports-available-query.result';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { cached } from 'util/method-cache';
 import { PlayerReportStatusEntity } from 'gameserver/model/player-report-status.entity';
 
 @QueryHandler(GetReportsAvailableQuery)
@@ -18,7 +17,6 @@ export class GetReportsAvailableHandler
     private readonly playerReportRepository: Repository<PlayerReportStatusEntity>,
   ) {}
 
-  @cached(360, GetReportsAvailableQuery.name)
   async execute(
     command: GetReportsAvailableQuery,
   ): Promise<GetReportsAvailableQueryResult> {

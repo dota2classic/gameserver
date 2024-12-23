@@ -6,11 +6,13 @@ import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core'
 import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import { PgInstrumentation } from '@opentelemetry/instrumentation-pg';
-import { JAEGER_EXPORT_URL } from './env';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import configuration from 'util/configuration';
 
+
+const cfg = configuration();
 const exporterOptions = {
-  url: JAEGER_EXPORT_URL, // grcp
+  url: cfg.telemetry.jaeger.url, // grcp
 };
 
 const traceExporter = new OTLPTraceExporter(exporterOptions);

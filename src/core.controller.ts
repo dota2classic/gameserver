@@ -10,7 +10,6 @@ import { PlayerBanHammeredEvent } from 'gateway/events/bans/player-ban-hammered.
 import { ServerSessionSyncEvent } from 'gateway/events/gs/server-session-sync.event';
 import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
 import { PlayerDeclinedGameEvent } from 'gateway/events/mm/player-declined-game.event';
-import { isDev } from 'env';
 import { TournamentGameReadyEvent } from 'gateway/events/tournament/tournament-game-ready.event';
 import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event';
 import { StartFakeMatchEvent } from 'gateway/events/start-fake-match.event';
@@ -18,17 +17,20 @@ import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
 import { MatchFailedEvent } from 'gateway/events/match-failed.event';
 import { PlayerAbandonedEvent } from 'gateway/events/bans/player-abandoned.event';
 import { LobbyReadyEvent } from 'gateway/events/lobby-ready.event';
-
+import { ConfigService } from '@nestjs/config';
 
 @Controller()
 export class CoreController {
-  constructor(private readonly ebus: EventBus) {}
+  constructor(
+    private readonly ebus: EventBus,
+    private readonly config: ConfigService,
+  ) {}
   private readonly logger = new Logger(CoreController.name);
 
   private event<T>(constructor: Constructor<T>, data: any) {
     const buff = data;
     buff.__proto__ = constructor.prototype;
-    if (!isDev) this.ebus.publish(buff);
+    if (this.config.get("prod")) this.ebus.publish(buff);
   }
 
   @EventPattern(RoomReadyEvent.name)

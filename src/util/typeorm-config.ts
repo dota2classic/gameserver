@@ -1,6 +1,4 @@
 import { MatchEntity } from 'gameserver/model/match.entity';
-import { DB_HOST, DB_PASSWORD, DB_USERNAME } from 'env';
-import { TypeOrmModuleOptions } from '@nestjs/typeorm/dist/interfaces/typeorm-options.interface';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
@@ -46,21 +44,3 @@ export const Entities: Function[] = [
   ItemView,
   ItemHeroView,
 ];
-
-
-export const prodDbConfig: TypeOrmModuleOptions = {
-  type: 'postgres',
-  database: 'postgres',
-  host: DB_HOST(),
-  port: 5432,
-  username: DB_USERNAME(),
-  password: DB_PASSWORD(),
-  entities: Entities,
-  synchronize: true,
-  dropSchema: false,
-  poolSize: 50,
-
-  // maxQueryExecutionTime: 100,
-
-  ssl: false,
-};

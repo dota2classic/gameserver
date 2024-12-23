@@ -5,7 +5,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerService } from 'gameserver/gameserver.service';
 import { HeroStatsDto, PlayerHeroPerformance } from 'rest/dto/hero.dto';
-import { cached } from 'util/method-cache';
 import { PlayerSummaryDto } from 'rest/dto/player.dto';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
@@ -31,7 +30,6 @@ export class PlayerService {
     private readonly connection: Connection,
   ) {}
 
-  @cached(100, "getRank")
   public async getRank(
     version: Dota2Version,
     steam_id: string,
@@ -78,7 +76,6 @@ where p.mmr > $3
     return rank2[0].count + 1;
   }
 
-  @cached(100, "heroStats")
   async heroStats(
     version: Dota2Version,
     steam_id: string,
@@ -104,7 +101,6 @@ group by pim.hero, pim."playerId"
     );
   }
 
-  @cached(100, "winrateLastRankedGames")
   async winrateLastRankedGames(steam_id: string): Promise<number> {
     const some: { is_win: boolean }[] = await this.playerInMatchRepository
       .query(`

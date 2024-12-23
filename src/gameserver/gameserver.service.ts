@@ -20,7 +20,7 @@ import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
 import { DotaTeam } from 'gateway/shared-types/dota-team';
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { ProcessAchievementsCommand } from 'gameserver/command/ProcessAchievements/process-achievements.command';
-import { isDev } from 'env';
+import { ConfigService } from '@nestjs/config';
 
 export interface MatchD2Com {
   id: number;
@@ -86,11 +86,12 @@ export class GameServerService {
     private readonly ebus: EventBus,
     @InjectRepository(MatchEntity)
     private readonly matchEntityRepository: Repository<MatchEntity>,
+    private readonly config: ConfigService,
   ) {
     // this.migrateShit();
     // this.migrateItems();
     // this.migrated2com();
-    if(!isDev) {
+    if (config.get("prod")) {
       this.migratePendoSite();
       // this.testMMRPreview();
       this.refreshLeaderboardView();
@@ -126,15 +127,15 @@ export class GameServerService {
     await this.leaderboardViewRepository.query(
       `refresh materialized view leaderboard_view`,
     );
-    this.logger.log('Refreshed leaderboard_view');
+    this.logger.log("Refreshed leaderboard_view");
     await this.leaderboardViewRepository.query(
       `refresh materialized view item_view`,
     );
-    this.logger.log('Refreshed item_view');
+    this.logger.log("Refreshed item_view");
     await this.leaderboardViewRepository.query(
       `refresh materialized view item_hero_view`,
     );
-    this.logger.log('Refreshed item_hero_view');
+    this.logger.log("Refreshed item_hero_view");
   }
 
   @Cron(CronExpression.EVERY_HOUR)
@@ -147,10 +148,10 @@ export class GameServerService {
     for (let page = 0; page < 1000; page++) {
       const { Matches } = await fetch(
         `https://dota2classic.com/API/Match/List?page=${page}`,
-      ).then(it => it.json());
-      const matchIds: number[] = Matches.map(it => it.MatchHistory.id);
+      ).then((it) => it.json());
+      const matchIds: number[] = Matches.map((it) => it.MatchHistory.id);
       if (matchIds.length === 0) {
-        this.logger.log('Done syncing matches with d2com');
+        this.logger.log("Done syncing matches with d2com");
         return;
       }
 
@@ -176,13 +177,13 @@ export class GameServerService {
       }
       this.logger.verbose(`Migrated page ${page}`);
       if (hasExisting) {
-        this.logger.log(`Caught up in matches at match ${matchIds.join(',')}`);
+        this.logger.log(`Caught up in matches at match ${matchIds.join(",")}`);
         successfulPages++;
         // break;
       }
       if (successfulPages >= 5) {
         this.logger.log(
-          'We are surely caught up: 5 successful pages in a row. Stopping scraper',
+          "We are surely caught up: 5 successful pages in a row. Stopping scraper",
         );
         return;
       }
@@ -197,9 +198,43 @@ export class GameServerService {
         start_timestamp: LessThanOrEqual(new Date()),
       },
       order: {
-        start_timestamp: 'DESC',
+        start_timestamp: "DESC",
       },
     });
+  }
+
+  public async getGamesPlayed(
+    season: GameSeasonEntity,
+    pid: PlayerId,
+    modes: MatchmakingMode[] | undefined,
+    beforeTimestamp: string,
+  ) {
+    let plr = await this.versionPlayerRepository.findOne({
+      where: { version: Dota2Version.Dota_681, steam_id: pid.value },
+    });
+
+    if (!plr) {
+      plr = new VersionPlayerEntity();
+      plr.steam_id = pid.value;
+      plr.version = season.version;
+      plr.mmr = VersionPlayerEntity.STARTING_MMR;
+      plr.hidden_mmr = VersionPlayerEntity.STARTING_MMR;
+      await this.versionPlayerRepository.save(plr);
+    }
+
+    let q = this.playerInMatchRepository
+      .createQueryBuilder("pim")
+      .innerJoin("pim.match", "m")
+      .where("pim.playerId = :id", { id: plr.steam_id })
+      .andWhere("m.timestamp > :season", { season: season.start_timestamp })
+      .andWhere("m.timestamp < :current_timestamp", {
+        current_timestamp: beforeTimestamp,
+      });
+
+    if (modes != undefined)
+      q = q.andWhere("m.matchmaking_mode in (:...modes)", { modes });
+
+    return q.getCount();
   }
 
   private async migrateMatch(j: MatchD2Com) {
@@ -220,8 +255,8 @@ export class GameServerService {
         Dota_GameMode.ALLPICK,
         j.matchmaking_mode,
         j.timestamp / 1000, // We need to divide here because GameResultsHandler multiplies by 1000
-        'dota2classic.com',
-        j.players.map(player => ({
+        "dota2classic.com",
+        j.players.map((player) => ({
           steam_id: player.playerId,
           team: player.team,
           kills: player.kills,
@@ -252,71 +287,35 @@ export class GameServerService {
     );
   }
 
-  public async getGamesPlayed(
-    season: GameSeasonEntity,
-    pid: PlayerId,
-    modes: MatchmakingMode[] | undefined,
-    beforeTimestamp: string,
-  ) {
-    let plr = await this.versionPlayerRepository.findOne({
-      where: { version: Dota2Version.Dota_681, steam_id: pid.value },
-    });
-
-    if (!plr) {
-      plr = new VersionPlayerEntity();
-      plr.steam_id = pid.value;
-      plr.version = season.version;
-      plr.mmr = VersionPlayerEntity.STARTING_MMR;
-      plr.hidden_mmr = VersionPlayerEntity.STARTING_MMR;
-      await this.versionPlayerRepository.save(plr);
-    }
-
-    let q = this.playerInMatchRepository
-      .createQueryBuilder('pim')
-      .innerJoin('pim.match', 'm')
-      .where('pim.playerId = :id', { id: plr.steam_id })
-      .andWhere('m.timestamp > :season', { season: season.start_timestamp })
-      .andWhere('m.timestamp < :current_timestamp', {
-        current_timestamp: beforeTimestamp,
-      });
-
-    if (modes != undefined)
-      q = q.andWhere('m.matchmaking_mode in (:...modes)', { modes });
-
-    return q.getCount();
-  }
-
   private async scrapMatch(matchId: number): Promise<MatchD2Com> {
     const url = `https://dota2classic.com/Match/${matchId}`;
 
     const $ = await cheerio.fromURL(url);
 
-    const matchId2 = $('.match-info-id')
+    const matchId2 = $(".match-info-id").text().replace("Match ID: ", "");
+    const [m, s] = $(".match-info-duration")
       .text()
-      .replace('Match ID: ', '');
-    const [m, s] = $('.match-info-duration')
-      .text()
-      .split(':')
-      .map(it => it.trim())
+      .split(":")
+      .map((it) => it.trim())
       .map(Number);
 
     const duration = m * 60 + s;
 
-    const winner = $('.match-info-radiant-victory')
+    const winner = $(".match-info-radiant-victory")
       .text()
       .toLowerCase()
-      .includes('radiant')
+      .includes("radiant")
       ? 2
       : 3;
 
-    const date = new Date($('.match-info-date time').attr('datetime'));
+    const date = new Date($(".match-info-date time").attr("datetime"));
 
     function toCertainNumber(numberlike: string) {
       // 14.2k
       // if has 'k' in it, remove it
-      let strippedLetters = numberlike.replace('k', '');
+      let strippedLetters = numberlike.replace("k", "");
       return Math.round(
-        strippedLetters.includes('.')
+        strippedLetters.includes(".")
           ? Number(strippedLetters) * 1000
           : Number(strippedLetters),
       );
@@ -324,67 +323,64 @@ export class GameServerService {
 
     const gs = this;
 
-    const players = $('.player-row')
-      .map(function(i) {
+    const players = $(".player-row")
+      .map(function (i) {
         const $el = $(this);
 
-        const teamWrap = $el
-          .parent()
-          .parent()
-          .parent();
+        const teamWrap = $el.parent().parent().parent();
         const team = teamWrap
-          .find('.team-title')
+          .find(".team-title")
           .text()
           .toLowerCase()
-          .includes('radiant')
+          .includes("radiant")
           ? 2
           : 3;
 
-        const heroid = $el.find('.player-hero').data('heroid');
-
+        const heroid = $el.find(".player-hero").data("heroid");
 
         // There can be spirit bear here resulting in undefined heroid
-        if(!heroid){
-          gs.logger.warn(`Skipping spirit bear, text is: ${$el.find('.player-name-link').text()}`)
+        if (!heroid) {
+          gs.logger.warn(
+            `Skipping spirit bear, text is: ${$el.find(".player-name-link").text()}`,
+          );
           return null;
         }
 
         const hero =
-          `npc_dota_hero_` + HeroMap.find(it => it.id === heroid)?.name;
+          `npc_dota_hero_` + HeroMap.find((it) => it.id === heroid)?.name;
 
         if (!hero) {
           throw new Error(`Unknown hero id ${heroid}`);
         }
 
-
         const steam64 = $el
-          .find('.player-name-link')
-          .attr('href')
-          .split('/')[2];
-        const level = parseInt($el.find('.player-level').text());
-        const kills = parseInt($el.find('.player-kills').text());
-        const deaths = parseInt($el.find('.player-deaths').text());
-        const assists = parseInt($el.find('.player-assists').text());
-        const gpm = parseInt($el.find('.player-gpm').text());
-        const xpm = parseInt($el.find('.player-xpm').text());
-        const hd = toCertainNumber($el.find('.player-hd').text());
-        const td = toCertainNumber($el.find('.player-td').text());
+          .find(".player-name-link")
+          .attr("href")
+          .split("/")[2];
+        const level = parseInt($el.find(".player-level").text());
+        const kills = parseInt($el.find(".player-kills").text());
+        const deaths = parseInt($el.find(".player-deaths").text());
+        const assists = parseInt($el.find(".player-assists").text());
+        const gpm = parseInt($el.find(".player-gpm").text());
+        const xpm = parseInt($el.find(".player-xpm").text());
+        const hd = toCertainNumber($el.find(".player-hd").text());
+        const td = toCertainNumber($el.find(".player-td").text());
         // const gold = parseInt();
         // 14.2k
         // if has 'k' in it, remove it
-        const gold = toCertainNumber($el.find('.player-gold').text());
-        const last_hits = parseInt($el.find('.player-lasthits').text());
-        const denies = parseInt($el.find('.player-denies').text());
+        const gold = toCertainNumber($el.find(".player-gold").text());
+        const last_hits = parseInt($el.find(".player-lasthits").text());
+        const denies = parseInt($el.find(".player-denies").text());
 
         const itemList = $el
-          .find('.player-stat-item')
+          .find(".player-stat-item")
           .toArray()
-          .map(it => it.attribs['data-itemid'])
+          .map((it) => it.attribs["data-itemid"])
           .map(Number); //.map(itemid => items.find(it => it.id === itemid).name);
 
         return {
           steam64: steam64,
-          playerId: (BigInt(steam64) - BigInt('76561197960265728')).toString(),
+          playerId: (BigInt(steam64) - BigInt("76561197960265728")).toString(),
           kills,
           deaths,
           assists,
@@ -409,14 +405,14 @@ export class GameServerService {
       .toArray()
       .filter(Boolean);
 
-    const isBotMatch = players.find(it => Number(it.steam64) <= 10);
+    const isBotMatch = players.find((it) => Number(it.steam64) <= 10);
 
     return {
       id: matchId,
       players,
       timestamp: date.getTime(),
       duration,
-      server: 'dota2classic.com',
+      server: "dota2classic.com",
       winner: winner,
       matchmaking_mode: isBotMatch ? 7 : 1, // 1 = unranked
     };
@@ -432,10 +428,10 @@ export class GameServerService {
         ]),
       },
       order: {
-        timestamp: 'ASC',
+        timestamp: "ASC",
       },
       // take: 20,
-      relations: ['players'],
+      relations: ["players"],
     });
     for (let i = 0; i < matches.length; i++) {
       const match = matches[i];
@@ -443,11 +439,11 @@ export class GameServerService {
         new ProcessRankedMatchCommand(
           match.id,
           match.players
-            .filter(t => t.team === match.winner)
-            .map(t => new PlayerId(t.playerId)),
+            .filter((t) => t.team === match.winner)
+            .map((t) => new PlayerId(t.playerId)),
           match.players
-            .filter(t => t.team !== match.winner)
-            .map(t => new PlayerId(t.playerId)),
+            .filter((t) => t.team !== match.winner)
+            .map((t) => new PlayerId(t.playerId)),
           // tODO:
           MatchmakingMode.UNRANKED,
         ),

@@ -47,7 +47,9 @@
     "cache-manager-redis-yet": "^5.1.4",
     "cheerio": "^1.0.0",
     "dotenv": "^16.4.5",
+    "fluent-logger": "^3.4.1",
     "ioredis": "^5.4.1",
+    "js-yaml": "^4.1.0",
     "pg": "^8.13.1",
     "pg-hstore": "^2.3.4",
     "reflect-metadata": "^0.2.2",
@@ -57,7 +59,8 @@
     "sequelize": "^6.37.5",
     "sqlite3": "^5.1.7",
     "swagger-ui-express": "^5.0.1",
-    "typeorm": "^0.3.20"
+    "typeorm": "^0.3.20",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.4.8",
@@ -69,6 +72,7 @@
     "@types/cron": "^2.4.3",
     "@types/express": "^5.0.0",
     "@types/jest": "29.5.14",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.10.0",
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "8.16.0",

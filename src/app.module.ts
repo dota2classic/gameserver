@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { AppService } from 'app.service';
 import { CqrsModule } from '@nestjs/cqrs';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_URL } from 'env';
+import { ClientsModule, RedisOptions, Transport } from '@nestjs/microservices';
 import { GameServerDomain } from 'gameserver';
 import { CoreController } from 'core.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Entities, prodDbConfig } from 'util/typeorm-config';
+import { Entities } from 'util/typeorm-config';
 import { QueryController } from 'query.controller';
 import { Mapper } from 'rest/mapper';
 import { PlayerController } from 'rest/player.controller';
@@ -17,7 +16,6 @@ import { MetaController } from 'rest/meta/meta.controller';
 import { MetaService } from 'rest/meta/meta.service';
 import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
 import { outerQuery } from 'gateway/util/outerQuery';
-import { QueryCache } from 'rcache';
 import { CacheModule } from '@nestjs/cache-manager';
 import { MatchService } from 'rest/match/match.service';
 import { MatchMapper } from 'rest/match/match.mapper';
@@ -26,36 +24,55 @@ import { MetaMapper } from 'rest/meta/meta.mapper';
 import { InfoMapper } from 'rest/info/info.mapper';
 import { InfoService } from 'rest/info/info.service';
 import { CrimeController } from 'rest/crime/crime.controller';
-
-
-export function qCache<T, B>() {
-  return new QueryCache<T, B>({
-    url: REDIS_URL(),
-    password: REDIS_PASSWORD(),
-    ttl: 10,
-  });
-}
+import configuration from 'util/configuration';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModuleOptions } from '@nestjs/typeorm/dist/interfaces/typeorm-options.interface';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [configuration],
+    }),
     CacheModule.register(),
     ScheduleModule.forRoot(),
     CqrsModule,
-    TypeOrmModule.forRoot(
-      prodDbConfig
-    ),
+    TypeOrmModule.forRootAsync({
+      useFactory(config: ConfigService): TypeOrmModuleOptions {
+        return {
+          type: "postgres",
+          database: "postgres",
+          host: config.get("postgres.host"),
+          username: config.get("postgres.username"),
+          password: config.get("postgres.password"),
+          entities: Entities,
+
+          port: 5432,
+          synchronize: true,
+          dropSchema: false,
+          poolSize: 50,
+
+          ssl: false,
+        };
+      },
+      imports: [],
+      inject: [ConfigService],
+    }),
     TypeOrmModule.forFeature(Entities),
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
-        name: 'QueryCore',
-        transport: Transport.REDIS,
-        options: {
-          host: REDIS_HOST(),
-          port: parseInt(REDIS_PORT() as string),
-          retryAttempts: Infinity,
-          password: REDIS_PASSWORD(),
-          retryDelay: 5000,
+        name: "QueryCore",
+        useFactory(config: ConfigService): RedisOptions {
+          return {
+            transport: Transport.REDIS,
+            options: {
+              host: config.get("redis.host"),
+              password: config.get("redis.password"),
+            },
+          };
         },
+        inject: [ConfigService],
+        imports: [],
       },
     ]),
   ],
@@ -66,7 +83,7 @@ export function qCache<T, B>() {
     PlayerController,
     InfoController,
     MetaController,
-    CrimeController
+    CrimeController,
   ],
   providers: [
     AppService,
@@ -79,7 +96,7 @@ export function qCache<T, B>() {
     InfoService,
     Mapper,
     ...GameServerDomain,
-    outerQuery(GetUserInfoQuery, 'QueryCore', qCache())
+    outerQuery(GetUserInfoQuery, "QueryCore"),
   ],
 })
 export class AppModule {}

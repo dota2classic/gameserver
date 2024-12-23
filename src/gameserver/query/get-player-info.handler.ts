@@ -7,7 +7,6 @@ import { Repository } from 'typeorm';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import { PlayerService } from 'rest/service/player.service';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { cached } from 'util/method-cache';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
@@ -29,7 +28,6 @@ export class GetPlayerInfoHandler
     private readonly playerService: PlayerService,
   ) {}
 
-  @cached(60, GetPlayerInfoQuery.name)
   async execute(
     command: GetPlayerInfoQuery,
   ): Promise<GetPlayerInfoQueryResult> {
