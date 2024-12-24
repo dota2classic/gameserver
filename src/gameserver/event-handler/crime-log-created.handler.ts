@@ -87,11 +87,11 @@ export class CrimeLogCreatedHandler
     if (!thisCrime) return;
 
     // We don't punish for crimes in bots
-    if (thisCrime.lobby_type === MatchmakingMode.BOTS) {
+    if (thisCrime.lobby_type === MatchmakingMode.BOTS || thisCrime.lobby_type === MatchmakingMode.LOBBY) {
       thisCrime.handled = true;
       thisCrime.banTime = 0;
       await this.playerCrimeLogEntityRepository.save(thisCrime);
-      this.logger.verbose("Don't punish for crime in bot match", {
+      this.logger.verbose("Don't punish for crime in bot/lobby match", {
         steam_id: thisCrime.steam_id,
         id: thisCrime.id,
         crime: thisCrime.crime,
