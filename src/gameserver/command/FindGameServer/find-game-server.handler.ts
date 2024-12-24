@@ -14,10 +14,7 @@ import {
 import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
 import { GetUserInfoQueryResult } from 'gateway/queries/GetUserInfo/get-user-info-query.result';
 import { MatchEntity } from 'gameserver/model/match.entity';
-import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
-import { Dota_Map } from 'gateway/shared-types/dota-map';
 import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
 import { ConfigService } from '@nestjs/config';
 
@@ -63,40 +60,6 @@ export class FindGameServerHandler
     await this.submitQueueTask(m.id, gsInfo);
   }
 
-  private async getMapForMatchMode(mode: MatchmakingMode): Promise<Dota_Map> {
-    const mapping = await this.matchmakingModeMappingEntityRepository.findOne({
-      where: {
-        lobbyType: mode,
-      },
-    });
-
-    if (!mapping) {
-      this.logger.error(
-        `No mapping found for lobby type ${mode}! Returning all pick`,
-      );
-      return Dota_Map.DOTA;
-    }
-    return mapping.dotaMap;
-  }
-
-  private async getGameModeForMatchMode(
-    mode: MatchmakingMode,
-  ): Promise<Dota_GameMode> {
-    const mapping = await this.matchmakingModeMappingEntityRepository.findOne({
-      where: {
-        lobbyType: mode,
-      },
-    });
-
-    if (!mapping) {
-      this.logger.error(
-        `No mapping found for lobby type ${mode}! Returning all pick`,
-      );
-      return Dota_GameMode.ALLPICK;
-    }
-    return mapping.dotaGameMode;
-  }
-
   private async extendMatchInfo(
     matchInfo: GamePreparedEvent,
   ): Promise<GSMatchInfo> {
@@ -117,8 +80,8 @@ export class FindGameServerHandler
 
     return new GSMatchInfo(
       matchInfo.mode,
-      await this.getMapForMatchMode(matchInfo.mode),
-      await this.getGameModeForMatchMode(matchInfo.mode),
+      matchInfo.map,
+      matchInfo.gameMode,
       matchInfo.roomId,
       players,
       matchInfo.version,
