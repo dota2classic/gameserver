@@ -37,7 +37,7 @@ export class AchievementService {
       ) =>
       (
         key: AchievementKey,
-        peopleOnly: boolean,
+        modes: MatchmakingMode[],
         maxProgress: number,
         progress: (pim: PlayerInMatchEntity, m: FinishedMatchEntity) => number,
       ) => {
@@ -46,9 +46,7 @@ export class AchievementService {
           maxProgress = maxProgress;
 
           supportsLobbyType(type: MatchmakingMode): boolean {
-            return peopleOnly
-              ? BaseAchievement.REAL_LOBBY_TYPES.includes(type)
-              : true;
+            return modes.includes(type);
           }
 
           async getProgress(
@@ -74,30 +72,76 @@ export class AchievementService {
     const runningAchievement = createRunningAchievement(map, p, f);
 
     runningAchievement(
-      AchievementKey.HARDCORE, true,
+      AchievementKey.HARDCORE,
+      BaseAchievement.REAL_LOBBY_TYPES,
       1,
       (t, m) => +(t.level === 25 && t.team === m.winner && t.deaths === 0),
     );
-    runningAchievement(AchievementKey.GPM_1000, true, 1000, (t) => t.gpm);
-
-    runningAchievement(AchievementKey.XPM_1000, true, 1000, (t) => t.xpm);
-    runningAchievement(AchievementKey.LAST_HITS_1000, true, 1000, (t) => t.last_hits);
-    runningAchievement(AchievementKey.DENIES_50, true, 50, (t) => t.denies);
+    runningAchievement(
+      AchievementKey.GPM_1000,
+      BaseAchievement.REAL_LOBBY_TYPES,
+      1000,
+      (t) => t.gpm,
+    );
 
     runningAchievement(
-      AchievementKey.GPM_XPM_1000, true,
+      AchievementKey.XPM_1000,
+      BaseAchievement.REAL_LOBBY_TYPES,
+      1000,
+      (t) => t.xpm,
+    );
+    runningAchievement(
+      AchievementKey.LAST_HITS_1000,
+      BaseAchievement.REAL_LOBBY_TYPES,
+      1000,
+      (t) => t.last_hits,
+    );
+    runningAchievement(
+      AchievementKey.DENIES_50,
+      BaseAchievement.REAL_LOBBY_TYPES,
+      50,
+      (t) => t.denies,
+    );
+
+    runningAchievement(
+      AchievementKey.GPM_XPM_1000,
+      BaseAchievement.REAL_LOBBY_TYPES,
       1,
       (t) => +(t.gpm >= 1000 && t.xpm >= 1000),
     );
 
     runningAchievement(
-      AchievementKey.WIN_1HR_GAME, true,
+      AchievementKey.WIN_1HR_GAME,
+      BaseAchievement.REAL_LOBBY_TYPES,
       1,
       (t, m) => +(t.team === m.winner && m.duration >= 3600),
     );
 
     runningAchievement(
-      AchievementKey.WIN_1HR_GAME_AGAINST_TECHIES, true,
+      AchievementKey.WIN_BOT_GAME,
+      [MatchmakingMode.BOTS],
+      1,
+      (t, m) => +(t.team === m.winner),
+    );
+
+
+    runningAchievement(
+      AchievementKey.WIN_BOT_GAME,
+      [MatchmakingMode.BOTS],
+      1,
+      (t, m) => +(t.team === m.winner),
+    );
+
+    runningAchievement(
+      AchievementKey.WIN_SOLOMID_GAME,
+      [MatchmakingMode.SOLOMID],
+      1,
+      (t, m) => +(t.team === m.winner),
+    );
+
+    runningAchievement(
+      AchievementKey.WIN_1HR_GAME_AGAINST_TECHIES,
+      BaseAchievement.REAL_LOBBY_TYPES,
       1,
       (t, m) =>
         +(
