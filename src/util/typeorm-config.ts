@@ -16,6 +16,7 @@ import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { ItemHeroView } from 'gameserver/model/item-hero.view';
 import { AchievementEntity } from 'gameserver/model/achievement.entity';
 import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
+import { PlayerIpEntity } from 'gameserver/model/player-ip.entity';
 
 export const Entities: Function[] = [
   GameSeasonEntity,
@@ -43,4 +44,5 @@ export const Entities: Function[] = [
 
   ItemView,
   ItemHeroView,
+  PlayerIpEntity
 ];

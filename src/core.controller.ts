@@ -19,6 +19,7 @@ import { PlayerAbandonedEvent } from 'gateway/events/bans/player-abandoned.event
 import { LobbyReadyEvent } from 'gateway/events/lobby-ready.event';
 import { ConfigService } from '@nestjs/config';
 import { SrcdsServerStartedEvent } from 'gateway/events/srcds-server-started.event';
+import { PlayerConnectedEvent } from 'gateway/events/srcds/player-connected.event';
 
 @Controller()
 export class CoreController {
@@ -122,5 +123,10 @@ export class CoreController {
   @EventPattern(MatchFailedEvent.name)
   async MatchFailedEvent(data: MatchFailedEvent) {
     this.event(MatchFailedEvent, data);
+  }
+
+  @EventPattern(PlayerConnectedEvent.name)
+  async PlayerConnectedEvent(data: PlayerConnectedEvent) {
+    this.event(PlayerConnectedEvent, data);
   }
 }
