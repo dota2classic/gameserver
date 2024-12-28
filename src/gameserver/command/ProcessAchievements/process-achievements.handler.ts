@@ -9,7 +9,6 @@ import { AchievementEntity } from 'gameserver/model/achievement.entity';
 import { combos } from 'util/cross';
 import { AchievementCompleteEvent } from 'gameserver/event/achievement-complete.event';
 import { AchievementService } from 'gameserver/achievement.service';
-import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 @CommandHandler(ProcessAchievementsCommand)
 export class ProcessAchievementsHandler
@@ -32,12 +31,6 @@ export class ProcessAchievementsHandler
     const fm = await this.finishedMatchEntityRepository.findOne({
       where: { id: matchId },
     });
-
-    if (
-      matchmakingMode !== MatchmakingMode.RANKED &&
-      matchmakingMode !== MatchmakingMode.UNRANKED
-    )
-      return;
 
     const handles = combos(
       fm.players,
