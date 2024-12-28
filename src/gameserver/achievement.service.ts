@@ -7,6 +7,7 @@ import { AchievementProgress, BaseAchievement } from 'gameserver/achievements/ba
 import { WinstreakAchievement } from 'gameserver/achievements/winstreak.achievement';
 import { AllHeroChallengeAchievement } from 'gameserver/achievements/all-hero-challenge.achievement';
 import { AchievementKey } from 'gateway/shared-types/achievemen-key';
+import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 @Injectable()
 export class AchievementService {
@@ -14,13 +15,9 @@ export class AchievementService {
 
   constructor(
     @InjectRepository(FinishedMatchEntity)
-    private readonly finishedMatchEntityRepository: Repository<
-      FinishedMatchEntity
-    >,
+    private readonly finishedMatchEntityRepository: Repository<FinishedMatchEntity>,
     @InjectRepository(PlayerInMatchEntity)
-    private readonly playerInMatchEntityRepository: Repository<
-      PlayerInMatchEntity
-    >,
+    private readonly playerInMatchEntityRepository: Repository<PlayerInMatchEntity>,
   ) {
     this.achievementMap = this.createAchievements(
       playerInMatchEntityRepository,
@@ -32,73 +29,82 @@ export class AchievementService {
     p: Repository<PlayerInMatchEntity>,
     f: Repository<FinishedMatchEntity>,
   ) {
-    const createRunningAchievement = (
-      map: Map<AchievementKey, BaseAchievement>,
-      p: Repository<PlayerInMatchEntity>,
-      f: Repository<FinishedMatchEntity>,
-    ) => (
-      key: AchievementKey,
-      maxProgress: number,
-      progress: (pim: PlayerInMatchEntity, m: FinishedMatchEntity) => number,
-    ) => {
-      const c = new (class extends BaseAchievement {
-        key = key;
-        maxProgress = maxProgress;
+    const createRunningAchievement =
+      (
+        map: Map<AchievementKey, BaseAchievement>,
+        p: Repository<PlayerInMatchEntity>,
+        f: Repository<FinishedMatchEntity>,
+      ) =>
+      (
+        key: AchievementKey,
+        peopleOnly: boolean,
+        maxProgress: number,
+        progress: (pim: PlayerInMatchEntity, m: FinishedMatchEntity) => number,
+      ) => {
+        const c = new (class extends BaseAchievement {
+          key = key;
+          maxProgress = maxProgress;
 
-        async getProgress(
-          pim: PlayerInMatchEntity,
-          match: FinishedMatchEntity,
-        ): Promise<AchievementProgress> {
-          const p = progress(pim, match);
+          supportsLobbyType(type: MatchmakingMode): boolean {
+            return peopleOnly
+              ? BaseAchievement.REAL_LOBBY_TYPES.includes(type)
+              : true;
+          }
 
-          return {
-            progress: p,
-            matchId: match.id,
-            hero: pim.hero,
-          };
-        }
-      })(f, p);
+          async getProgress(
+            pim: PlayerInMatchEntity,
+            match: FinishedMatchEntity,
+          ): Promise<AchievementProgress> {
+            const p = progress(pim, match);
 
-      map.set(key, c);
+            return {
+              progress: p,
+              matchId: match.id,
+              hero: pim.hero,
+            };
+          }
+        })(f, p);
 
-      return c;
-    };
+        map.set(key, c);
+
+        return c;
+      };
 
     const map = new Map<AchievementKey, BaseAchievement>();
     const runningAchievement = createRunningAchievement(map, p, f);
 
     runningAchievement(
-      AchievementKey.HARDCORE,
+      AchievementKey.HARDCORE, true,
       1,
       (t, m) => +(t.level === 25 && t.team === m.winner && t.deaths === 0),
     );
-    runningAchievement(AchievementKey.GPM_1000, 1000, t => t.gpm);
+    runningAchievement(AchievementKey.GPM_1000, true, 1000, (t) => t.gpm);
 
-    runningAchievement(AchievementKey.XPM_1000, 1000, t => t.xpm);
-    runningAchievement(AchievementKey.LAST_HITS_1000, 1000, t => t.last_hits);
-    runningAchievement(AchievementKey.DENIES_50, 50, t => t.denies);
+    runningAchievement(AchievementKey.XPM_1000, true, 1000, (t) => t.xpm);
+    runningAchievement(AchievementKey.LAST_HITS_1000, true, 1000, (t) => t.last_hits);
+    runningAchievement(AchievementKey.DENIES_50, true, 50, (t) => t.denies);
 
     runningAchievement(
-      AchievementKey.GPM_XPM_1000,
+      AchievementKey.GPM_XPM_1000, true,
       1,
-      t => +(t.gpm >= 1000 && t.xpm >= 1000),
+      (t) => +(t.gpm >= 1000 && t.xpm >= 1000),
     );
 
     runningAchievement(
-      AchievementKey.WIN_1HR_GAME,
+      AchievementKey.WIN_1HR_GAME, true,
       1,
       (t, m) => +(t.team === m.winner && m.duration >= 3600),
     );
 
     runningAchievement(
-      AchievementKey.WIN_1HR_GAME_AGAINST_TECHIES,
+      AchievementKey.WIN_1HR_GAME_AGAINST_TECHIES, true,
       1,
       (t, m) =>
         +(
           t.team === m.winner &&
           m.duration >= 3600 &&
           m.players.findIndex(
-            en => en.team != t.team && en.hero === 'npc_dota_hero_techies',
+            (en) => en.team != t.team && en.hero === "npc_dota_hero_techies",
           ) !== -1
         ),
     );

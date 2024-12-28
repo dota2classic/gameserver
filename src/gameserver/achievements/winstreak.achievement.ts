@@ -3,6 +3,7 @@ import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { Repository } from 'typeorm';
 import { AchievementKey } from 'gateway/shared-types/achievemen-key';
+import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 export class WinstreakAchievement extends BaseAchievement {
   key: AchievementKey = AchievementKey.WINSTREAK_10;
@@ -17,18 +18,25 @@ export class WinstreakAchievement extends BaseAchievement {
     this.maxProgress = maxProgress;
   }
 
+  supportsLobbyType(type: MatchmakingMode): boolean {
+    return BaseAchievement.REAL_LOBBY_TYPES.includes(type);
+  }
+
   async getProgress(
     pim: PlayerInMatchEntity,
     match: FinishedMatchEntity,
   ): Promise<AchievementProgress> {
-    const raw: { win: boolean }[] = await this.playerInMatchEntityRepository
-      .query(`select pim.team = f.winner as win, pim."playerId", f.id as matchId, pim.hero
+    const raw: { win: boolean }[] =
+      await this.playerInMatchEntityRepository.query(
+        `select pim.team = f.winner as win, pim."playerId", f.id as matchId, pim.hero
 from player_in_match pim
          inner join finished_match f on f.id = pim."matchId" and f.matchmaking_mode in (0, 1)
 where pim."playerId" = $1
   and f.timestamp < $2
 order by timestamp desc
-limit 9`, [pim.playerId, match.timestamp]);
+limit 9`,
+        [pim.playerId, match.timestamp],
+      );
 
     if (pim.team !== match.winner)
       return {

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { AchievementEntity } from 'gameserver/model/achievement.entity';
 import { Logger } from '@nestjs/common';
 import { AchievementKey } from 'gateway/shared-types/achievemen-key';
+import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 export interface AchievementProgress {
   matchId?: number;
@@ -15,15 +16,16 @@ export abstract class BaseAchievement {
   public abstract key: AchievementKey;
   public abstract maxProgress: number;
 
-  private logger = new Logger('Achievement');
+  public static REAL_LOBBY_TYPES = [
+    MatchmakingMode.RANKED,
+    MatchmakingMode.UNRANKED,
+  ];
+
+  private logger = new Logger("Achievement");
 
   constructor(
-    protected readonly finishedMatchEntityRepository: Repository<
-      FinishedMatchEntity
-    >,
-    protected readonly playerInMatchEntityRepository: Repository<
-      PlayerInMatchEntity
-    >,
+    protected readonly finishedMatchEntityRepository: Repository<FinishedMatchEntity>,
+    protected readonly playerInMatchEntityRepository: Repository<PlayerInMatchEntity>,
   ) {}
 
   abstract getProgress(
@@ -31,14 +33,21 @@ export abstract class BaseAchievement {
     match: FinishedMatchEntity,
   ): Promise<AchievementProgress>;
 
+  public supportsLobbyType(type: MatchmakingMode): boolean {
+    return true;
+  }
+
   async handleMatch(
     pim: PlayerInMatchEntity,
     match: FinishedMatchEntity,
     achievement: AchievementEntity,
   ) {
-    // this.logger.log(
-    //   `Handle match ${match.id} for player ${pim.playerId} @ ${this.key}`,
-    // );
+    if (!this.supportsLobbyType(match.matchmaking_mode)) {
+      this.logger.log(`Achievement doesn't support lobby type`, {
+        lobby_type: match.matchmaking_mode,
+      });
+      return false;
+    }
     if (this.isComplete(achievement)) {
       // We are already good, skip
       this.logger.log(
