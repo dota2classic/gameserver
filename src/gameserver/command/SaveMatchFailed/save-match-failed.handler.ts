@@ -1,15 +1,17 @@
-import { EventBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { MatchFailedEvent } from 'gateway/events/match-failed.event';
-import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
+import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
+import { SaveMatchFailedCommand } from 'gameserver/command/SaveMatchFailed/save-match-failed.command';
+import { InjectRepository } from '@nestjs/typeorm';
+import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
+import { Repository } from 'typeorm';
 import { MatchEntity } from 'gameserver/model/match.entity';
+import { PlayerNotLoadedEvent } from 'gameserver/event/player-not-loaded.event';
 
-@EventsHandler(MatchFailedEvent)
-export class MatchFailedHandler implements IEventHandler<MatchFailedEvent> {
-  private logger = new Logger(MatchFailedHandler.name);
+@CommandHandler(SaveMatchFailedCommand)
+export class SaveMatchFailedHandler
+  implements ICommandHandler<SaveMatchFailedCommand>
+{
+  private logger = new Logger(SaveMatchFailedHandler.name);
 
   constructor(
     @InjectRepository(PlayerCrimeLogEntity)
@@ -21,12 +23,12 @@ export class MatchFailedHandler implements IEventHandler<MatchFailedEvent> {
     private readonly ebus: EventBus,
   ) {}
 
-  async handle(event: MatchFailedEvent) {
+  async execute({ event }: SaveMatchFailedCommand) {
     const match = await this.matchEntityRepository.findOne({
       where: { id: event.matchId },
     });
     if (!match) {
-      this.logger.warn('MatchFailedEvent on non-existing match');
+      this.logger.warn('MatchFailedEvent on non-existing match', { match_id: event.matchId });
       return;
     }
     //

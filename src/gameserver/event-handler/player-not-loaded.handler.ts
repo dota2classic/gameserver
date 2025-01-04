@@ -1,11 +1,11 @@
 import { EventBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BanReason } from 'gateway/shared-types/ban';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
+import { PlayerNotLoadedEvent } from 'gameserver/event/player-not-loaded.event';
 
 @EventsHandler(PlayerNotLoadedEvent)
 export class PlayerNotLoadedHandler
@@ -25,7 +25,8 @@ export class PlayerNotLoadedHandler
     const crime = new PlayerCrimeLogEntity(
       event.playerId.value,
       BanReason.LOAD_FAILURE,
-      event.mode
+      event.mode,
+      event.matchId
     );
 
     await this.playerCrimeLogEntityRepository.save(crime);

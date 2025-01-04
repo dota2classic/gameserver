@@ -14,6 +14,9 @@ export class PlayerCrimeLogEntity {
   crime: BanReason;
 
   @Column({ default: null, nullable: true })
+  match_id?: number;
+
+  @Column({ default: null, nullable: true })
   lobby_type?: MatchmakingMode;
 
   @Column({ default: false })
@@ -25,9 +28,10 @@ export class PlayerCrimeLogEntity {
   @CreateDateColumn({ type: "timestamptz" })
   created_at: Date;
 
-  constructor(steam_id: string, crime: BanReason | undefined, lobby_type: MatchmakingMode) {
+  constructor(steam_id: string, crime: BanReason | undefined, lobby_type: MatchmakingMode, matchId: number | null) {
     this.steam_id = steam_id;
     this.crime = crime;
     this.lobby_type = lobby_type;
+    this.match_id = matchId
   }
 }

@@ -1,17 +1,17 @@
-import { EventBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { PlayerAbandonedEvent } from 'gateway/events/bans/player-abandoned.event';
+import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
+import { Logger } from '@nestjs/common';
+import { SavePlayerAbandonCommand } from 'gameserver/command/SavePlayerAbandon/save-player-abandon.command';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { BanReason } from 'gateway/shared-types/ban';
-import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Logger } from '@nestjs/common';
+import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 
-@EventsHandler(PlayerAbandonedEvent)
-export class PlayerAbandonedHandler
-  implements IEventHandler<PlayerAbandonedEvent>
+@CommandHandler(SavePlayerAbandonCommand)
+export class SavePlayerAbandonHandler
+  implements ICommandHandler<SavePlayerAbandonCommand>
 {
-  private logger = new Logger(PlayerAbandonedHandler.name);
+  private readonly logger = new Logger(SavePlayerAbandonHandler.name);
 
   constructor(
     @InjectRepository(PlayerCrimeLogEntity)
@@ -19,7 +19,7 @@ export class PlayerAbandonedHandler
     private readonly ebus: EventBus,
   ) {}
 
-  async handle(event: PlayerAbandonedEvent) {
+  async execute({ event }: SavePlayerAbandonCommand) {
     // Let them abandon ffs
     this.logger.log("PlayerAbandonEvent", { index: event.abandonIndex });
     if (event.abandonIndex > 0) {
@@ -31,6 +31,7 @@ export class PlayerAbandonedHandler
       event.playerId.value,
       BanReason.ABANDON,
       event.mode,
+      event.matchId
     );
 
     await this.playerCrimeLogEntityRepository.save(crime);

@@ -8,7 +8,6 @@ import { GameServerNotStartedHandler } from 'gameserver/event-handler/game-serve
 import { GameSessionFinishedHandler } from 'gameserver/event-handler/game-session-finished.handler';
 import { MatchStartedHandler } from 'gameserver/event-handler/match-started.handler';
 import { MatchFinishedHandler } from 'gameserver/event-handler/match-finished.handler';
-import { GameResultsHandler } from 'gameserver/event-handler/game-results.handler';
 import { GetSessionByUserHandler } from 'gameserver/query/get-session-by-user.handler';
 import { ProcessRankedMatchHandler } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.handler';
 import { GetPlayerInfoHandler } from 'gameserver/query/get-player-info.handler';
@@ -28,19 +27,24 @@ import { StartFakeMatchHandler } from 'gameserver/event-handler/start-fake-match
 import { ServerStatusHandler } from 'gameserver/event-handler/server-status.handler';
 import { ProcessAchievementsHandler } from 'gameserver/command/ProcessAchievements/process-achievements.handler';
 import { AchievementService } from 'gameserver/achievement.service';
-import { MatchFailedHandler } from 'gameserver/event-handler/match-failed.handler';
-import { PlayerAbandonedHandler } from 'gameserver/event-handler/player-abandoned.handler';
 import { PrepareGameHandler } from 'gameserver/command/PrepareGame/prepare-game.handler';
 import { LobbyReadyHandler } from 'gameserver/event-handler/lobby-ready.handler';
 import { SrcdsServerStartedHandler } from 'gameserver/event-handler/srcds-server-started.handler';
 import { PlayerConnectedHandler } from 'gameserver/event-handler/player-connected.handler';
+import { SaveGameResultsHandler } from 'gameserver/command/SaveGameResults/save-game-results.handler';
+import { SaveMatchFailedHandler } from 'gameserver/command/SaveMatchFailed/save-match-failed.handler';
+import { SavePlayerAbandonHandler } from 'gameserver/command/SavePlayerAbandon/save-player-abandon.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
   ProcessRankedMatchHandler,
   MakeSureExistsHandler,
   ProcessAchievementsHandler,
-  PrepareGameHandler
+  PrepareGameHandler,
+
+  SaveGameResultsHandler,
+  SaveMatchFailedHandler,
+  SavePlayerAbandonHandler
 ];
 const EventHandlers = [
   PlayerConnectedHandler,
@@ -57,21 +61,18 @@ const EventHandlers = [
   MatchStartedHandler,
   MatchFinishedHandler,
 
-  GameResultsHandler,
   PlayerBanHammeredHandler,
   LobbyReadyHandler,
 
   ServerStatusHandler,
   PlayerNotLoadedHandler,
   PlayerDeclinedGameHandler,
-  PlayerAbandonedHandler,
   CrimeLogCreatedHandler,
 
   ServerNotRespondingHandler,
   PlayerReportUpdatedHandler,
   PlayerReportHandler,
   PlayerReportedHandler,
-  MatchFailedHandler
 ];
 
 const QueryHandlers = [GetPlayerInfoHandler, GetSessionByUserHandler, GetReportsAvailableHandler];

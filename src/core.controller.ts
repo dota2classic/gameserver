@@ -5,17 +5,13 @@ import { Constructor, EventBus } from '@nestjs/cqrs';
 import { GameServerNotStartedEvent, GameServerStartedEvent } from 'gateway/events/game-server-started.event';
 import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
 import { GameServerDiscoveredEvent } from 'gateway/events/game-server-discovered.event';
-import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
 import { PlayerBanHammeredEvent } from 'gateway/events/bans/player-ban-hammered.event';
 import { ServerSessionSyncEvent } from 'gateway/events/gs/server-session-sync.event';
-import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
 import { PlayerDeclinedGameEvent } from 'gateway/events/mm/player-declined-game.event';
 import { TournamentGameReadyEvent } from 'gateway/events/tournament/tournament-game-ready.event';
 import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event';
 import { StartFakeMatchEvent } from 'gateway/events/start-fake-match.event';
 import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
-import { MatchFailedEvent } from 'gateway/events/match-failed.event';
-import { PlayerAbandonedEvent } from 'gateway/events/bans/player-abandoned.event';
 import { LobbyReadyEvent } from 'gateway/events/lobby-ready.event';
 import { ConfigService } from '@nestjs/config';
 import { SrcdsServerStartedEvent } from 'gateway/events/srcds-server-started.event';
@@ -80,11 +76,6 @@ export class CoreController {
     this.event(GameServerDiscoveredEvent, data);
   }
 
-  @EventPattern(GameResultsEvent.name)
-  async GameResultsEvent(data: GameResultsEvent) {
-    this.event(GameResultsEvent, data);
-  }
-
   @EventPattern(PlayerBanHammeredEvent.name)
   async PlayerBanHammeredEvent(data: PlayerBanHammeredEvent) {
     this.event(PlayerBanHammeredEvent, data);
@@ -95,15 +86,7 @@ export class CoreController {
     this.event(PlayerDeclinedGameEvent, data);
   }
 
-  @EventPattern(PlayerNotLoadedEvent.name)
-  async PlayerNotLoadedEvent(data: PlayerNotLoadedEvent) {
-    this.event(PlayerNotLoadedEvent, data);
-  }
 
-  @EventPattern(PlayerAbandonedEvent.name)
-  async PlayerAbandonedEvent(data: PlayerAbandonedEvent) {
-    this.event(PlayerAbandonedEvent, data);
-  }
 
   @EventPattern(LiveMatchUpdateEvent.name)
   async LiveMatchUpdateEvent(data: LiveMatchUpdateEvent) {
@@ -118,11 +101,6 @@ export class CoreController {
   @EventPattern(ServerStatusEvent.name)
   async ServerStatusEvent(data: ServerStatusEvent) {
     this.event(ServerStatusEvent, data);
-  }
-
-  @EventPattern(MatchFailedEvent.name)
-  async MatchFailedEvent(data: MatchFailedEvent) {
-    this.event(MatchFailedEvent, data);
   }
 
   @EventPattern(PlayerConnectedEvent.name)

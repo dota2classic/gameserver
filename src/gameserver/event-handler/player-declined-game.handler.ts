@@ -23,6 +23,7 @@ export class PlayerDeclinedGameHandler
       event.id.value,
       BanReason.GAME_DECLINE,
       event.mode,
+      undefined
     );
 
     await this.playerCrimeLogEntityRepository.save(crime);

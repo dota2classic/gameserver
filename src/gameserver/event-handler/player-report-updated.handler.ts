@@ -57,8 +57,6 @@ export class PlayerReportUpdatedHandler
         .getCount();
 
 
-      console.log(`GAMES SINCE LAST `, gamesSinceLast)
-
       if (gamesSinceLast >= GAMES_TO_ADD_REPORT) {
         r.reports += FREE_REPORT_PER_GAMES;
         r.reports = Math.min(r.reports, MAX_REPORTS_AVAILABLE);

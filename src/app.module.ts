@@ -27,6 +27,7 @@ import { CrimeController } from 'rest/crime/crime.controller';
 import configuration from 'util/configuration';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm/dist/interfaces/typeorm-options.interface';
+import { RmqController } from 'rmq.controller';
 
 @Module({
   imports: [
@@ -75,7 +76,7 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm/dist/interfaces/typeorm-op
                   password: config.get<string>('rabbitmq.password'),
                 },
               ],
-              queue: config.get<string>('rabbitmq.queue'),
+              queue: config.get<string>('rabbitmq.gameserver_commands'),
               queueOptions: {
                 durable: true,
               },
@@ -106,6 +107,7 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm/dist/interfaces/typeorm-op
   ],
   controllers: [
     CoreController,
+    RmqController,
     QueryController,
     MatchController,
     PlayerController,

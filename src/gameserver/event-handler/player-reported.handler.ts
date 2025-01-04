@@ -13,7 +13,8 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 @EventsHandler(PlayerReportedEvent)
 export class PlayerReportedHandler
-  implements IEventHandler<PlayerReportedEvent> {
+  implements IEventHandler<PlayerReportedEvent>
+{
   private readonly logger = new Logger(PlayerReportedHandler.name);
   constructor(
     @InjectRepository(PlayerBanEntity)
@@ -21,9 +22,7 @@ export class PlayerReportedHandler
     @InjectRepository(PlayerReportEntity)
     private readonly playerReportRepository: Repository<PlayerReportEntity>,
     @InjectRepository(PlayerCrimeLogEntity)
-    private readonly playerCrimeLogEntityRepository: Repository<
-      PlayerCrimeLogEntity
-    >,
+    private readonly playerCrimeLogEntityRepository: Repository<PlayerCrimeLogEntity>,
     private readonly ebus: EventBus,
   ) {}
 
@@ -38,9 +37,7 @@ select count(*)
 from t
 `);
 
-
-
-    const count = Number(countHolder[0].count)
+    const count = Number(countHolder[0].count);
     this.logger.log(
       `${event.reported.value} was reported ${count} times within last ${REPORT_STACK_WINDOW}. To create crime we need: ${CRITICAL_REPORT_COUNT_TO_BAN}`,
     );
@@ -49,7 +46,8 @@ from t
       const crime = new PlayerCrimeLogEntity(
         event.reported.value,
         BanReason.REPORTS,
-        MatchmakingMode.BOTS // TODO: fetch via event.matchId
+        MatchmakingMode.BOTS, // TODO: fetch via event.matchId
+        event.matchId,
       );
       crime.steam_id = event.reported.value;
       crime.crime = BanReason.REPORTS;
