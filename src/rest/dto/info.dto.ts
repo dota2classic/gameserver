@@ -10,6 +10,7 @@ export class GameServerDto {
 }
 
 export class MatchInfoDto {
+  @ApiProperty({ enum: MatchmakingMode, enumName: "MatchmakingMode" })
   public readonly mode: MatchmakingMode;
   public readonly roomId: string;
   public readonly radiant: string[];
