@@ -182,7 +182,7 @@ describe("MatchController", () => {
 
     for (let change of changes) {
       const pim = pims.find((pim) => pim.playerId === change.playerId);
-      // console.log("Amogus!", change, pim)
+      console.log("Amogus!", change, pim)
       if (pim?.abandoned) {
         expect(change.change).toBeLessThan(0);
       } else if (pim.team === DotaTeam.RADIANT) {

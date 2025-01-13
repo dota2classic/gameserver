@@ -17,7 +17,7 @@ import { CommandBus, EventBus } from '@nestjs/cqrs';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { GameServerService } from 'gameserver/gameserver.service';
-import { PlayerService, Summary } from 'rest/service/player.service';
+import { MatchAccessLevel, PlayerService, Summary } from 'rest/service/player.service';
 import { HeroStatsDto } from 'rest/dto/hero.dto';
 import { UNRANKED_GAMES_REQUIRED_FOR_RANKED } from 'gateway/shared-types/timings';
 import { BanStatus } from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
@@ -172,7 +172,6 @@ offset $2 limit $3`,
     };
   }
 
-
   @CacheTTL(120)
   @Get("/summary/:version/:id")
   async playerSummary(
@@ -185,9 +184,9 @@ offset $2 limit $3`,
       where: { steam_id },
     });
 
-
     // Crucial thing for newbie:
-    const hasUnrankedAccess = await this.playerService.hasUnrankedAccess(steam_id)
+    const matchAccessLevel =
+      await this.playerService.getMatchAccessLevel(steam_id);
 
     // if it exists in the view, we happy
     if (lb) {
@@ -207,7 +206,9 @@ offset $2 limit $3`,
         play_time: lb.play_time,
         playedAnyGame: lb.any_games > 0,
 
-        hasUnrankedAccess: hasUnrankedAccess,
+        accessLevel: matchAccessLevel,
+
+        hasUnrankedAccess: matchAccessLevel === MatchAccessLevel.HUMAN_GAMES,
 
         newbieUnrankedGamesLeft:
           lb.ranked_games > 0
@@ -241,7 +242,9 @@ offset $2 limit $3`,
 
       playedAnyGame: summary && summary.any_games > 0,
 
-      hasUnrankedAccess: (summary?.bot_wins || 0) > 0,
+      hasUnrankedAccess: matchAccessLevel === MatchAccessLevel.HUMAN_GAMES,
+
+      accessLevel: matchAccessLevel,
 
       newbieUnrankedGamesLeft:
         (summary?.ranked_games || 0) > 0

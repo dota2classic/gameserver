@@ -2,6 +2,7 @@ import { BanReason } from 'gateway/shared-types/ban';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { Page } from 'gateway/shared-types/page';
 import { ApiProperty } from '@nestjs/swagger';
+import { MatchAccessLevel } from 'rest/service/player.service';
 
 export class LeaderboardEntryDto {
   rank: number | null;
@@ -26,13 +27,17 @@ export class LeaderboardEntryPageDto extends Page<LeaderboardEntryDto> {
   pages: number;
 }
 
+
+
+
 export class PlayerSummaryDto extends LeaderboardEntryDto {
   newbieUnrankedGamesLeft: number;
   playedAnyGame: boolean;
   calibrationGamesLeft: number;
 
-
   hasUnrankedAccess: boolean;
+
+  accessLevel: MatchAccessLevel
 }
 
 export class BanStatusDto {

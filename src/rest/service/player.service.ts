@@ -9,14 +9,32 @@ import { PlayerSummaryDto } from 'rest/dto/player.dto';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 
-export type Summary =
-  | undefined
-  | (Omit<PlayerSummaryDto, "rank" | "newbieUnrankedGamesLeft"> & {
-      ranked_games: number;
-      unranked_games: number;
-      any_games: number;
-      bot_wins: number;
-    });
+/**
+ * EDUCATION = need to finish education, either win or lose
+ * SIMPLE_MODES = 1+ games, 0 wins
+ * HUMAN_GAMES = 1+ wins
+ */
+export enum MatchAccessLevel {
+  EDUCATION,
+  SIMPLE_MODES,
+  HUMAN_GAMES,
+}
+
+export function getMatchAccessLevel(anyGames: number, anyWins: number) {
+  if (anyWins) return MatchAccessLevel.HUMAN_GAMES;
+  if (anyGames) return MatchAccessLevel.SIMPLE_MODES;
+  return MatchAccessLevel.EDUCATION;
+}
+
+export type Summary = Omit<
+  PlayerSummaryDto,
+  "rank" | "newbieUnrankedGamesLeft"
+> & {
+  ranked_games: number;
+  unranked_games: number;
+  any_games: number;
+  any_wins: number;
+};
 
 // TODO: we probably need to orm this shit up
 @Injectable()
@@ -153,11 +171,11 @@ order by score desc`;
     ]);
   }
 
-  async fullSummary(steam_id: string): Promise<Summary> {
+  async fullSummary(steam_id: string): Promise<Summary | undefined> {
     const some = await this.playerInMatchRepository.query(
       `with cte as (select plr."playerId"                                                                   as steam_id,
                     count(*)::int                                                                    as any_games,
-                    sum((m.winner = plr.team )::int)::int                                            as bot_wins,
+                    sum((m.winner = plr.team )::int)::int                                            as any_wins,
                     sum((m.matchmaking_mode in (0, 1))::int)::int                                    as games,
                     sum((m.winner = plr.team and m.matchmaking_mode in (0, 1))::int)::int            as wins,
                     sum((m.matchmaking_mode = 0 and m.timestamp > now() - '14 days'::interval)::int) as recent_ranked_games,
@@ -171,7 +189,7 @@ select p.steam_id,
        p.wins,
        p.games,
        p.any_games,
-       p.bot_wins,
+       p.any_wins,
        p.mmr                                                                        as mmr,
        avg(pim.kills)::float                                                        as kills,
        avg(pim.deaths)::float                                                       as deaths,
@@ -189,12 +207,17 @@ group by p.steam_id, p.recent_ranked_games, p.mmr, p.games, p.wins, p.any_games,
     return some[0];
   }
 
-  public async hasUnrankedAccess(steam_id: string): Promise<boolean> {
-    const result: { count: number }[] =
+  public async getMatchAccessLevel(steamId: string): Promise<MatchAccessLevel> {
+    const result: { any_wins: number; any_games: number }[] =
       await this.playerInMatchRepository.query(
-        `select count(*) from player_activity pa where pa.win and pa.steam_id = $1`,
-        [steam_id],
+        `
+select sum(pa.win::int)::int as any_wins, count(pa)::int as any_games
+from player_activity pa
+where pa.steam_id = $1
+`,
+        [steamId],
       );
-    return result[0].count > 0;
+
+    return getMatchAccessLevel(result[0].any_games, result[0].any_wins);
   }
 }
