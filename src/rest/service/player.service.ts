@@ -186,7 +186,7 @@ order by score desc`;
 where plr."playerId" = $1
              group by plr."playerId", p.hidden_mmr)
 select p.steam_id,
-       p.wins,
+       p.any_wins,
        p.games,
        p.any_games,
        p.any_wins,
@@ -200,7 +200,7 @@ select p.steam_id,
 from cte p
          inner join player_in_match pim on pim."playerId" = p.steam_id
          inner join finished_match m on pim."matchId" = m.id
-group by p.steam_id, p.recent_ranked_games, p.mmr, p.games, p.wins, p.any_games, p.bot_wins`,
+group by p.steam_id, p.recent_ranked_games, p.mmr, p.games, p.wins, p.any_games, p.any_wins`,
       [steam_id, MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],
     );
 
