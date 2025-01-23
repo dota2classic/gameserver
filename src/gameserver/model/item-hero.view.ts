@@ -5,7 +5,7 @@ import { ItemView } from 'gameserver/model/item.view';
   name: "item_hero_view",
   dependsOn: [ItemView],
   expression: `
-select i.item_id as item_id, pim.hero as hero, count(pim) as played, sum((pim.team = fm.winner)::int) as wins
+select i.item_id as item_id, pim.hero as hero, count(pim)::int as played, sum((pim.team = fm.winner)::int)::int as wins
 from item_view i
          left join player_in_match pim
                    on pim.item0 = i.item_id
