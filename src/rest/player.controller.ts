@@ -285,7 +285,7 @@ offset $2 limit $3`,
       skip: perPage * page,
     });
 
-    return makePage(data, total, page, perPage);
+    return makePage(data, total, page, perPage, (r) => r);
   }
 
   @CacheTTL(120)

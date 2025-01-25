@@ -41,6 +41,6 @@ export class CrimeController {
       .skip(perPage * page)
       .getManyAndCount();
 
-    return makePage(crimes, count, page, perPage, (t) => t as CrimeLogDto);
+    return makePage(crimes, count, page, perPage, (t) => t as unknown as CrimeLogDto);
   }
 }

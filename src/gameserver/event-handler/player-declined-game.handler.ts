@@ -20,7 +20,7 @@ export class PlayerDeclinedGameHandler
     // We don't care about bot games: they are for education
 
     const crime = new PlayerCrimeLogEntity(
-      event.id.value,
+      event.steamId,
       BanReason.GAME_DECLINE,
       event.mode,
       undefined
