@@ -5,7 +5,7 @@ import { BanReason } from 'gateway/shared-types/ban';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
-import { PlayerNotLoadedEvent } from 'gameserver/event/player-not-loaded.event';
+import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
 
 @EventsHandler(PlayerNotLoadedEvent)
 export class PlayerNotLoadedHandler
