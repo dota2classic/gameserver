@@ -14,6 +14,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ReplayEntity } from 'gameserver/model/replay.entity';
 import { GameServerEntity } from 'gameserver/model/game-server.entity';
+import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
 
 @Injectable()
 export class AppService {
@@ -53,7 +54,8 @@ export class AppService {
       MatchFinishedEvent,
       ServerActualizationRequestedEvent,
       KillServerRequestedEvent,
-      BanSystemEvent
+      BanSystemEvent,
+      PlayerNotLoadedEvent
     ];
 
     this.ebus

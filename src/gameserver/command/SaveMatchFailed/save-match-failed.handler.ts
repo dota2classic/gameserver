@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { Repository } from 'typeorm';
 import { MatchEntity } from 'gameserver/model/match.entity';
-import { PlayerNotLoadedEvent } from 'gameserver/event/player-not-loaded.event';
+import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
 
 @CommandHandler(SaveMatchFailedCommand)
 export class SaveMatchFailedHandler
