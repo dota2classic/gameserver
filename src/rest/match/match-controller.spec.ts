@@ -97,11 +97,17 @@ describe("MatchController", () => {
 
       await request(app.getHttpServer())
         .get(`/match/player/${pims[0].playerId}`)
-        .query({ page: 0})
+        .query({ page: 0 })
         .expect(200)
         .expect(
           JSON.stringify(
-            await makePage([mapper.mapMatch({ ...fm, players: [pims[0]] })], 1, 0, 25),
+            await makePage(
+              [mapper.mapMatch({ ...fm, players: [pims[0]] })],
+              1,
+              0,
+              25,
+              (t) => t,
+            ),
           ),
         );
     });
@@ -112,9 +118,9 @@ describe("MatchController", () => {
 
       await request(app.getHttpServer())
         .get(`/match/player/-41234213`)
-        .query({ page: 0})
+        .query({ page: 0 })
         .expect(200)
-        .expect(JSON.stringify(await makePage([], 0, 0, 25)));
+        .expect(JSON.stringify(await makePage([], 0, 0, 25, (t) => t)));
     });
   });
 });
