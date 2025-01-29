@@ -7,8 +7,8 @@ import { Repository } from 'typeorm';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { AchievementEntity } from 'gameserver/model/achievement.entity';
 import { combos } from 'util/cross';
-import { AchievementCompleteEvent } from 'gameserver/event/achievement-complete.event';
 import { AchievementService } from 'gameserver/achievement.service';
+import { AchievementCompleteEvent } from 'gateway/events/gs/achievement-complete.event';
 
 @CommandHandler(ProcessAchievementsCommand)
 export class ProcessAchievementsHandler
