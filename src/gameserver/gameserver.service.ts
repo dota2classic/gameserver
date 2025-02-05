@@ -92,7 +92,7 @@ export class GameServerService {
     // this.migrateItems();
     // this.migrated2com();
     if (config.get("prod")) {
-      this.migratePendoSite();
+      // this.migratePendoSite();
       // this.testMMRPreview();
       this.refreshLeaderboardView();
     }
