@@ -73,8 +73,10 @@ export class CrimeLogCreatedHandler
         ),
       )
       .then((proms) => {
-        this.logger.log(`Initial cathing up in crimes finished, ${proms.length} crimes handled`)
-      })
+        this.logger.log(
+          `Initial cathing up in crimes finished, ${proms.length} crimes handled`,
+        );
+      });
   }
 
   async handle(event: CrimeLogCreatedEvent) {
@@ -87,7 +89,11 @@ export class CrimeLogCreatedHandler
     if (!thisCrime) return;
 
     // We don't punish for crimes in bots
-    if (thisCrime.lobby_type === MatchmakingMode.BOTS || thisCrime.lobby_type === MatchmakingMode.LOBBY) {
+    if (
+      thisCrime.lobby_type === MatchmakingMode.BOTS ||
+      thisCrime.lobby_type === MatchmakingMode.LOBBY ||
+      thisCrime.lobby_type == MatchmakingMode.SOLOMID
+    ) {
       thisCrime.handled = true;
       thisCrime.banTime = 0;
       await this.playerCrimeLogEntityRepository.save(thisCrime);
@@ -103,17 +109,17 @@ export class CrimeLogCreatedHandler
 
     const cumInterval = getPunishmentCumulativeInterval(thisCrime.crime);
 
-    this.logger.log(`Cumulative interval for crime is ${cumInterval}`)
+    this.logger.log(`Cumulative interval for crime is ${cumInterval}`);
 
     const frequentCrimesCount = await this.playerCrimeLogEntityRepository
       .createQueryBuilder("pc")
       .select()
       .where("pc.steam_id = :sid", { sid: thisCrime.steam_id })
       .andWhere(`pc.created_at >= now() - :cum_interval::interval`, {
-        cum_interval: cumInterval
+        cum_interval: cumInterval,
       }) // interval here
       .andWhere({
-        handled: true
+        handled: true,
       })
       .andWhere(`pc."banTime" > 0`)
       .getMany();
