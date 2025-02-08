@@ -11,8 +11,23 @@ GameSessionState
     GameComplete
 
 
+```js
+class GameSessionModel {
+    @Column
+    server_url: string;
 
-## RoomReady
-1) create game session
-2) populate players
-3) 
+    @PrimaryColumn
+    match_id: number;
+}
+
+class GameSessionPlayer {
+  @ManyToOne(match_id)
+  session: GameSessionModel;
+  
+  connected: boolean;
+  
+  abandoned: boolean;
+}
+
+
+```
