@@ -16,6 +16,7 @@ import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { UpdateGamemodeDto } from 'rest/dto/info.dto';
 import { Repository } from 'typeorm';
 import { Dota_Map } from 'gateway/shared-types/dota-map';
+import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
 
 describe("InfoController", () => {
   jest.setTimeout(60000);
@@ -36,6 +37,7 @@ describe("InfoController", () => {
     const Entities = [
       MatchmakingModeMappingEntity,
       GameServerSessionEntity,
+      GameSessionPlayerEntity,
       GameServerEntity,
     ];
 

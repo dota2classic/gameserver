@@ -22,7 +22,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
-describe("MatchController", () => {
+describe("ProcessRnakedMatchHandler", () => {
   jest.setTimeout(60000);
 
   let container: StartedPostgreSqlContainer;
