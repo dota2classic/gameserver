@@ -11,9 +11,7 @@ import { GameServerEntity } from 'gameserver/model/game-server.entity';
 export class GameServerSessionRepository {
   constructor(
     @InjectRepository(GameServerSessionEntity)
-    private readonly gameServerSessionModelRepository: Repository<
-      GameServerSessionEntity
-    >,
+    private readonly gameServerSessionModelRepository: Repository<GameServerSessionEntity>,
     @InjectRepository(GameServerEntity)
     private readonly gameServerModelRepository: Repository<GameServerEntity>,
   ) {}
@@ -27,14 +25,17 @@ export class GameServerSessionRepository {
       having count(gssm) = 0`);
   }
 
+
+  // FIXME: use proper query
   public async findWith(
     playerId: PlayerId,
   ): Promise<GameServerSessionEntity | undefined> {
     const all = await this.gameServerSessionModelRepository.find();
 
-    return all.find(t =>
-      t.matchInfoJson.players
-        .find(z => z.playerId.value === playerId.value),
+    return all.find((t) =>
+      t.players.find(
+        (z) => z.steamId === playerId.value && z.abandoned === false,
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import { GameServerDto, GameSessionDto, MatchmakingModeInfoDto } from 'rest/dto/
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { DotaTeam } from 'gateway/shared-types/dota-team';
 import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
+import { Dota2Version } from 'gateway/shared-types/dota2version';
 
 @Injectable()
 export class InfoMapper {
@@ -16,16 +17,16 @@ export class InfoMapper {
     url: it.url,
     matchId: it.matchId,
     info: {
-      mode: it.matchInfoJson.mode,
-      version: it.matchInfoJson.version,
-      roomId: it.matchInfoJson.roomId,
+      mode: it.matchmaking_mode,
+      version: Dota2Version.Dota_684,
+      roomId: it.roomId,
       averageMMR: 0,
-      radiant: it.matchInfoJson.players
+      radiant: it.players
         .filter((it) => it.team == DotaTeam.RADIANT)
-        .map((t) => t.playerId.value),
-      dire: it.matchInfoJson.players
+        .map((t) => t.steamId),
+      dire: it.players
         .filter((it) => it.team == DotaTeam.DIRE)
-        .map((t) => t.playerId.value),
+        .map((t) => t.steamId),
     },
   });
 

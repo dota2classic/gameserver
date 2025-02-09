@@ -18,6 +18,14 @@ class GameSessionModel {
 
     @PrimaryColumn
     match_id: number;
+
+      matchId: number;
+      matchmaking_mode: MatchmakingMode;
+      game_mode: Dota_GameMode;
+      game_state: Dota_GameRulesState;
+      duration: number;
+      server: string;
+      timestamp: number;
 }
 
 class GameSessionPlayer {

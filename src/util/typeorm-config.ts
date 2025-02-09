@@ -17,6 +17,7 @@ import { ItemHeroView } from 'gameserver/model/item-hero.view';
 import { AchievementEntity } from 'gameserver/model/achievement.entity';
 import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
 import { PlayerIpEntity } from 'gameserver/model/player-ip.entity';
+import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
 
 export const Entities: Function[] = [
   GameSeasonEntity,
@@ -30,6 +31,8 @@ export const Entities: Function[] = [
   PlayerBanEntity,
 
   GameServerSessionEntity,
+  GameSessionPlayerEntity,
+
   GameServerEntity,
   PlayerCrimeLogEntity,
 

@@ -6,19 +6,16 @@ import { Repository } from 'typeorm';
 import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
 import { Logger } from '@nestjs/common';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
+import { Dota2Version } from 'gateway/shared-types/dota2version';
 
 @EventsHandler(ServerStatusEvent)
 export class ServerStatusHandler implements IEventHandler<ServerStatusEvent> {
   private logger = new Logger(ServerStatusHandler.name);
   constructor(
     @InjectRepository(GameServerSessionEntity)
-    private readonly gameServerSessionModelRepository: Repository<
-      GameServerSessionEntity
-    >,
+    private readonly gameServerSessionModelRepository: Repository<GameServerSessionEntity>,
     @InjectRepository(FinishedMatchEntity)
-    private readonly finishedMatchEntityRepository: Repository<
-      FinishedMatchEntity
-    >,
+    private readonly finishedMatchEntityRepository: Repository<FinishedMatchEntity>,
     private readonly ebus: EventBus,
   ) {}
 
@@ -28,32 +25,14 @@ export class ServerStatusHandler implements IEventHandler<ServerStatusEvent> {
     });
 
     if (event.running && !existingSession) {
-      const exists = await this.finishedMatchEntityRepository.exists({
-        where: { id: event.matchId },
-      });
-      if (!exists) {
-        this.logger.warn(
-          `Needed to create game server session for url ${event.url}`,
-        );
-      } else {
-        this.logger.warn(
-          'Skipping server status: match already ended, no need to create session',
-        );
-        return;
-      }
-      // Server is running with session and we don't know it for some reason
-      existingSession = new GameServerSessionEntity();
-      existingSession.url = event.url;
-      existingSession.matchId = event.matchId;
-      existingSession.matchInfoJson = event.session;
-      await this.gameServerSessionModelRepository.save(existingSession);
+      this.logger.warn(
+        "Server is running, but no session: should not be possible i guess?",
+      );
     } else if (!event.running && existingSession) {
       // remove session if it exists
+      this.logger.log("Game server is stopped!");
       this.ebus.publish(
-        new GameServerStoppedEvent(
-          event.url,
-          existingSession.matchInfoJson.version,
-        ),
+        new GameServerStoppedEvent(event.url, Dota2Version.Dota_684),
       );
     }
   }

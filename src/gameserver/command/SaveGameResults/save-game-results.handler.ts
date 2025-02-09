@@ -5,10 +5,11 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { MatchRecordedEvent } from 'gameserver/event/match-recorded.event';
-import { GameSessionFinishedEvent } from 'gateway/events/game-session-finished.event';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
+import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
+import { Dota2Version } from 'gateway/shared-types/dota2version';
 
 @CommandHandler(SaveGameResultsCommand)
 export class SaveGameResultsHandler
@@ -36,7 +37,7 @@ export class SaveGameResultsHandler
 
     if (existingRecordedMatch) {
       this.logger.warn("Tried to save already existing match", {
-        match_id: event.matchId
+        match_id: event.matchId,
       });
       return;
     }
@@ -120,20 +121,9 @@ export class SaveGameResultsHandler
       ),
     );
 
-    const runningSession = await this.gameServerSessionModelRepository.findOne({
-      where: {
-        url: event.server,
-      },
-    });
-    if (runningSession) {
-      await this.gameServerSessionModelRepository.delete(runningSession.url);
-      this.ebus.publish(
-        new GameSessionFinishedEvent(
-          runningSession.url,
-          runningSession.matchId,
-          runningSession.matchInfoJson,
-        ),
-      );
-    }
+    // FIXME: this is not right event naming, but will do for now
+    await this.ebus.publish(
+      new GameServerStoppedEvent(event.server, Dota2Version.Dota_684),
+    );
   }
 }

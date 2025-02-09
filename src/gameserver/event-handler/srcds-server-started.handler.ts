@@ -2,11 +2,14 @@ import { EventBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { SrcdsServerStartedEvent } from 'gateway/events/srcds-server-started.event';
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { GameSessionCreatedEvent } from 'gateway/events/game-session-created.event';
 import { MatchStartedEvent } from 'gateway/events/match-started.event';
 import { GameServerInfo } from 'gateway/shared-types/game-server-info';
+import { Dota_GameRulesState } from 'gateway/shared-types/dota-game-rules-state';
+import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
+import { DotaConnectionState } from 'gateway/shared-types/dota-player-connection-state';
 
 @EventsHandler(SrcdsServerStartedEvent)
 export class SrcdsServerStartedHandler
@@ -18,6 +21,7 @@ export class SrcdsServerStartedHandler
     @InjectRepository(GameServerSessionEntity)
     private readonly gameServerSessionEntityRepository: Repository<GameServerSessionEntity>,
     private readonly ebus: EventBus,
+    private readonly datasource: DataSource,
   ) {}
 
   async handle(event: SrcdsServerStartedEvent) {
@@ -28,30 +32,59 @@ export class SrcdsServerStartedHandler
     m.server = event.server;
     await this.matchEntityRepository.save(m);
 
-    const session = new GameServerSessionEntity();
-    session.url = event.server;
+    const session = await this.createGameSession(event);
 
-    session.matchId = m.id;
-    session.matchInfoJson = {
-      ...event.info,
-    };
-
-    await this.gameServerSessionEntityRepository.save(session);
+    //
 
     this.ebus.publish(
       new GameSessionCreatedEvent(
         session.url,
         session.matchId,
-        session.matchInfoJson,
+        session.asGsMatchInfo(),
       ),
     );
 
     this.ebus.publish(
       new MatchStartedEvent(
         session.matchId,
-        session.matchInfoJson,
+        session.asGsMatchInfo(),
         new GameServerInfo(session.url),
       ),
     );
+  }
+
+  private async createGameSession(event: SrcdsServerStartedEvent) {
+    return this.datasource.transaction(async (em) => {
+      // Session
+      const session = new GameServerSessionEntity(
+        event.matchId,
+        event.server,
+        event.info.roomId,
+        event.info.mode,
+        event.info.gameMode,
+        event.info.map,
+        Dota_GameRulesState.WAIT_FOR_PLAYERS_TO_LOAD,
+        0,
+      );
+
+      await em.save(GameServerSessionEntity, session);
+
+      // Players
+      const players = event.info.players.map(
+        (p) =>
+          new GameSessionPlayerEntity(
+            p.playerId.value,
+            event.matchId,
+            p.partyId,
+            p.team,
+            DotaConnectionState.DOTA_CONNECTION_STATE_NOT_YET_CONNECTED,
+            false,
+          ),
+      );
+      await em.save(GameSessionPlayerEntity, players);
+      session.players = players;
+
+      return session;
+    });
   }
 }
