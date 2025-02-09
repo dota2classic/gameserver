@@ -30,7 +30,9 @@ export class GameServerSessionRepository {
   public async findWith(
     playerId: PlayerId,
   ): Promise<GameServerSessionEntity | undefined> {
-    const all = await this.gameServerSessionModelRepository.find();
+    const all = await this.gameServerSessionModelRepository.find({
+      relations: ['players']
+    });
 
     return all.find(
       (t) =>
