@@ -18,12 +18,14 @@ export class LiveMatchUpdateHandler
   ) {}
 
   async handle(event: LiveMatchUpdateEvent) {
-    const session = await this.sessionRepo.findOneOrFail({
+    const session = await this.sessionRepo.findOne({
       where: {
         matchId: event.matchId,
       },
       relations: ["players"],
     });
+
+    if (!session) return;
 
     await this.dataSource.transaction(async (em) => {
       session.timestamp = new Date(event.timestamp);
