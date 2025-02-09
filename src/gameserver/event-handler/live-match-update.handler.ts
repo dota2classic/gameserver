@@ -1,22 +1,49 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event';
-import { ReplayEntity } from 'gameserver/model/replay.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
+import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
 
 @EventsHandler(LiveMatchUpdateEvent)
-export class LiveMatchUpdateHandler implements IEventHandler<LiveMatchUpdateEvent> {
+export class LiveMatchUpdateHandler
+  implements IEventHandler<LiveMatchUpdateEvent>
+{
   constructor(
-    @InjectRepository(ReplayEntity)
-    private readonly replayEntityRepository: Repository<ReplayEntity>,
+    @InjectRepository(GameServerSessionEntity)
+    private readonly sessionRepo: Repository<GameServerSessionEntity>,
+    @InjectRepository(GameSessionPlayerEntity)
+    private readonly plrRepo: Repository<GameSessionPlayerEntity>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async handle(event: LiveMatchUpdateEvent) {
-    const r = new ReplayEntity()
+    const session = await this.sessionRepo.findOneOrFail({
+      where: {
+        matchId: event.matchId,
+      },
+      relations: ["players"],
+    });
 
-    r.content = event;
-    r.matchId = event.matchId;
-    r.timestamp = event.timestamp;
-    await this.replayEntityRepository.save(r);
+    await this.dataSource.transaction(async (em) => {
+      session.timestamp = new Date(event.timestamp);
+      session.gameState = event.game_state;
+      session.gameMode = event.game_mode;
+      session.matchmaking_mode = event.matchmaking_mode;
+      session.duration = event.duration;
+      session.url = event.server;
+
+      await em.save(GameSessionPlayerEntity, session);
+      session.players.forEach((plr) => {
+        const matchingPlayer = event.heroes.find(
+          (hero) => hero.steam_id === plr.steamId,
+        );
+        if (!matchingPlayer) return;
+
+        plr.connection = matchingPlayer.connection;
+      });
+
+      await em.save(GameSessionPlayerEntity, session.players);
+    });
   }
 }
