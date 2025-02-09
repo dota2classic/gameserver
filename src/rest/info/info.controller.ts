@@ -57,7 +57,9 @@ export class InfoController {
   @Get("current_online")
   @CacheTTL(10)
   public async getCurrentOnline(): Promise<number> {
-    const allSessions = await this.gameServerSessionModelRepository.find();
+    const allSessions = await this.gameServerSessionModelRepository.find({
+      relations: ['players']
+    });
     return allSessions.reduce((a, b) => a + b.players.length, 0);
   }
 }
