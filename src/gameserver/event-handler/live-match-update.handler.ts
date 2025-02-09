@@ -35,8 +35,8 @@ export class LiveMatchUpdateHandler
       session.duration = event.duration;
       session.url = event.server;
 
-      await em.save(GameSessionPlayerEntity, session);
-      session.players.forEach((plr) => {
+      await em.save(GameServerSessionEntity, session);
+      session.players.map((plr) => {
         const matchingPlayer = event.heroes.find(
           (hero) => hero.steam_id === plr.steamId,
         );
