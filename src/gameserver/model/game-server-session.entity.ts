@@ -37,7 +37,7 @@ export class GameServerSessionEntity {
   @Column({ type: "timestamptz", default: () => "now()" })
   timestamp: Date;
 
-  @OneToMany(() => GameSessionPlayerEntity, (t) => t.session)
+  @OneToMany(() => GameSessionPlayerEntity, (t) => t.session, { eager: true })
   players: Relation<GameSessionPlayerEntity>[];
 
   constructor(

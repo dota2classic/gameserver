@@ -35,7 +35,7 @@ export class InfoController {
   @Get("game_sessions")
   public async gameSessions(): Promise<GameSessionDto[]> {
     return this.gameServerSessionModelRepository
-      .find()
+      .find({ relations: ['players'] })
       .then((t) => t.map(this.mapper.mapGameSession));
   }
 
