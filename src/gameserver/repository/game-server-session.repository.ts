@@ -6,6 +6,7 @@ import { PlayerId } from 'gateway/shared-types/player-id';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GameServerEntity } from 'gameserver/model/game-server.entity';
+import { Dota_GameRulesState } from 'gateway/shared-types/dota-game-rules-state';
 
 @Injectable()
 export class GameServerSessionRepository {
@@ -25,17 +26,18 @@ export class GameServerSessionRepository {
       having count(gssm) = 0`);
   }
 
-
   // FIXME: use proper query
   public async findWith(
     playerId: PlayerId,
   ): Promise<GameServerSessionEntity | undefined> {
     const all = await this.gameServerSessionModelRepository.find();
 
-    return all.find((t) =>
-      t.players.find(
-        (z) => z.steamId === playerId.value && z.abandoned === false,
-      ),
+    return all.find(
+      (t) =>
+        t.gameState !== Dota_GameRulesState.POST_GAME &&
+        t.players.find(
+          (z) => z.steamId === playerId.value && z.abandoned === false,
+        ),
     );
   }
 }

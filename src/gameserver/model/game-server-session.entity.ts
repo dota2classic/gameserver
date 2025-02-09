@@ -34,14 +34,22 @@ export class GameServerSessionEntity {
   @Column({ name: "duration", default: 0 })
   duration: number;
 
-  @Column({ type: "timestamptz", default: () => 'now()' })
+  @Column({ type: "timestamptz", default: () => "now()" })
   timestamp: Date;
 
   @OneToMany(() => GameSessionPlayerEntity, (t) => t.session)
   players: Relation<GameSessionPlayerEntity>[];
 
-
-  constructor(matchId: number, url: string, roomId: string, matchmaking_mode: MatchmakingMode, gameMode: Dota_GameMode, map: Dota_Map, gameState: Dota_GameRulesState, duration: number) {
+  constructor(
+    matchId: number,
+    url: string,
+    roomId: string,
+    matchmaking_mode: MatchmakingMode,
+    gameMode: Dota_GameMode,
+    map: Dota_Map,
+    gameState: Dota_GameRulesState,
+    duration: number,
+  ) {
     this.matchId = matchId;
     this.url = url;
     this.roomId = roomId;
