@@ -3,7 +3,6 @@ import { GameServerSessionEntity } from 'gameserver/model/game-server-session.en
 import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
-import { ReplayEntity } from 'gameserver/model/replay.entity';
 import { LeaderboardView } from 'gameserver/model/leaderboard.view';
 import { ItemView } from 'gameserver/model/item.view';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
@@ -42,7 +41,6 @@ export const Entities: Function[] = [
   PlayerReportEntity,
   AchievementEntity,
 
-  ReplayEntity,
   LeaderboardView,
 
   ItemView,

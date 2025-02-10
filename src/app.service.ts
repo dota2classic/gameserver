@@ -12,7 +12,6 @@ import { KillServerRequestedEvent } from 'gateway/events/gs/kill-server-requeste
 import { BanSystemEvent } from 'gateway/events/gs/ban-system.event';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ReplayEntity } from 'gameserver/model/replay.entity';
 import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
 import { AchievementCompleteEvent } from 'gateway/events/gs/achievement-complete.event';
@@ -24,8 +23,6 @@ export class AppService {
     private readonly ebus: EventBus,
     @InjectRepository(GameServerEntity)
     private readonly gameServerEntityRepository: Repository<GameServerEntity>,
-    @InjectRepository(ReplayEntity)
-    private readonly replayEntityRepository: Repository<ReplayEntity>,
     @InjectRepository(GameServerSessionEntity)
     private readonly gameServerSessionEntityRepository: Repository<GameServerSessionEntity>,
     @Inject("QueryCore") private readonly redisEventQueue: ClientProxy,

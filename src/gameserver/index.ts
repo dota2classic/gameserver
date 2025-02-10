@@ -23,7 +23,6 @@ import { PlayerReportUpdatedHandler } from 'gameserver/event-handler/player-repo
 import { PlayerReportHandler } from 'gameserver/event-handler/player-report.handler';
 import { PlayerReportedHandler } from 'gameserver/event-handler/player-reported.handler';
 import { LiveMatchUpdateHandler } from 'gameserver/event-handler/live-match-update.handler';
-import { StartFakeMatchHandler } from 'gameserver/event-handler/start-fake-match.handler';
 import { ServerStatusHandler } from 'gameserver/event-handler/server-status.handler';
 import { ProcessAchievementsHandler } from 'gameserver/command/ProcessAchievements/process-achievements.handler';
 import { AchievementService } from 'gameserver/achievement.service';
@@ -48,7 +47,6 @@ const CommandHandlers = [
 ];
 const EventHandlers = [
   PlayerConnectedHandler,
-  StartFakeMatchHandler,
   LiveMatchUpdateHandler,
   SrcdsServerStartedHandler,
 
