@@ -11,6 +11,14 @@ import { PlayerId } from 'gateway/shared-types/player-id';
 import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
+const ABANDON_PUNISHMENTS = [
+  1000 * 60 * 60 * 12, // 12 hours
+  1000 * 60 * 60 * 24, // 24 hours
+  1000 * 60 * 60 * 24 * 5, // 5 days
+  1000 * 60 * 60 * 24 * 14, // 2 weeks
+  1000 * 60 * 60 * 24 * 30, // 1 month
+];
+
 export const getBasePunishment = (crime: BanReason) => {
   switch (crime) {
     case BanReason.INFINITE_BAN:
@@ -35,7 +43,7 @@ export const getPunishmentCumulativeInterval = (crime: BanReason): string => {
     case BanReason.LOAD_FAILURE:
       return "24h";
     case BanReason.ABANDON:
-      return "7d";
+      return "21d";
     default:
       return "1m";
   }
@@ -129,17 +137,19 @@ export class CrimeLogCreatedHandler
 
     // We do `+1` because it doesn't count current crime, but we want to
     let totalPunishmentCount = (countedCrimes.get(thisCrime.crime) || 0) + 1;
-    const basePunishment = getBasePunishment(thisCrime.crime);
-    let punishmentDuration = basePunishment * totalPunishmentCount;
 
-    // console.log(
-    //   countedCrimes,
-    //   totalPunishmentCount,
-    //   basePunishment,
-    //   punishmentDuration,
-    //   thisCrime,
-    // );
-
+    let punishmentDuration: number;
+    if (thisCrime.crime === BanReason.ABANDON) {
+      // Use predefined punishments
+      const punishmentIdx = Math.min(
+        totalPunishmentCount,
+        ABANDON_PUNISHMENTS.length - 1,
+      );
+      punishmentDuration = ABANDON_PUNISHMENTS[punishmentIdx];
+    } else {
+      const basePunishment = getBasePunishment(thisCrime.crime);
+      punishmentDuration = basePunishment * totalPunishmentCount;
+    }
     this.logger.log(
       `Punishment: ${punishmentDuration / 1000 / 60} minutes for ${
         thisCrime.steam_id
