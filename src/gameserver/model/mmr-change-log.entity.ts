@@ -12,33 +12,36 @@ export class MmrChangeLogEntity {
   @Column()
   winner: boolean;
 
-  @Column({ type: 'float' })
+  @Column({ type: "float" })
   winnerAverage: number;
 
-  @Column({ type: 'float' })
+  @Column({ type: "float" })
   loserAverage: number;
 
-  @Column({ type: 'float' })
+  @Column({ type: "float" })
   mmrBefore: number;
 
-  @Column({ type: 'float' })
+  @Column({ type: "float" })
   mmrAfter: number;
 
   @Column({ default: false })
   hiddenMmr: boolean;
 
-  @Column({ type: 'float' })
+  @Column({ type: "float" })
   change: number;
 
-  @ManyToOne(type => PlayerInMatchEntity)
+  @Column({ type: "float", default: 1.0, name: "player_performance_coefficient" })
+  playerPerformanceCoefficient: number;
+
+  @ManyToOne((type) => PlayerInMatchEntity)
   @JoinColumn([
     {
-      name: 'matchId',
-      referencedColumnName: 'matchId',
+      name: "matchId",
+      referencedColumnName: "matchId",
     },
     {
-      name: 'playerId',
-      referencedColumnName: 'playerId',
+      name: "playerId",
+      referencedColumnName: "playerId",
     },
   ])
   pim?: Relation<PlayerInMatchEntity>;

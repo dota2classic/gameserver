@@ -21,7 +21,12 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "docker": "docker build . -t dota2classic/matchmaking:gameserver && docker push dota2classic/matchmaking:gameserver",
     "docker:local": "docker build . -t dota2classic/matchmaking:gameserver",
-    "nodemon": "nodemon scrapper.js"
+    "nodemon": "nodemon scrapper.js",
+    "migration:generate": "npx ts-node -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d ./src/config/typeorm.config.ts",
+    "migration:create": "npx ts-node -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:create",
+    "migration:run": "npx ts-node -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d ./src/config/typeorm.config.ts",
+    "migration:run-fake": "npx ts-node -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run --fake -d ./src/config/typeorm.config.ts",
+    "migration:revert": "npx ts-node -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d ./src/config/typeorm.config.ts"
   },
   "dependencies": {
     "@nestjs/cache-manager": "^2.3.0",
@@ -70,8 +75,9 @@
     "@nestjs/testing": "^10.4.10",
     "@swc/cli": "^0.5.1",
     "@swc/core": "^1.9.3",
-    "testcontainers": "^10.15.0",
     "@testcontainers/postgresql": "^10.15.0",
+    "@testcontainers/rabbitmq": "^10.18.0",
+    "@testcontainers/redis": "^10.18.0",
     "@types/express": "^5.0.0",
     "@types/jest": "29.5.14",
     "@types/js-yaml": "^4.0.9",
@@ -86,7 +92,7 @@
     "nodemon": "^3.1.7",
     "prettier": "^3.4.1",
     "supertest": "^7.0.0",
-
+    "testcontainers": "^10.15.0",
     "ts-jest": "29.2.5",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",

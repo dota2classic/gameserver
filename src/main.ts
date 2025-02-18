@@ -13,7 +13,7 @@ import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event'
 import { GameServerDiscoveredEvent } from 'gateway/events/game-server-discovered.event';
 import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
 import './util/promise';
-import configuration from 'util/configuration';
+import configuration from 'config/configuration';
 import { ConfigService } from '@nestjs/config';
 import { WinstonWrapper } from 'util/logger';
 

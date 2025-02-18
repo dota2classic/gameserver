@@ -24,10 +24,12 @@ import { MetaMapper } from 'rest/meta/meta.mapper';
 import { InfoMapper } from 'rest/info/info.mapper';
 import { InfoService } from 'rest/info/info.service';
 import { CrimeController } from 'rest/crime/crime.controller';
-import configuration from 'util/configuration';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm/dist/interfaces/typeorm-options.interface';
 import { RmqController } from 'rmq.controller';
+import { getTypeormConfig } from 'config/typeorm.config';
+import configuration from 'config/configuration';
+import { MmrBucketService } from 'gameserver/mmr-bucket.service';
 
 @Module({
   imports: [
@@ -41,19 +43,11 @@ import { RmqController } from 'rmq.controller';
     TypeOrmModule.forRootAsync({
       useFactory(config: ConfigService): TypeOrmModuleOptions {
         return {
+          ...getTypeormConfig(config),
           type: "postgres",
-          database: "postgres",
-          host: config.get("postgres.host"),
-          username: config.get("postgres.username"),
-          password: config.get("postgres.password"),
-          entities: Entities,
-
-          port: 5432,
-          synchronize: true,
-          dropSchema: false,
-          poolSize: 50,
-
-          ssl: false,
+          migrations: ["dist/src/database/migrations/*.*"],
+          migrationsRun: true,
+          logging: undefined,
         };
       },
       imports: [],
@@ -62,21 +56,21 @@ import { RmqController } from 'rmq.controller';
     TypeOrmModule.forFeature(Entities),
     ClientsModule.registerAsync([
       {
-        name: 'RMQ',
+        name: "RMQ",
         useFactory(config: ConfigService): RmqOptions {
           return {
             transport: Transport.RMQ,
             options: {
               urls: [
                 {
-                  hostname: config.get<string>('rabbitmq.host'),
-                  port: config.get<number>('rabbitmq.port'),
-                  protocol: 'amqp',
-                  username: config.get<string>('rabbitmq.user'),
-                  password: config.get<string>('rabbitmq.password'),
+                  hostname: config.get<string>("rabbitmq.host"),
+                  port: config.get<number>("rabbitmq.port"),
+                  protocol: "amqp",
+                  username: config.get<string>("rabbitmq.user"),
+                  password: config.get<string>("rabbitmq.password"),
                 },
               ],
-              queue: config.get<string>('rabbitmq.gameserver_commands'),
+              queue: config.get<string>("rabbitmq.gameserver_commands"),
               queueOptions: {
                 durable: true,
               },
@@ -124,6 +118,7 @@ import { RmqController } from 'rmq.controller';
     MetaMapper,
     InfoMapper,
     InfoService,
+    MmrBucketService,
     Mapper,
     ...GameServerDomain,
     outerQuery(GetUserInfoQuery, "QueryCore"),

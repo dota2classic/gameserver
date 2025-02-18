@@ -25,8 +25,8 @@ export interface ExpectedConfig {
   };
 }
 
-export default (): ExpectedConfig => {
+export default (config = YAML_CONFIG_FILENAME): ExpectedConfig => {
   return yaml.load(
-    readFileSync(join("./", YAML_CONFIG_FILENAME), "utf8"),
+    readFileSync(join("./", config), "utf8"),
   ) as ExpectedConfig;
 };

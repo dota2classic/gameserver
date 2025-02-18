@@ -2184,6 +2184,20 @@
   dependencies:
     testcontainers "^10.16.0"
 
+"@testcontainers/rabbitmq@^10.18.0":
+  version "10.18.0"
+  resolved "https://registry.yarnpkg.com/@testcontainers/rabbitmq/-/rabbitmq-10.18.0.tgz#f084cce17a2dddbabd444a6df2bd8becd790ddc6"
+  integrity sha512-4qj8Pj0I0s8B7eSa2NqqQI8p8hK+lSdztbzceejZa1QToGtSuYwgfYCRvkWPlASYW8PDpaNotlvk85+bobevkg==
+  dependencies:
+    testcontainers "^10.18.0"
+
+"@testcontainers/redis@^10.18.0":
+  version "10.18.0"
+  resolved "https://registry.yarnpkg.com/@testcontainers/redis/-/redis-10.18.0.tgz#108692114053dca30f183e25a81de4f14664a2ff"
+  integrity sha512-ZRIemaCl7C6ozC6D3PdR7BBfD3roT+EHX3ATIopUCXdemhQ/0gNaCNwt4Zq8akxkf8TvgnJkK/t6+Itm01FcVQ==
+  dependencies:
+    testcontainers "^10.18.0"
+
 "@tokenizer/token@^0.3.0":
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/@tokenizer/token/-/token-0.3.0.tgz#fe98a93fe789247e998c75e74e9c7c63217aa276"
@@ -8885,6 +8899,27 @@ testcontainers@^10.15.0, testcontainers@^10.16.0:
     tmp "^0.2.3"
     undici "^5.28.4"
 
+testcontainers@^10.18.0:
+  version "10.18.0"
+  resolved "https://registry.yarnpkg.com/testcontainers/-/testcontainers-10.18.0.tgz#dbd74e1d6e5de431414a06fb2c2ed9d82971739e"
+  integrity sha512-MnwWsPjsN5QVe+lSU1LwLZVOyjgwSwv1INzkw8FekdwgvOtvJ7FThQEkbmzRcguQootgwmA9FG54NoTChZDRvA==
+  dependencies:
+    "@balena/dockerignore" "^1.0.2"
+    "@types/dockerode" "^3.3.29"
+    archiver "^7.0.1"
+    async-lock "^1.4.1"
+    byline "^5.0.0"
+    debug "^4.3.5"
+    docker-compose "^0.24.8"
+    dockerode "^3.3.5"
+    get-port "^5.1.1"
+    proper-lockfile "^4.1.2"
+    properties-reader "^2.3.0"
+    ssh-remote-port-forward "^1.0.4"
+    tar-fs "^3.0.6"
+    tmp "^0.2.3"
+    undici "^5.28.5"
+
 text-decoder@^1.1.0:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/text-decoder/-/text-decoder-1.2.3.tgz#b19da364d981b2326d5f43099c310cc80d770c65"
@@ -9243,6 +9278,13 @@ undici@^5.28.4:
   version "5.28.4"
   resolved "https://registry.yarnpkg.com/undici/-/undici-5.28.4.tgz#6b280408edb6a1a604a9b20340f45b422e373068"
   integrity sha512-72RFADWFqKmUb2hmmvNODKL3p9hcB6Gt2DOQMis1SEBaV6a4MH8soBvzg+95CYhCKPFedut2JY9bMfrDl9D23g==
+  dependencies:
+    "@fastify/busboy" "^2.0.0"
+
+undici@^5.28.5:
+  version "5.28.5"
+  resolved "https://registry.yarnpkg.com/undici/-/undici-5.28.5.tgz#b2b94b6bf8f1d919bc5a6f31f2c01deb02e54d4b"
+  integrity sha512-zICwjrDrcrUE0pyyJc1I2QzBkLM8FINsgOrt6WjA+BgajVq9Nxu2PbFFXUrAggLfDXlZGZBVZYw7WNV5KiBiBA==
   dependencies:
     "@fastify/busboy" "^2.0.0"
 

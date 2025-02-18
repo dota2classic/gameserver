@@ -16,7 +16,6 @@ import { GetUserInfoQueryResult } from 'gateway/queries/GetUserInfo/get-user-inf
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
 import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
-import { ConfigService } from '@nestjs/config';
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
@@ -34,7 +33,6 @@ export class FindGameServerHandler
     private readonly qbus: QueryBus,
     @Inject("QueryCore") private readonly redisEventQueue: ClientProxy,
     @Inject("RMQ") private readonly rmq: ClientProxy,
-    private readonly config: ConfigService,
     @InjectRepository(MatchmakingModeMappingEntity)
     private readonly matchmakingModeMappingEntityRepository: Repository<MatchmakingModeMappingEntity>,
   ) {
