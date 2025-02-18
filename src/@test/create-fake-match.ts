@@ -1,19 +1,15 @@
-import { Repository } from 'typeorm';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
-import { TestingModule } from '@nestjs/testing';
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { DotaTeam } from 'gateway/shared-types/dota-team';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import { TestEnvironment } from '@test/useFullModule';
 
-export async function createSeason(module: TestingModule) {
-  const seasonRep = module.get<Repository<GameSeasonEntity>>(
-    getRepositoryToken(GameSeasonEntity),
-  );
+export async function createSeason(te: TestEnvironment) {
+  const seasonRep = te.repo(GameSeasonEntity);
   const gs3 = new GameSeasonEntity();
   gs3.id = 3;
   gs3.start_timestamp = new Date("2023-08-31 20:00:00.000000");
@@ -22,18 +18,14 @@ export async function createSeason(module: TestingModule) {
 }
 
 export async function createFakeMatch(
-  module: TestingModule,
+  te: TestEnvironment,
   winner: DotaTeam = DotaTeam.RADIANT,
   mode: MatchmakingMode = MatchmakingMode.UNRANKED,
   duration: number = 100,
 ): Promise<FinishedMatchEntity> {
-  const matchRep = module.get<Repository<FinishedMatchEntity>>(
-    getRepositoryToken(FinishedMatchEntity),
-  );
+  const matchRep = te.repo(FinishedMatchEntity);
 
-  const meRep = module.get<Repository<MatchEntity>>(
-    getRepositoryToken(MatchEntity),
-  );
+  const meRep = te.repo(MatchEntity);
 
   // seasons setup
 
@@ -59,16 +51,15 @@ export async function createFakeMatch(
   return match;
 }
 
+const randInt = (r: number) => Math.round(Math.random() * r);
+
 export async function fillMatch(
-  module: TestingModule,
+  te: TestEnvironment,
   fm: FinishedMatchEntity,
   count: number = 10,
+  modify: (pim: PlayerInMatchEntity) => void = () => undefined,
 ) {
-  const pRep = module.get<Repository<PlayerInMatchEntity>>(
-    getRepositoryToken(PlayerInMatchEntity),
-  );
-
-  const randInt = (r: number) => Math.round(Math.random() * r);
+  const pRep = te.repo(PlayerInMatchEntity);
 
   const pims: PlayerInMatchEntity[] = [];
   for (let i = 0; i < count; i++) {
@@ -92,6 +83,7 @@ export async function fillMatch(
     pim.item3 = randInt(100);
     pim.item4 = randInt(100);
     pim.item5 = randInt(100);
+    modify(pim);
     await pRep.save(pim);
     pims.push(pim);
   }

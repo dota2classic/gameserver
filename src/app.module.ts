@@ -29,6 +29,7 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm/dist/interfaces/typeorm-op
 import { RmqController } from 'rmq.controller';
 import { getTypeormConfig } from 'config/typeorm.config';
 import configuration from 'config/configuration';
+import { MmrBucketService } from 'gameserver/mmr-bucket.service';
 
 @Module({
   imports: [
@@ -117,6 +118,7 @@ import configuration from 'config/configuration';
     MetaMapper,
     InfoMapper,
     InfoService,
+    MmrBucketService,
     Mapper,
     ...GameServerDomain,
     outerQuery(GetUserInfoQuery, "QueryCore"),
