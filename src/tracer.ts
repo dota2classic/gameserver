@@ -7,7 +7,7 @@ import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import { PgInstrumentation } from '@opentelemetry/instrumentation-pg';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import configuration from 'util/configuration';
+import configuration from 'config/configuration';
 
 
 const cfg = configuration();

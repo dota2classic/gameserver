@@ -79,8 +79,11 @@ export class ProcessRankedMatchHandler
   }
 
   async execute(command: ProcessRankedMatchCommand) {
-
-    if(command.mode !== MatchmakingMode.UNRANKED && command.mode !== MatchmakingMode.RANKED) return;
+    if (
+      command.mode !== MatchmakingMode.UNRANKED &&
+      command.mode !== MatchmakingMode.RANKED
+    )
+      return;
 
     // find latest season which start_timestamp > now
     const currentSeason = await this.gameServerService.getCurrentSeason(
@@ -272,7 +275,60 @@ export class ProcessRankedMatchHandler
       change.matchId = matchId;
       return change;
     } catch (e) {
-      this.logger.error("Couldn't create mmr change ", e)
+      this.logger.error("Couldn't create mmr change ", e);
     }
   }
 }
+
+// Get KDA buckets
+
+// with stats as (
+//   select
+//   pim."playerId" as steam_id,
+//   vp.hidden_mmr as mmr,
+//   fm.id,
+//   (pim.team = fm.winner) as win,
+//   fm.matchmaking_mode,
+//   fm.timestamp::date as date,
+//   fm.duration,
+//   ue.name,
+//   pim.hero,
+//   pim.hero_healing,
+//   (pim.kills * 0.3 + pim.deaths * -0.3 + pim.assists * 0.15) as kda_fp,
+//   (pim.last_hits * 0.003 + pim.denies * 0.008) as creep_fp,
+//   (pim.xpm * 0.002 + pim.gpm * 0.002) as pm_fp,
+//   (pim.hero_healing * 0.001 + pim.hero_damage * 0.0001 + pim.tower_damage * 0.001) as dmg_fp
+// from
+// player_in_match pim
+// inner join finished_match fm on
+// fm.id = pim."matchId"
+// inner join user_entity ue on
+// ue.steam_id = pim."playerId"
+// inner join version_player vp on
+// vp.steam_id = pim."playerId"
+// ),
+// fantasy as (
+//   select
+// b.mmr as mmr,
+//   500 * (b.mmr / 500)::int as bucket,
+//   b.kda_fp + b.creep_fp + b.pm_fp + b.dmg_fp as fantasy_total,
+//   (b.kda_fp + b.creep_fp + b.pm_fp + b.dmg_fp) / b.duration * 60 as fpm
+// from
+// stats b
+// where
+// b.matchmaking_mode = 1
+// ),
+// buckets as (
+//   select
+// 500 * (fp.mmr / 500)::int as bucket,
+//   avg(fp.fpm) over (partition by 500 * (fp.mmr / 500)::int) as avg
+// from
+// fantasy fp
+// )
+// select
+// buc.bucket,
+//   avg(buc.avg)
+// from
+// buckets buc
+// group by
+// buc.bucket
