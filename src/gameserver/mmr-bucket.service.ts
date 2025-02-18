@@ -13,7 +13,8 @@ export class MmrBucketService {
   constructor(private readonly datasource: DataSource) {}
 
   public async getPlayerFpmInSeason(steamId: string) {
-    const d = await this.datasource.query<{ fpm: number }[]>(`
+    const d = await this.datasource.query<{ fpm: number }[]>(
+      `
       select
         avg(60 * fantasy_score(pim) / fm.duration)::numeric as fpm
       from
@@ -32,7 +33,9 @@ export class MmrBucketService {
             order by
                 gs.start_timestamp desc
             limit 1)
-      `, [steamId]);
+      `,
+      [steamId],
+    );
     return d[0].fpm;
   }
 
@@ -45,31 +48,35 @@ export class MmrBucketService {
     playerMmr: number,
     playerAvgFpm: number,
   ): Promise<number> {
-    const playerBucket = await this.getBucketForFantasy(playerAvgFpm);
+    const playerBucket = await this.getBucketForFantasy(playerMmr);
     if (!playerBucket) return 1.0;
 
-    if (playerBucket.maxMmr <= playerMmr) {
-      // Player has more mmr than average performance
-      // Therefore, we return a smaller number
-      return (
-        (playerBucket.maxMmr - MmrBucketService.BUCKET_SIZE / 2) / playerMmr
-      );
-    } else {
-      // Number > 1, means
-      return (
-        (playerBucket.maxMmr - MmrBucketService.BUCKET_SIZE / 2) / playerMmr
-      );
+    if (playerBucket.fantasy === 0) return 1.0;
+
+    const relPerf = playerAvgFpm / playerBucket.fantasy;
+    // Clamp to [-4, 4]
+    if (relPerf > 4) {
+      return 4;
     }
+    if (relPerf < -4) {
+      return -4;
+    }
+    return relPerf;
   }
 
-  public async getBucketForFantasy(
-    fpm: number,
+  private async getBucketForFantasy(
+    mmr: number,
   ): Promise<FantasyBucket | undefined> {
     const buckets = await this.getFantasyBuckets();
+
     if (buckets.length === 0) return undefined;
-    return buckets.sort(
-      (a, b) => Math.abs(a.fantasy - fpm) - Math.abs(b.fantasy - fpm),
-    )[0];
+    for (let bucket of buckets) {
+      if (bucket.maxMmr > mmr) {
+        return bucket;
+      }
+    }
+
+    return undefined;
   }
 
   private async getFantasyBuckets(): Promise<FantasyBucket[]> {
