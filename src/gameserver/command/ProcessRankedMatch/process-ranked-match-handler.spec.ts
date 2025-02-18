@@ -73,15 +73,18 @@ describe("ProcessRnakedMatchHandler", () => {
     // given
     const mbs = te.service(MmrBucketService);
 
-    // @ts-expect-error private method
-    const getBucketSpy: jest.Mock = jest.spyOn(mbs, "getFantasyBuckets") as unknown as jest.Mock;
+    // noinspection TypeScriptValidateTypes
+    const getBucketSpy: jest.Mock = jest.spyOn(
+      mbs,
+      "getFantasyBuckets",
+    ) as unknown as jest.Mock;
 
     // when
 
     const fm = await createFakeMatch(te, DotaTeam.RADIANT);
     let i = 0;
     const pims = await fillMatch(te, fm, 10, (pim) => {
-      pim.kills = 15;
+      pim.kills = 2 + (10 - i);
       pim.deaths = i;
       pim.assists = 5 + (10 - i);
 
@@ -149,15 +152,19 @@ describe("ProcessRnakedMatchHandler", () => {
         if (change.playerPerformanceCoefficient > 1) {
           // We expect to receive more than 100 mmr
           expect(change.change).toBeGreaterThan(baselineChange);
-        } else {
+        } else if (change.playerPerformanceCoefficient < 1) {
           expect(change.change).toBeLessThan(baselineChange);
+        } else {
+          expect(change.change).toEqual(baselineChange);
         }
       } else {
         if (change.playerPerformanceCoefficient > 1) {
           // We expect to receive more than 100 mmr
           expect(change.change).toBeGreaterThan(-baselineChange);
-        } else {
+        } else if (change.playerPerformanceCoefficient < 1) {
           expect(change.change).toBeLessThan(-baselineChange);
+        } else {
+          expect(change.change).toEqual(-baselineChange);
         }
       }
     }

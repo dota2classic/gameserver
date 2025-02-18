@@ -48,7 +48,7 @@ export class MmrBucketService {
     playerMmr: number,
     playerAvgFpm: number,
   ): Promise<number> {
-    const playerBucket = await this.getBucketForFantasy(playerMmr);
+    const playerBucket = await this.getBucketForMmr(playerMmr);
     if (!playerBucket) return 1.0;
 
     if (playerBucket.fantasy === 0) return 1.0;
@@ -64,22 +64,7 @@ export class MmrBucketService {
     return relPerf;
   }
 
-  private async getBucketForFantasy(
-    mmr: number,
-  ): Promise<FantasyBucket | undefined> {
-    const buckets = await this.getFantasyBuckets();
-
-    if (buckets.length === 0) return undefined;
-    for (let bucket of buckets) {
-      if (bucket.maxMmr > mmr) {
-        return bucket;
-      }
-    }
-
-    return undefined;
-  }
-
-  private async getFantasyBuckets(): Promise<FantasyBucket[]> {
+  async getFantasyBuckets(): Promise<FantasyBucket[]> {
     return (
       await this.datasource.query<
         {
@@ -123,6 +108,8 @@ export class MmrBucketService {
         fantasy_history fh
     group by
         1
+    having 
+        count(fh.id) > 100
     `,
         [MmrBucketService.BUCKET_SIZE],
       )
@@ -132,5 +119,19 @@ export class MmrBucketService {
         fantasy: it.fpm,
       }))
       .sort((a, b) => a.maxMmr - b.maxMmr);
+  }
+
+  private async getBucketForMmr(
+    mmr: number,
+  ): Promise<FantasyBucket | undefined> {
+    const buckets = await this.getFantasyBuckets();
+
+    if (buckets.length === 0) return undefined;
+
+    return buckets.find(
+      (bucket) =>
+        mmr > bucket.maxMmr - MmrBucketService.BUCKET_SIZE &&
+        mmr <= bucket.maxMmr,
+    );
   }
 }
