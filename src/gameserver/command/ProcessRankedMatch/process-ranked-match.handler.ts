@@ -121,22 +121,25 @@ export class ProcessRankedMatchHandler
       },
     });
 
+    this.logger.log(`Processing ranked match ${m.id}`);
     const { diffDeviationFactor, winnerAverage, loserAverage } =
       this.getTeamBalance(command, playerMap);
 
     const changelogs = await Promise.all(
-      [...command.winners, ...command.losers].map(async (t, idx) => this.changeMMR(
-        currentSeason,
-        t,
-        idx < command.winners.length,
-        diffDeviationFactor,
-        winnerAverage,
-        loserAverage,
-        command.matchId,
-        m.timestamp,
-        playerMap,
-        m.players.find((it) => it.playerId === t.value)?.abandoned || false,
-      )),
+      [...command.winners, ...command.losers].map(async (t, idx) =>
+        this.changeMMR(
+          currentSeason,
+          t,
+          idx < command.winners.length,
+          diffDeviationFactor,
+          winnerAverage,
+          loserAverage,
+          command.matchId,
+          m.timestamp,
+          playerMap,
+          m.players.find((it) => it.playerId === t.value)?.abandoned || false,
+        ),
+      ),
     );
 
     await this.datasource.transaction(async ($em) => {
@@ -161,7 +164,6 @@ export class ProcessRankedMatchHandler
 
     return check > 0;
   }
-
 
   private async getVersionPlayerMap(command: ProcessRankedMatchCommand) {
     const map = new Map<string, VersionPlayerEntity>();

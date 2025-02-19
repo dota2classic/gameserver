@@ -451,4 +451,30 @@ export class GameServerService {
       this.logger.log(`Processed match ${i + 1} / ${matches.length}`);
     }
   }
+
+  public async debugProcessRankedMatch(id: number) {
+    const match = await this.finishedMatchRepository.findOneOrFail({
+      where: {
+        id,
+      },
+      order: {
+        timestamp: "ASC",
+      },
+      // take: 20,
+      relations: ["players"],
+    });
+
+    await this.cbus.execute(
+      new ProcessRankedMatchCommand(
+        match.id,
+        match.players
+          .filter((t) => t.team === match.winner)
+          .map((t) => new PlayerId(t.playerId)),
+        match.players
+          .filter((t) => t.team !== match.winner)
+          .map((t) => new PlayerId(t.playerId)),
+        match.matchmaking_mode,
+      ),
+    );
+  }
 }

@@ -16,6 +16,7 @@ import './util/promise';
 import configuration from 'config/configuration';
 import { ConfigService } from '@nestjs/config';
 import { WinstonWrapper } from 'util/logger';
+import { GameServerService } from 'gameserver/gameserver.service';
 
 export function prepareModels(publisher: EventPublisher) {
   // publisher.mergeClassContext(GameServerModel);
@@ -26,7 +27,6 @@ async function bootstrap() {
 
   const parsedConfig = configuration();
   const config = new ConfigService(parsedConfig);
-
 
   const app = await NestFactory.create(AppModule, {
     logger: new WinstonWrapper(
@@ -39,12 +39,12 @@ async function bootstrap() {
   app.connectMicroservice({
     transport: Transport.REDIS,
     options: {
-      username: 'default',
-      host: config.get('redis.host'),
+      username: "default",
+      host: config.get("redis.host"),
       port: 6379,
       retryAttempts: Infinity,
       retryDelay: 5000,
-      password: config.get('redis.password')
+      password: config.get("redis.password"),
     },
   });
 
@@ -53,14 +53,14 @@ async function bootstrap() {
     options: {
       urls: [
         {
-          hostname: config.get<string>('rabbitmq.host'),
-          port: config.get<number>('rabbitmq.port'),
-          protocol: 'amqp',
-          username: config.get<string>('rabbitmq.user'),
-          password: config.get<string>('rabbitmq.password'),
+          hostname: config.get<string>("rabbitmq.host"),
+          port: config.get<number>("rabbitmq.port"),
+          protocol: "amqp",
+          username: config.get<string>("rabbitmq.user"),
+          password: config.get<string>("rabbitmq.password"),
         },
       ],
-      queue: config.get<string>('rabbitmq.srcds_events'),
+      queue: config.get<string>("rabbitmq.srcds_events"),
       prefetchCount: 5,
       noAck: false,
       queueOptions: {
@@ -70,14 +70,14 @@ async function bootstrap() {
   });
 
   const options = new DocumentBuilder()
-    .setTitle('GameServer api')
-    .setDescription('Matches, players, mmrs')
-    .setVersion('1.0')
-    .addTag('game')
+    .setTitle("GameServer api")
+    .setDescription("Matches, players, mmrs")
+    .setVersion("1.0")
+    .addTag("game")
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, options);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup("api", app, document);
 
   await app.listen(5003);
 
@@ -90,11 +90,11 @@ async function bootstrap() {
   const cbus = app.get(CommandBus);
   const qbus = app.get(QueryBus);
 
-  const clogger = new Logger('CommandLogger');
-  const elogger = new Logger('EventLogger');
-  const qlogger = new Logger('EventLogger');
+  const clogger = new Logger("CommandLogger");
+  const elogger = new Logger("EventLogger");
+  const qlogger = new Logger("EventLogger");
 
-  ebus.subscribe(e => {
+  ebus.subscribe((e) => {
     if (e.constructor.name === ServerActualizationRequestedEvent.name) return;
     if (e.constructor.name === ServerSessionSyncEvent.name) return;
     if (e.constructor.name === LiveMatchUpdateEvent.name) return;
@@ -108,7 +108,7 @@ async function bootstrap() {
   //   qlogger.log(`${inspect(e)}`);
   // });
 
-  cbus.pipe(ofType(FindGameServerCommand)).subscribe(e => {
+  cbus.pipe(ofType(FindGameServerCommand)).subscribe((e) => {
     clogger.log(
       `${inspect(e)}`,
       // e.__proto__.constructor.name,
@@ -123,6 +123,6 @@ async function bootstrap() {
   //   console.error("Wrong", data.length)
   // }
 
-
+  await app.get(GameServerService).debugProcessRankedMatch(20379);
 }
 bootstrap();
