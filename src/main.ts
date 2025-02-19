@@ -124,5 +124,6 @@ async function bootstrap() {
   // }
 
   await app.get(GameServerService).debugProcessRankedMatch(20379);
+  await app.get(GameServerService).debugProcessRankedMatch(20386);
 }
 bootstrap();
