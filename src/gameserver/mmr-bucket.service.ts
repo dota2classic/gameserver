@@ -25,6 +25,7 @@ export class MmrBucketService {
       where
         pim."playerId" = $1
         and fm.matchmaking_mode in (0, 1)
+        and fm.duration > 0
         and fm.timestamp >= (
             select
                 gs.start_timestamp::date
