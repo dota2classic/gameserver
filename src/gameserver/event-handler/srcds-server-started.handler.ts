@@ -10,11 +10,14 @@ import { GameServerInfo } from 'gateway/shared-types/game-server-info';
 import { Dota_GameRulesState } from 'gateway/shared-types/dota-game-rules-state';
 import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
 import { DotaConnectionState } from 'gateway/shared-types/dota-player-connection-state';
+import { Logger } from '@nestjs/common';
 
 @EventsHandler(SrcdsServerStartedEvent)
 export class SrcdsServerStartedHandler
   implements IEventHandler<SrcdsServerStartedEvent>
 {
+  private logger = new Logger(SrcdsServerStartedHandler.name);
+
   constructor(
     @InjectRepository(MatchEntity)
     private readonly matchEntityRepository: Repository<MatchEntity>,
@@ -25,6 +28,7 @@ export class SrcdsServerStartedHandler
   ) {}
 
   async handle(event: SrcdsServerStartedEvent) {
+    this.logger.log("Srcds server started: assigning server url")
     const m = await this.matchEntityRepository.findOneOrFail({
       where: { id: event.matchId },
     });
@@ -68,6 +72,7 @@ export class SrcdsServerStartedHandler
       );
 
       await em.save(GameServerSessionEntity, session);
+      this.logger.log(`Game server session created ${event.matchId}`)
 
       // Players
       const players = event.info.players.map(
@@ -83,6 +88,8 @@ export class SrcdsServerStartedHandler
       );
       await em.save(GameSessionPlayerEntity, players);
       session.players = players;
+
+      this.logger.log(`Game server session players created ${event.matchId}`)
 
       return session;
     });

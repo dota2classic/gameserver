@@ -16,7 +16,6 @@ import './util/promise';
 import configuration from 'config/configuration';
 import { ConfigService } from '@nestjs/config';
 import { WinstonWrapper } from 'util/logger';
-import { GameServerService } from 'gameserver/gameserver.service';
 
 export function prepareModels(publisher: EventPublisher) {
   // publisher.mergeClassContext(GameServerModel);
@@ -123,7 +122,10 @@ async function bootstrap() {
   //   console.error("Wrong", data.length)
   // }
 
-  await app.get(GameServerService).debugProcessRankedMatch(20379);
-  await app.get(GameServerService).debugProcessRankedMatch(20386);
+  // const r1 = async () =>
+  //   (await app.get(RecordService).getMostKda()).map((it) => it.match.id);
+  // console.log(await r1());
+  //
+  // console.log(await r1());
 }
 bootstrap();

@@ -49,7 +49,7 @@ export class WinstonWrapper implements LoggerService {
   }
 
   error(message: any, ...optionalParams: any[]): any {
-    console.trace(message);
+    console.trace(optionalParams[0]);
     this.winstonInstance.error(this.wrap(message, optionalParams[0]));
   }
 

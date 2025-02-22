@@ -30,6 +30,8 @@ import { RmqController } from 'rmq.controller';
 import { getTypeormConfig } from 'config/typeorm.config';
 import configuration from 'config/configuration';
 import { MmrBucketService } from 'gameserver/mmr-bucket.service';
+import { RecordController } from 'rest/record.controller';
+import { RecordService } from 'rest/service/record.service';
 
 @Module({
   imports: [
@@ -37,7 +39,9 @@ import { MmrBucketService } from 'gameserver/mmr-bucket.service';
       isGlobal: true,
       load: [configuration],
     }),
-    CacheModule.register(),
+    CacheModule.register({
+      isGlobal: true
+    }),
     ScheduleModule.forRoot(),
     CqrsModule,
     TypeOrmModule.forRootAsync({
@@ -108,6 +112,7 @@ import { MmrBucketService } from 'gameserver/mmr-bucket.service';
     InfoController,
     MetaController,
     CrimeController,
+    RecordController,
   ],
   providers: [
     AppService,
@@ -120,6 +125,7 @@ import { MmrBucketService } from 'gameserver/mmr-bucket.service';
     InfoService,
     MmrBucketService,
     Mapper,
+    RecordService,
     ...GameServerDomain,
     outerQuery(GetUserInfoQuery, "QueryCore"),
   ],

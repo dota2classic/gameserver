@@ -7,6 +7,8 @@ import { AchievementEntity } from 'gameserver/model/achievement.entity';
 import { AchievementDto } from 'rest/dto/achievement.dto';
 import { AchievementService } from 'gameserver/achievement.service';
 import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
+import { PlayerRecordDto } from 'rest/dto/record.dto';
+import { RecordEntry } from 'rest/service/record.service';
 
 @Injectable()
 export class Mapper {
@@ -56,10 +58,10 @@ export class Mapper {
     mode: match.matchmaking_mode,
     game_mode: match.game_mode,
     radiant: match.players
-      .filter(t => t.team === DotaTeam.RADIANT)
+      .filter((t) => t.team === DotaTeam.RADIANT)
       .map(this.mapPlayerInMatch),
     dire: match.players
-      .filter(t => t.team === DotaTeam.DIRE)
+      .filter((t) => t.team === DotaTeam.DIRE)
       .map(this.mapPlayerInMatch),
     winner: match.winner,
     duration: match.duration,
@@ -71,8 +73,6 @@ export class Mapper {
   //   mmr: it.mmr,
   // });
 
-
-
   public mapAchievement = (it: AchievementEntity): AchievementDto => ({
     key: it.achievement_key,
     steamId: it.steam_id,
@@ -81,4 +81,12 @@ export class Mapper {
     isComplete: this.as.achievementMap.get(it.achievement_key).isComplete(it),
     match: it.match ? this.mapMatch(it.match) : undefined,
   });
+
+  public mapRecordDto = async (it: RecordEntry): Promise<PlayerRecordDto> => {
+    return {
+      match: it.match && (await this.mapMatch(it.match)),
+      steamId: it.steamId,
+      recordType: it.type,
+    };
+  };
 }
