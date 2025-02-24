@@ -27,12 +27,11 @@ export class MakeSureExistsHandler
 
   private async makeSureExists(steam_id: string, version: Dota2Version) {
     const p = await this.versionPlayerRepository.findOne({
-      where: { steam_id, version: Dota2Version.Dota_681 },
+      where: { steamId: steam_id },
     });
     if (!p) {
       const vp = new VersionPlayerEntity();
-      vp.steam_id = steam_id;
-      vp.version = version;
+      vp.steamId = steam_id;
       vp.mmr = VersionPlayerEntity.STARTING_MMR;
       await this.versionPlayerRepository.save(vp);
     }

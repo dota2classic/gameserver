@@ -1,15 +1,14 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
-import { Dota2Version } from 'gateway/shared-types/dota2version';
+import { Column, Entity, OneToMany, PrimaryColumn, Relation } from 'typeorm';
+import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 
-
-@Entity('game_season')
+@Entity("game_season")
 export class GameSeasonEntity {
   @PrimaryColumn()
   public id: number;
 
-  @PrimaryColumn()
-  public version: Dota2Version;
-
   @Column()
   start_timestamp!: Date;
+
+  @OneToMany(() => VersionPlayerEntity, (t) => t.season)
+  players: Relation<VersionPlayerEntity>[];
 }

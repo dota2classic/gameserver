@@ -1,7 +1,6 @@
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import { MatchEntity } from 'gameserver/model/match.entity';
-import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { DotaTeam } from 'gateway/shared-types/dota-team';
@@ -13,7 +12,6 @@ export async function createSeason(te: TestEnvironment) {
   const gs3 = new GameSeasonEntity();
   gs3.id = 3;
   gs3.start_timestamp = new Date("2023-08-31 20:00:00.000000");
-  gs3.version = Dota2Version.Dota_684;
   await seasonRep.save(gs3);
 }
 

@@ -56,8 +56,7 @@ export class PlayerService {
 
     const p = await this.versionPlayerRepository.findOne({
       where: {
-        steam_id,
-        version: Dota2Version.Dota_681,
+        steamId: steam_id,
       },
     });
 

@@ -169,22 +169,20 @@ export class ProcessRankedMatchHandler
     const map = new Map<string, VersionPlayerEntity>();
     const plrs = await this.versionPlayerRepository.find({
       where: {
-        steam_id: In(
+        steamId: In(
           [...command.losers, ...command.winners].map((t) => t.value),
         ),
       },
     });
 
-    plrs.forEach((plr) => map.set(plr.steam_id, plr));
+    plrs.forEach((plr) => map.set(plr.steamId, plr));
 
     // here we do some tricks
     [...command.losers, ...command.winners].forEach((pid) => {
       if (!map.has(pid.value)) {
         const vp = new VersionPlayerEntity();
-        vp.steam_id = pid.value;
-        vp.hidden_mmr = VersionPlayerEntity.STARTING_MMR;
+        vp.steamId = pid.value;
         vp.mmr = VersionPlayerEntity.STARTING_MMR;
-        vp.version = Dota2Version.Dota_681;
         map.set(pid.value, vp);
       }
     });
@@ -196,10 +194,8 @@ export class ProcessRankedMatchHandler
     command: ProcessRankedMatchCommand,
     playerMap: Map<string, VersionPlayerEntity>,
   ): TeamBalance {
-    const isHiddenMmr = command.mode !== MatchmakingMode.RANKED;
 
-    const getMmr: GetMmr = (plr: VersionPlayerEntity): number =>
-      isHiddenMmr ? plr.hidden_mmr : plr.mmr;
+    const getMmr: GetMmr = (plr: VersionPlayerEntity): number => plr.mmr;
 
     const winnerMMR = command.winners
       .map((t) => playerMap.get(t.value))
@@ -245,12 +241,12 @@ export class ProcessRankedMatchHandler
     // Calculate player performance coefficient
     const playerPerformanceCoefficient =
       await this.mmrBucketService.additionalPerformanceCoefficient(
-        plr.hidden_mmr,
-        await this.mmrBucketService.getPlayerFpmInSeason(plr.steam_id),
+        plr.mmr,
+        await this.mmrBucketService.getPlayerFpmInSeason(plr.steamId),
       );
 
     this.logger.log(
-      `Player's ${plr.steam_id} performance coefficient is ${playerPerformanceCoefficient}`,
+      `Player's ${plr.steamId} performance coefficient is ${playerPerformanceCoefficient}`,
     );
 
     let mmrChange = Math.round(
@@ -270,14 +266,14 @@ export class ProcessRankedMatchHandler
 
     this.logger.log(
       `Updating MMR for ${
-        plr.steam_id
-      }. Now: ${plr.hidden_mmr}, change: ${mmrChange}`,
+        plr.steamId
+      }. Now: ${plr.mmr}, change: ${mmrChange}`,
     );
 
     try {
       let mmrBefore: number;
-      mmrBefore = plr.hidden_mmr;
-      plr.hidden_mmr = plr.hidden_mmr + mmrChange;
+      mmrBefore = plr.mmr;
+      plr.mmr = plr.mmr + mmrChange;
 
       const change = new MmrChangeLogEntity();
       change.playerId = pid.value;

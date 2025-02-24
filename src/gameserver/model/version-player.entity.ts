@@ -1,19 +1,23 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
-import { Dota2Version } from 'gateway/shared-types/dota2version';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 
-@Entity('version_player')
+@Entity("version_player")
 export class VersionPlayerEntity {
-  @PrimaryColumn()
-  steam_id: string;
+  @PrimaryColumn({ name: "steam_id" })
+  steamId: string;
 
-  @PrimaryColumn()
-  version: Dota2Version;
-
-  @Column({ default: VersionPlayerEntity.STARTING_MMR })
+  @Column({ default: VersionPlayerEntity.STARTING_MMR, name: "mmr" })
   mmr: number = VersionPlayerEntity.STARTING_MMR;
 
-  @Column({ default: VersionPlayerEntity.STARTING_MMR })
-  hidden_mmr: number = VersionPlayerEntity.STARTING_MMR;
+  @ManyToOne(() => GameSeasonEntity, (t) => t.players)
+  @JoinColumn({
+    referencedColumnName: "id",
+    name: "season_id",
+  })
+  season: GameSeasonEntity;
+
+  @Column({ name: "season_id", default: 1 })
+  seasonId: number;
 
   public static STARTING_MMR = 2500;
 }

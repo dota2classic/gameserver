@@ -66,7 +66,7 @@ from version_player vp,
      recent_games rg
 
 where vp.steam_id = $1
-group by vp.steam_id, vp.mmr, vp.version`,
+group by vp.steam_id, vp.hidden_mmr, vp.version`,
         [command.playerId.value, 20],
       )
     )[0];
