@@ -1,34 +1,66 @@
 import { Index, ViewColumn, ViewEntity } from 'typeorm';
 
 @ViewEntity({
-  expression: `with cte as (select plr."playerId"                                                                   as steam_id,
-                    count(*)::int                                                                    as any_games,
-                    sum((m.winner = plr.team)::int)::int                                             as bot_wins,
-                    sum((m.matchmaking_mode in (0, 1))::int)::int                                    as games,
-                    sum((m.winner = plr.team and m.matchmaking_mode in (0, 1))::int)::int            as wins,
-                    sum((m.matchmaking_mode = 0 and m.timestamp > now() - '14 days'::interval)::int) as recent_ranked_games,
-                    coalesce(p.hidden_mmr, -1)                                                       as mmr
-             from player_in_match plr
-                      left join version_player p on plr."playerId" = p.steam_id
-                      inner join finished_match m on plr."matchId" = m.id
-             group by plr."playerId", p.hidden_mmr)
-select p.steam_id,
-       p.wins,
-       p.games,
-       p.any_games,
-       p.bot_wins,
-       p.mmr                                                                        as mmr,
-       avg(pim.kills)::float                                                        as kills,
-       avg(pim.deaths)::float                                                       as deaths,
-       avg(pim.assists)::float                                                      as assists,
-       sum(m.duration)::int                                                         as play_time,
-       sum((m.matchmaking_mode in (0, 1))::int)                                     as ranked_games,
-       (row_number() over ( order by p.mmr desc))::int                              as rank
-from cte p
-         inner join player_in_match pim on pim."playerId" = p.steam_id
-         inner join finished_match m on pim."matchId" = m.id
-group by p.steam_id, p.recent_ranked_games, p.mmr, p.games, p.wins, p.any_games, p.bot_wins
-order by rank, games desc`,
+  expression: `
+with current_season as (
+select
+    *
+from
+    game_season gs
+order by
+    gs.start_timestamp desc
+limit 1),
+cte as (
+select
+    plr."playerId" as steam_id,
+    count(*)::int as any_games,
+    sum((fm.winner = plr.team)::int)::int as bot_wins,
+    sum((fm.matchmaking_mode in (0, 1))::int)::int as games,
+    sum((fm.winner = plr.team and fm.matchmaking_mode in (0, 1))::int)::int as wins,
+    coalesce(vp.mmr,
+    -1) as mmr
+from
+    player_in_match plr
+left join version_player vp on
+    plr."playerId" = vp.steam_id
+inner join finished_match fm on
+    plr."matchId" = fm.id
+inner join current_season cs on
+    fm.timestamp >= cs.start_timestamp
+group by
+    plr."playerId",
+    vp.mmr)
+select
+    p.steam_id,
+    p.wins,
+    p.games,
+    p.any_games,
+    p.bot_wins,
+    p.mmr as mmr,
+    avg(pim.kills)::float as kills,
+    avg(pim.deaths)::float as deaths,
+    avg(pim.assists)::float as assists,
+    sum(m.duration)::int as play_time,
+    sum((m.matchmaking_mode in (0, 1))::int) as ranked_games,
+    (row_number() over (
+order by
+    p.mmr desc))::int as rank
+from
+    cte p
+inner join player_in_match pim on
+    pim."playerId" = p.steam_id
+inner join finished_match m on
+    pim."matchId" = m.id
+group by
+    p.steam_id,
+    p.mmr,
+    p.games,
+    p.wins,
+    p.any_games,
+    p.bot_wins
+order by
+    rank,
+    games desc`,
   materialized: true,
 })
 export class LeaderboardView {
@@ -52,9 +84,6 @@ export class LeaderboardView {
   @Index()
   @ViewColumn()
   games: number;
-
-  @ViewColumn()
-  ranked_games: number;
 
   @ViewColumn()
   wins: number;

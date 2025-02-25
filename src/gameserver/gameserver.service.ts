@@ -139,10 +139,10 @@ export class GameServerService {
   ): Promise<GameSeasonEntity> {
     return this.gameSeasonRepository.findOne({
       where: {
-        start_timestamp: LessThanOrEqual(new Date()),
+        startTimestamp: LessThanOrEqual(new Date()),
       },
       order: {
-        start_timestamp: "DESC",
+        startTimestamp: "DESC",
       },
     });
   }
@@ -154,13 +154,15 @@ export class GameServerService {
     beforeTimestamp: string,
   ) {
     let plr = await this.versionPlayerRepository.findOne({
-      where: { steamId: pid.value },
+      where: { steamId: pid.value, seasonId: season.id },
     });
 
     if (!plr) {
-      plr = new VersionPlayerEntity();
-      plr.steamId = pid.value;
-      plr.mmr = VersionPlayerEntity.STARTING_MMR;
+      plr = new VersionPlayerEntity(
+        pid.value,
+        VersionPlayerEntity.STARTING_MMR,
+        season.id,
+      );
       await this.versionPlayerRepository.save(plr);
     }
 
@@ -168,7 +170,7 @@ export class GameServerService {
       .createQueryBuilder("pim")
       .innerJoin("pim.match", "m")
       .where("pim.playerId = :id", { id: plr.steamId })
-      .andWhere("m.timestamp > :season", { season: season.start_timestamp })
+      .andWhere("m.timestamp > :season", { season: season.startTimestamp })
       .andWhere("m.timestamp < :current_timestamp", {
         current_timestamp: beforeTimestamp,
       });

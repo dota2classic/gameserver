@@ -33,6 +33,8 @@ import { PlayerConnectedHandler } from 'gameserver/event-handler/player-connecte
 import { SaveGameResultsHandler } from 'gameserver/command/SaveGameResults/save-game-results.handler';
 import { SaveMatchFailedHandler } from 'gameserver/command/SaveMatchFailed/save-match-failed.handler';
 import { SavePlayerAbandonHandler } from 'gameserver/command/SavePlayerAbandon/save-player-abandon.handler';
+import { GameSeasonService } from 'gameserver/service/game-season.service';
+import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -43,7 +45,7 @@ const CommandHandlers = [
 
   SaveGameResultsHandler,
   SaveMatchFailedHandler,
-  SavePlayerAbandonHandler
+  SavePlayerAbandonHandler,
 ];
 const EventHandlers = [
   PlayerConnectedHandler,
@@ -73,9 +75,18 @@ const EventHandlers = [
   PlayerReportedHandler,
 ];
 
-const QueryHandlers = [GetPlayerInfoHandler, GetSessionByUserHandler, GetReportsAvailableHandler];
+const QueryHandlers = [
+  GetPlayerInfoHandler,
+  GetSessionByUserHandler,
+  GetReportsAvailableHandler,
+];
 const Repositories = [GameServerSessionRepository];
-const Services = [GameServerService, AchievementService];
+const Services = [
+  GameServerService,
+  AchievementService,
+  GameSeasonService,
+  PlayerServiceV2,
+];
 const Sagas = [GameserverSaga];
 
 export const GameServerDomain = [

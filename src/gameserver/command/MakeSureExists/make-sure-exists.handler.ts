@@ -3,36 +3,43 @@ import { Logger } from '@nestjs/common';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { inspect } from 'util';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
+import { GameSeasonService } from 'gameserver/service/game-season.service';
 
 @CommandHandler(MakeSureExistsCommand)
 export class MakeSureExistsHandler
-  implements ICommandHandler<MakeSureExistsCommand> {
+  implements ICommandHandler<MakeSureExistsCommand>
+{
   private readonly logger = new Logger(MakeSureExistsHandler.name);
 
   constructor(
     @InjectRepository(VersionPlayerEntity)
     private readonly versionPlayerRepository: Repository<VersionPlayerEntity>,
+    private readonly gsService: GameSeasonService,
   ) {}
 
   async execute(command: MakeSureExistsCommand) {
     try {
-      await this.makeSureExists(command.id.value, Dota2Version.Dota_681);
-    }catch (e){
-      this.logger.error(`Error creating new user? ${command.id.value} ${inspect(command)}`)
+      await this.makeSureExists(command.id.value);
+    } catch (e) {
+      this.logger.error(
+        `Error creating new user? ${command.id.value} ${inspect(command)}`,
+      );
     }
   }
 
-  private async makeSureExists(steam_id: string, version: Dota2Version) {
+  private async makeSureExists(steam_id: string) {
     const p = await this.versionPlayerRepository.findOne({
       where: { steamId: steam_id },
     });
+    const season = await this.gsService.getCurrentSeason();
     if (!p) {
-      const vp = new VersionPlayerEntity();
-      vp.steamId = steam_id;
-      vp.mmr = VersionPlayerEntity.STARTING_MMR;
+      const vp = new VersionPlayerEntity(
+        steam_id,
+        VersionPlayerEntity.STARTING_MMR,
+        season.id,
+      );
       await this.versionPlayerRepository.save(vp);
     }
   }

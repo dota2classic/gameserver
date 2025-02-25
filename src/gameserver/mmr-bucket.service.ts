@@ -28,7 +28,7 @@ export class MmrBucketService {
         and fm.duration > 0
         and fm.timestamp >= (
             select
-                gs.start_timestamp::date
+                gs.start_timestamp
             from
                 game_season gs
             order by
@@ -79,7 +79,7 @@ export class MmrBucketService {
       select
       fm.id,
         pim."playerId" as steam_id,
-      vp.hidden_mmr as mmr,
+      vp.mmr as mmr,
       pim.hero,
       fm.duration,
       fantasy_score(pim) as fp

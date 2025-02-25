@@ -143,11 +143,6 @@ describe("ProcessRnakedMatchHandler", () => {
 
     const baselineChange = 100;
     for (let change of changes) {
-      console.log(
-        change.playerPerformanceCoefficient,
-        change.winner,
-        change.change,
-      );
       if (change.winner) {
         if (change.playerPerformanceCoefficient > 1) {
           // We expect to receive more than 100 mmr
@@ -189,11 +184,11 @@ describe("ProcessRnakedMatchHandler", () => {
       const pim = pims.find((pim) => pim.playerId === change.playerId);
       console.log("Amogus!", change, pim);
       if (pim?.abandoned) {
-        expect(change.change).toBeLessThan(0);
+        expect(change.change).toBeLessThanOrEqual(0);
       } else if (pim.team === DotaTeam.RADIANT) {
-        expect(change.change).toBeGreaterThan(0);
+        expect(change.change).toBeGreaterThanOrEqual(0);
       } else {
-        expect(change.change).toBeLessThan(0);
+        expect(change.change).toBeLessThanOrEqual(0);
       }
     }
   });

@@ -20,4 +20,11 @@ export class VersionPlayerEntity {
   seasonId: number;
 
   public static STARTING_MMR = 2500;
+
+
+  constructor(steamId: string, mmr: number, seasonId: number) {
+    this.steamId = steamId;
+    this.mmr = mmr;
+    this.seasonId = seasonId;
+  }
 }

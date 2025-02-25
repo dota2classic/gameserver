@@ -13,12 +13,12 @@ export class TestDataService {
   public async init() {
     const gs1 = new GameSeasonEntity();
     gs1.id = 1;
-    gs1.start_timestamp = new Date('2020-07-07 00:00:00.000000');
+    gs1.startTimestamp = new Date('2020-07-07 00:00:00.000000');
     await this.gameSeasonRepository.save(gs1);
 
     const gs2 = new GameSeasonEntity();
     gs2.id = 2;
-    gs2.start_timestamp = new Date('2020-08-31 20:00:00.000000');
+    gs2.startTimestamp = new Date('2020-08-31 20:00:00.000000');
     await this.gameSeasonRepository.save(gs2);
   }
 }

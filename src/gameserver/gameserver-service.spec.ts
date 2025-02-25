@@ -56,14 +56,12 @@ describe.skip("GameserverService", () => {
     );
     const gs1 = new GameSeasonEntity();
     gs1.id = 1;
-    gs1.start_timestamp = new Date("2020-07-07 00:00:00.000000");
-    gs1.version = Dota2Version.Dota_684;
+    gs1.startTimestamp = new Date("2020-07-07 00:00:00.000000");
     await repo.save(gs1);
 
     const gs2 = new GameSeasonEntity();
     gs2.id = 2;
-    gs2.start_timestamp = new Date("2022-07-07 00:00:00.000000");
-    gs2.version = Dota2Version.Dota_684;
+    gs2.startTimestamp = new Date("2022-07-07 00:00:00.000000");
     await repo.save(gs2);
 
     const season = await gs.getCurrentSeason(Dota2Version.Dota_684);

@@ -11,7 +11,7 @@ export async function createSeason(te: TestEnvironment) {
   const seasonRep = te.repo(GameSeasonEntity);
   const gs3 = new GameSeasonEntity();
   gs3.id = 3;
-  gs3.start_timestamp = new Date("2023-08-31 20:00:00.000000");
+  gs3.startTimestamp = new Date("2023-08-31 20:00:00.000000");
   await seasonRep.save(gs3);
 }
 

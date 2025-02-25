@@ -210,13 +210,10 @@ offset $2 limit $3`,
 
         hasUnrankedAccess: matchAccessLevel === MatchAccessLevel.HUMAN_GAMES,
 
-        newbieUnrankedGamesLeft:
-          lb.ranked_games > 0
-            ? 0
-            : Math.max(0, UNRANKED_GAMES_REQUIRED_FOR_RANKED - lb.games),
+        newbieUnrankedGamesLeft: -1,
 
         calibrationGamesLeft: Math.max(
-          ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES - lb.ranked_games,
+          ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES - lb.games,
           0,
         ),
       };

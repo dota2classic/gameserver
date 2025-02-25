@@ -6,8 +6,8 @@ export class GameSeasonEntity {
   @PrimaryColumn()
   public id: number;
 
-  @Column()
-  start_timestamp!: Date;
+  @Column({ type: "timestamptz", name: "start_timestamp"})
+  startTimestamp!: Date;
 
   @OneToMany(() => VersionPlayerEntity, (t) => t.season)
   players: Relation<VersionPlayerEntity>[];

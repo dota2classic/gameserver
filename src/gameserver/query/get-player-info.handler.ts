@@ -58,7 +58,7 @@ export class GetPlayerInfoHandler
                       order by fm.timestamp desc
                       limit $2)
 select vp.steam_id                                               as steam_id,
-       vp.hidden_mmr::int                                        as mmr,
+       vp.mmr::int                                               as mmr,
        vp.version                                                as version,
        (sum(rg.win::int)::float / greatest(1, count(rg)))::float as winrate,
        avg(rg.ka / greatest(rg.deaths, 1))::float                as recent_kda
@@ -66,7 +66,7 @@ from version_player vp,
      recent_games rg
 
 where vp.steam_id = $1
-group by vp.steam_id, vp.hidden_mmr, vp.version`,
+group by vp.steam_id, vp.mmr, vp.version`,
         [command.playerId.value, 20],
       )
     )[0];

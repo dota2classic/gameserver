@@ -3,15 +3,15 @@ import { Logger } from '@nestjs/common';
 import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
-import { PlayerId } from 'gateway/shared-types/player-id';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerService } from 'gameserver/gameserver.service';
-import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { MmrBucketService } from 'gameserver/mmr-bucket.service';
+import { GameSeasonService } from 'gameserver/service/game-season.service';
+import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
 
 type GetMmr = (plr: VersionPlayerEntity) => number;
 
@@ -45,6 +45,8 @@ export class ProcessRankedMatchHandler
     private readonly cbus: CommandBus,
     private readonly mmrBucketService: MmrBucketService,
     private readonly datasource: DataSource,
+    private readonly seasonService: GameSeasonService,
+    private readonly plrService: PlayerServiceV2,
   ) {}
 
   public static calculateMmrDeviation(
@@ -68,14 +70,11 @@ export class ProcessRankedMatchHandler
     baseMMRChange: number = 25,
     playerPerformanceCoefficient: number,
   ): number {
-    let baseMMR = baseMMRChange;
-
     const isCalibrationGame = cbGame < cbGames;
 
-    if (isCalibrationGame) {
-      // gradually reducing mmr
-      baseMMR = 100;
-    }
+    const maxAbsoluteChange = 600;
+
+    let baseMMR = isCalibrationGame ? 100 : baseMMRChange;
 
     const change = (win ? 1 : -1) * (baseMMR + mmrDiff);
 
@@ -85,11 +84,15 @@ export class ProcessRankedMatchHandler
         : 1 / playerPerformanceCoefficient
       : 1;
 
+    let mmrChange = change * playerPerformanceCorrection;
+    mmrChange = Math.min(mmrChange, maxAbsoluteChange);
+    mmrChange = Math.max(mmrChange, -maxAbsoluteChange);
+
     this.logger.log(
-      `Player mmr change: cb=${isCalibrationGame}, win=${win}, base=${change.toFixed(0)}, playerPerformanceCorrection=${playerPerformanceCorrection.toFixed(1)}, result = ${(change * playerPerformanceCorrection).toFixed(0)} `,
+      `Player mmr change: cb=${isCalibrationGame}, win=${win}, base=${change.toFixed(0)}, playerPerformanceCorrection=${playerPerformanceCorrection.toFixed(1)}, result = ${mmrChange} `,
     );
 
-    return change * playerPerformanceCorrection;
+    return mmrChange;
   }
 
   async execute(command: ProcessRankedMatchCommand) {
@@ -100,13 +103,11 @@ export class ProcessRankedMatchHandler
       return;
 
     // find latest season which start_timestamp > now
-    const currentSeason = await this.gameServerService.getCurrentSeason(
-      Dota2Version.Dota_681,
-    );
+    const currentSeason = await this.seasonService.getCurrentSeason();
 
     if (await this.isAlreadyProcessed(command.matchId)) return;
 
-    const playerMap = await this.getVersionPlayerMap(command);
+    const playerMap = await this.getVersionPlayerMap(command, currentSeason);
 
     if (playerMap.size !== command.winners.length + command.losers.length) {
       this.logger.error(
@@ -126,10 +127,10 @@ export class ProcessRankedMatchHandler
       this.getTeamBalance(command, playerMap);
 
     const changelogs = await Promise.all(
-      [...command.winners, ...command.losers].map(async (t, idx) =>
+      [...command.winners, ...command.losers].map(async (playerId, idx) =>
         this.changeMMR(
           currentSeason,
-          t,
+          playerId.value,
           idx < command.winners.length,
           diffDeviationFactor,
           winnerAverage,
@@ -137,7 +138,8 @@ export class ProcessRankedMatchHandler
           command.matchId,
           m.timestamp,
           playerMap,
-          m.players.find((it) => it.playerId === t.value)?.abandoned || false,
+          m.players.find((it) => it.playerId === playerId.value)?.abandoned ||
+            false,
         ),
       ),
     );
@@ -165,13 +167,17 @@ export class ProcessRankedMatchHandler
     return check > 0;
   }
 
-  private async getVersionPlayerMap(command: ProcessRankedMatchCommand) {
+  private async getVersionPlayerMap(
+    command: ProcessRankedMatchCommand,
+    currentSeason: GameSeasonEntity,
+  ) {
     const map = new Map<string, VersionPlayerEntity>();
     const plrs = await this.versionPlayerRepository.find({
       where: {
         steamId: In(
           [...command.losers, ...command.winners].map((t) => t.value),
         ),
+        seasonId: currentSeason.id
       },
     });
 
@@ -180,9 +186,11 @@ export class ProcessRankedMatchHandler
     // here we do some tricks
     [...command.losers, ...command.winners].forEach((pid) => {
       if (!map.has(pid.value)) {
-        const vp = new VersionPlayerEntity();
-        vp.steamId = pid.value;
-        vp.mmr = VersionPlayerEntity.STARTING_MMR;
+        const vp = new VersionPlayerEntity(
+          pid.value,
+          VersionPlayerEntity.STARTING_MMR,
+          currentSeason.id,
+        );
         map.set(pid.value, vp);
       }
     });
@@ -194,7 +202,6 @@ export class ProcessRankedMatchHandler
     command: ProcessRankedMatchCommand,
     playerMap: Map<string, VersionPlayerEntity>,
   ): TeamBalance {
-
     const getMmr: GetMmr = (plr: VersionPlayerEntity): number => plr.mmr;
 
     const winnerMMR = command.winners
@@ -220,7 +227,7 @@ export class ProcessRankedMatchHandler
 
   private async changeMMR(
     season: GameSeasonEntity,
-    pid: PlayerId,
+    steamId: string,
     winner: boolean,
     mmrDiff: number,
     winnerAverage: number,
@@ -230,13 +237,13 @@ export class ProcessRankedMatchHandler
     playerMap: Map<string, VersionPlayerEntity>,
     didAbandon: boolean,
   ) {
-    const cb = await this.gameServerService.getGamesPlayed(
+    const cb = await this.plrService.getGamesPlayed(
       season,
-      pid,
+      steamId,
       [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],
       matchTimestamp,
     );
-    const plr = playerMap.get(pid.value);
+    const plr = playerMap.get(steamId);
 
     // Calculate player performance coefficient
     const playerPerformanceCoefficient =
@@ -265,9 +272,7 @@ export class ProcessRankedMatchHandler
     }
 
     this.logger.log(
-      `Updating MMR for ${
-        plr.steamId
-      }. Now: ${plr.mmr}, change: ${mmrChange}`,
+      `Updating MMR for ${plr.steamId}. Now: ${plr.mmr}, change: ${mmrChange}`,
     );
 
     try {
@@ -276,7 +281,7 @@ export class ProcessRankedMatchHandler
       plr.mmr = plr.mmr + mmrChange;
 
       const change = new MmrChangeLogEntity();
-      change.playerId = pid.value;
+      change.playerId = steamId;
       change.loserAverage = Number(loserAverage);
       change.winnerAverage = Number(winnerAverage);
       change.change = Number(mmrChange);
@@ -292,56 +297,3 @@ export class ProcessRankedMatchHandler
     }
   }
 }
-
-// Get KDA buckets
-
-// with stats as (
-//   select
-//   pim."playerId" as steam_id,
-//   vp.hidden_mmr as mmr,
-//   fm.id,
-//   (pim.team = fm.winner) as win,
-//   fm.matchmaking_mode,
-//   fm.timestamp::date as date,
-//   fm.duration,
-//   ue.name,
-//   pim.hero,
-//   pim.hero_healing,
-//   (pim.kills * 0.3 + pim.deaths * -0.3 + pim.assists * 0.15) as kda_fp,
-//   (pim.last_hits * 0.003 + pim.denies * 0.008) as creep_fp,
-//   (pim.xpm * 0.002 + pim.gpm * 0.002) as pm_fp,
-//   (pim.hero_healing * 0.001 + pim.hero_damage * 0.0001 + pim.tower_damage * 0.001) as dmg_fp
-// from
-// player_in_match pim
-// inner join finished_match fm on
-// fm.id = pim."matchId"
-// inner join user_entity ue on
-// ue.steam_id = pim."playerId"
-// inner join version_player vp on
-// vp.steam_id = pim."playerId"
-// ),
-// fantasy as (
-//   select
-// b.mmr as mmr,
-//   500 * (b.mmr / 500)::int as bucket,
-//   b.kda_fp + b.creep_fp + b.pm_fp + b.dmg_fp as fantasy_total,
-//   (b.kda_fp + b.creep_fp + b.pm_fp + b.dmg_fp) / b.duration * 60 as fpm
-// from
-// stats b
-// where
-// b.matchmaking_mode = 1
-// ),
-// buckets as (
-//   select
-// 500 * (fp.mmr / 500)::int as bucket,
-//   avg(fp.fpm) over (partition by 500 * (fp.mmr / 500)::int) as avg
-// from
-// fantasy fp
-// )
-// select
-// buc.bucket,
-//   avg(buc.avg)
-// from
-// buckets buc
-// group by
-// buc.bucket
