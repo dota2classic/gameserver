@@ -21,11 +21,11 @@ select
     -1) as mmr
 from
     player_in_match plr
+inner join current_season cs on true
 left join version_player vp on
-    plr."playerId" = vp.steam_id and
+    plr."playerId" = vp.steam_id and vp.season_id = cs.id
 inner join finished_match fm on
     plr."matchId" = fm.id
-inner join current_season cs on true
 group by
     plr."playerId",
     vp.mmr)

@@ -46,3 +46,10 @@ export class UpdateGamemodeDto {
   @ApiProperty({ enum: Dota_Map, enumName: "Dota_Map" })
   dota_map: Dota_Map;
 }
+
+
+export class GameSeasonDto {
+  id: number;
+  startTimestamp: string;
+  isActive: boolean;
+}

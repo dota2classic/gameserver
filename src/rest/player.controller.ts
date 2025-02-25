@@ -261,7 +261,6 @@ offset $2 limit $3`,
   }
 
   @Get("/leaderboard")
-  @CacheTTL(60 * 30)
   @ApiQuery({
     name: "page",
     required: true,

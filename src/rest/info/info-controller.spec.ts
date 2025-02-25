@@ -17,6 +17,8 @@ import { UpdateGamemodeDto } from 'rest/dto/info.dto';
 import { Repository } from 'typeorm';
 import { Dota_Map } from 'gateway/shared-types/dota-map';
 import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
+import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
+import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 
 describe("InfoController", () => {
   jest.setTimeout(60000);
@@ -39,6 +41,8 @@ describe("InfoController", () => {
       GameServerSessionEntity,
       GameSessionPlayerEntity,
       GameServerEntity,
+      GameSeasonEntity,
+      VersionPlayerEntity
     ];
 
     module = await Test.createTestingModule({

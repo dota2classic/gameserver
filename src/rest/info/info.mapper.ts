@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { GameServerEntity } from 'gameserver/model/game-server.entity';
-import { GameServerDto, GameSessionDto, MatchmakingModeInfoDto } from 'rest/dto/info.dto';
+import { GameSeasonDto, GameServerDto, GameSessionDto, MatchmakingModeInfoDto } from 'rest/dto/info.dto';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { DotaTeam } from 'gateway/shared-types/dota-team';
 import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
@@ -37,5 +37,15 @@ export class InfoMapper {
     game_mode: it.dotaGameMode,
     dota_map: it.dotaMap,
     enabled: it.enabled,
+  });
+
+  public mapGameSeason = (it: {
+    gs_id: number;
+    gs_start_timestamp: Date;
+    is_active: boolean;
+  }): GameSeasonDto => ({
+    id: it.gs_id,
+    startTimestamp: it.gs_start_timestamp.toISOString(),
+    isActive: it.is_active,
   });
 }
