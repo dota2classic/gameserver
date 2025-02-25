@@ -25,6 +25,7 @@ export class MakeSureExistsHandler
     } catch (e) {
       this.logger.error(
         `Error creating new user? ${command.id.value} ${inspect(command)}`,
+        e,
       );
     }
   }

@@ -22,11 +22,10 @@ select
 from
     player_in_match plr
 left join version_player vp on
-    plr."playerId" = vp.steam_id
+    plr."playerId" = vp.steam_id and
 inner join finished_match fm on
     plr."matchId" = fm.id
-inner join current_season cs on
-    fm.timestamp >= cs.start_timestamp
+inner join current_season cs on true
 group by
     plr."playerId",
     vp.mmr)
@@ -44,7 +43,7 @@ select
     sum((m.matchmaking_mode in (0, 1))::int) as ranked_games,
     (row_number() over (
 order by
-    p.mmr desc))::int as rank
+    p.mmr desc, p.games DESC))::int as rank
 from
     cte p
 inner join player_in_match pim on
