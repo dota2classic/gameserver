@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { Connection, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
@@ -48,60 +47,15 @@ export class PlayerService {
     private readonly connection: Connection,
   ) {}
 
-  public async getRank(
-    version: Dota2Version,
-    steam_id: string,
-  ): Promise<number> {
-    // Only 681 as version player is deprecated model(same mmr for all)
-
-    const p = await this.versionPlayerRepository.findOne({
-      where: {
-        steamId: steam_id,
-      },
-    });
-
-    const rank2 = await this.connection.query<
-      { count: number; pgames: number }[]
-    >(
-      `
-with players as (select p.steam_id, p.mmr, count(pim) as games
-             from version_player p
-                      left outer join player_in_match pim
-                      inner join finished_match m on pim."matchId" = m.id
-                                 on p.steam_id = pim."playerId" and
-                                    m.matchmaking_mode = $1
-             where m.timestamp > now() - '14 days' :: interval
-             group by p.steam_id, p.mmr),
-     played_games as (select count(*) as games
-                  from player_in_match p
-                           inner join finished_match m on m.id = p."matchId"
-                  where p."playerId" = $2
-                    and m.matchmaking_mode = $1
-                    and m.timestamp > now() - '14 days' :: interval)
-select count(p.steam_id)::int, pg.games::int as pgames
-from players p,
-     played_games pg
-where p.mmr > $3
-  and p.games > 0 group by pgames
-    `,
-      [MatchmakingMode.RANKED, steam_id, p.mmr],
-    );
-
-    if (rank2.length === 0) return -1;
-    if (rank2[0].pgames === 0) return -1;
-
-    return rank2[0].count + 1;
-  }
 
   async heroStats(
-    version: Dota2Version,
     steam_id: string,
   ): Promise<HeroStatsDto[]> {
     return await this.playerInMatchRepository.query(
       `
 select pim."playerId",
-       avg(pim.gpm)::float                                             as gpm,
-       avg(pim.xpm)::float                                              as xpm,
+       avg(pim.gpm)::float                                                     as gpm,
+       avg(pim.xpm)::float                                                     as xpm,
        avg((pim.kills + pim.assists)::float / greatest(pim.deaths, 1))::float  as kda,
        count(*)::int as games,
        avg(pim.last_hits)::float as last_hits,
@@ -116,23 +70,6 @@ group by pim.hero, pim."playerId"
 `,
       [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED, steam_id],
     );
-  }
-
-  async winrateLastRankedGames(steam_id: string): Promise<number> {
-    const some: { is_win: boolean }[] = await this.playerInMatchRepository
-      .query(`
-    select m.winner = pims.team as is_win
-from finished_match m inner join player_in_match pims on m.id = pims."matchId"
-where pims."playerId" = '${steam_id}' and m.matchmaking_mode = ${MatchmakingMode.RANKED}
-order by m.timestamp DESC
-LIMIT 20;
-`);
-
-    const winCount = some.reduce((a, b) => a + (b.is_win ? 1 : 0), 0);
-
-    const recordCount = some.length;
-
-    return winCount / recordCount;
   }
 
   async getHeroPlayers(hero: string): Promise<PlayerHeroPerformance[]> {
@@ -170,53 +107,4 @@ order by score desc`;
     ]);
   }
 
-  async fullSummary(steam_id: string): Promise<Summary | undefined> {
-    const some = await this.playerInMatchRepository.query(
-      `with cte as (select plr."playerId"                                                                   as steam_id,
-                    count(*)::int                                                                    as any_games,
-                    sum((m.winner = plr.team )::int)::int                                            as any_wins,
-                    sum((m.matchmaking_mode in (0, 1))::int)::int                                    as games,
-                    sum((m.winner = plr.team and m.matchmaking_mode in (0, 1))::int)::int            as wins,
-                    sum((m.matchmaking_mode = 0 and m.timestamp > now() - '14 days'::interval)::int) as recent_ranked_games,
-                    coalesce(p.hidden_mmr, -1)                                                       as mmr
-             from player_in_match plr
-                      left join version_player p on plr."playerId" = p.steam_id
-                      inner join finished_match m on plr."matchId" = m.id
-where plr."playerId" = $1
-             group by plr."playerId", p.hidden_mmr)
-select p.steam_id,
-       p.any_wins,
-       p.games,
-       p.any_games,
-       p.any_wins,
-       p.mmr                                                                        as mmr,
-       avg(pim.kills)::float                                                        as kills,
-       avg(pim.deaths)::float                                                       as deaths,
-       avg(pim.assists)::float                                                      as assists,
-       sum(m.duration)::int                                                         as play_time,
-       sum((m.matchmaking_mode in ($2, $3))::int)                                   as ranked_games,
-       -1                             as rank
-from cte p
-         inner join player_in_match pim on pim."playerId" = p.steam_id
-         inner join finished_match m on pim."matchId" = m.id
-group by p.steam_id, p.recent_ranked_games, p.mmr, p.games, p.wins, p.any_games, p.any_wins`,
-      [steam_id, MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],
-    );
-
-    return some[0];
-  }
-
-  public async getMatchAccessLevel(steamId: string): Promise<MatchAccessLevel> {
-    const result: { any_wins: number; any_games: number }[] =
-      await this.playerInMatchRepository.query(
-        `
-select sum(pa.win::int)::int as any_wins, count(pa)::int as any_games
-from player_activity pa
-where pa.steam_id = $1
-`,
-        [steamId],
-      );
-
-    return getMatchAccessLevel(result[0].any_games, result[0].any_wins);
-  }
 }

@@ -4,7 +4,6 @@ import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Mapper } from 'rest/mapper';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
-import { Dota2Version } from 'gateway/shared-types/dota2version';
 import {
   BanStatusDto,
   LeaderboardEntryPageDto,
@@ -206,14 +205,13 @@ offset $2 limit $3`,
   }
 
   @CacheTTL(120)
-  @Get(`/summary/heroes/:version/:id`)
+  @Get(`/summary/heroes/:id`)
   async playerHeroSummary(
-    @Param("version") version: Dota2Version,
-    @Param("id") steam_id: string,
+    @Param("id") steamId: string,
   ): Promise<HeroStatsDto[]> {
-    await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
+    await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steamId)));
 
-    return await this.playerService.heroStats(version, steam_id);
+    return await this.playerService.heroStats(steamId);
   }
 
   @Get("/hero/:hero/players")
