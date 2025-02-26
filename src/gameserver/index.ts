@@ -35,6 +35,7 @@ import { SaveMatchFailedHandler } from 'gameserver/command/SaveMatchFailed/save-
 import { SavePlayerAbandonHandler } from 'gameserver/command/SavePlayerAbandon/save-player-abandon.handler';
 import { GameSeasonService } from 'gameserver/service/game-season.service';
 import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
+import { LeaderboardService } from 'gameserver/service/leaderboard.service';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -86,6 +87,7 @@ const Services = [
   AchievementService,
   GameSeasonService,
   PlayerServiceV2,
+  LeaderboardService
 ];
 const Sagas = [GameserverSaga];
 

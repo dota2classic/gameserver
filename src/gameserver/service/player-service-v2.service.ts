@@ -5,6 +5,13 @@ import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import { MatchAccessLevel } from 'rest/service/player.service';
+
+function getMatchAccessLevel(anyGames: number, anyWins: number) {
+  if (anyWins) return MatchAccessLevel.HUMAN_GAMES;
+  if (anyGames) return MatchAccessLevel.SIMPLE_MODES;
+  return MatchAccessLevel.EDUCATION;
+}
 
 @Injectable()
 export class PlayerServiceV2 {
@@ -34,5 +41,19 @@ export class PlayerServiceV2 {
       q = q.andWhere("m.matchmaking_mode in (:...modes)", { modes });
 
     return q.getCount();
+  }
+
+  public async getMatchAccessLevel(steamId: string): Promise<MatchAccessLevel> {
+    const result: { any_wins: number; any_games: number }[] =
+      await this.playerInMatchRepository.query(
+        `
+select count(*) filter(where pa.win) as any_wins, count(pa)::int as any_games
+from player_activity pa
+where pa.steam_id = $1
+`,
+        [steamId],
+      );
+
+    return getMatchAccessLevel(result[0].any_games, result[0].any_wins);
   }
 }

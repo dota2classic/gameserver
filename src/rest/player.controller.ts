@@ -17,9 +17,8 @@ import { CommandBus, EventBus } from '@nestjs/cqrs';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { GameServerService } from 'gameserver/gameserver.service';
-import { MatchAccessLevel, PlayerService, Summary } from 'rest/service/player.service';
+import { PlayerService } from 'rest/service/player.service';
 import { HeroStatsDto } from 'rest/dto/hero.dto';
-import { UNRANKED_GAMES_REQUIRED_FOR_RANKED } from 'gateway/shared-types/timings';
 import { BanStatus } from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
 import { PlayerReportEvent } from 'gameserver/event/player-report.event';
 import { LeaderboardView } from 'gameserver/model/leaderboard.view';
@@ -33,8 +32,8 @@ import { AchievementDto } from 'rest/dto/achievement.dto';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { makePage } from 'gateway/util/make-page';
-import { ProcessRankedMatchHandler } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.handler';
 import { AchievementKey } from 'gateway/shared-types/achievemen-key';
+import { LeaderboardService } from 'gameserver/service/leaderboard.service';
 
 @Controller("player")
 @ApiTags("player")
@@ -59,6 +58,7 @@ export class PlayerController {
     private readonly achievements: AchievementService,
     @InjectRepository(AchievementEntity)
     private readonly achievementEntityRepository: Repository<AchievementEntity>,
+    private readonly leaderboardService: LeaderboardService,
   ) {}
 
   @Get("/:id/achievements")
@@ -162,8 +162,6 @@ offset $2 limit $3`,
       [steamId, perPage * page, perPage],
     );
 
-    //
-    // console.log(data)
     return {
       data,
       page,
@@ -173,91 +171,13 @@ offset $2 limit $3`,
   }
 
   @CacheTTL(120)
-  @Get("/summary/:version/:id")
+  @Get("/summary/:id")
   async playerSummary(
-    @Param("version") version: Dota2Version,
-    @Param("id") steam_id: string,
+    @Param("id") steamId: string,
   ): Promise<PlayerSummaryDto> {
-    await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steam_id)));
+    await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steamId)));
 
-    const lb = await this.leaderboardViewRepository.findOne({
-      where: { steam_id },
-    });
-
-    // Crucial thing for newbie:
-    const matchAccessLevel =
-      await this.playerService.getMatchAccessLevel(steam_id);
-
-    // if it exists in the view, we happy
-    if (lb) {
-      return {
-        rank: lb.rank,
-
-        steam_id: lb.steam_id,
-        mmr: lb.mmr,
-
-        games: lb.games,
-        wins: lb.wins,
-
-        kills: lb.kills,
-        deaths: lb.deaths,
-        assists: lb.assists,
-
-        play_time: lb.play_time,
-        playedAnyGame: lb.any_games > 0,
-
-        accessLevel: matchAccessLevel,
-
-        hasUnrankedAccess: matchAccessLevel === MatchAccessLevel.HUMAN_GAMES,
-
-        newbieUnrankedGamesLeft: -1,
-
-        calibrationGamesLeft: Math.max(
-          ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES - lb.games,
-          0,
-        ),
-      };
-    }
-
-    const summary: Summary | undefined =
-      await this.playerService.fullSummary(steam_id);
-
-    const rank = await this.playerService.getRank(version, steam_id);
-
-    return {
-      rank: rank,
-      mmr: summary?.mmr,
-      steam_id: steam_id,
-
-      games: summary?.games || 0,
-      wins: summary?.wins || 0,
-
-      kills: summary?.kills || 0,
-      deaths: summary?.deaths || 0,
-      assists: summary?.assists || 0,
-      play_time: summary?.play_time || 0,
-
-      playedAnyGame: summary && summary.any_games > 0,
-
-      hasUnrankedAccess: matchAccessLevel === MatchAccessLevel.HUMAN_GAMES,
-
-      accessLevel: matchAccessLevel,
-
-      newbieUnrankedGamesLeft:
-        (summary?.ranked_games || 0) > 0
-          ? 0
-          : Math.max(
-              0,
-              UNRANKED_GAMES_REQUIRED_FOR_RANKED -
-                (summary?.unranked_games || 0),
-            ),
-
-      calibrationGamesLeft: Math.max(
-        ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES -
-          (summary?.ranked_games || 0),
-        0,
-      ),
-    };
+    return this.leaderboardService.getPlayerSummary(steamId);
   }
 
   @Get("/leaderboard")
@@ -275,6 +195,7 @@ offset $2 limit $3`,
   ): Promise<LeaderboardEntryPageDto> {
     const [data, total] = await this.leaderboardViewRepository.findAndCount({
       order: {
+        rank: "ASC",
         mmr: "DESC",
       },
       take: perPage,

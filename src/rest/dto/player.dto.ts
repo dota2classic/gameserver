@@ -7,17 +7,20 @@ import { MatchAccessLevel } from 'rest/service/player.service';
 export class LeaderboardEntryDto {
   rank: number | null;
 
-  steam_id: string;
+  steamId: string;
   mmr: number;
 
   games: number;
+  seasonGames: number;
+
   wins: number;
 
   kills: number;
   deaths: number;
   assists: number;
 
-  play_time: number;
+  playtime: number;
+
 }
 
 export class LeaderboardEntryPageDto extends Page<LeaderboardEntryDto> {
@@ -31,13 +34,10 @@ export class LeaderboardEntryPageDto extends Page<LeaderboardEntryDto> {
 
 
 export class PlayerSummaryDto extends LeaderboardEntryDto {
-  newbieUnrankedGamesLeft: number;
-  playedAnyGame: boolean;
+
   calibrationGamesLeft: number;
-
-  hasUnrankedAccess: boolean;
-
   accessLevel: MatchAccessLevel
+
 }
 
 export class BanStatusDto {
