@@ -249,7 +249,8 @@ export class ProcessRankedMatchHandler
     const playerPerformanceCoefficient =
       await this.mmrBucketService.additionalPerformanceCoefficient(
         plr.mmr,
-        await this.mmrBucketService.getPlayerFpmInSeason(plr.steamId),
+        // await this.mmrBucketService.getPlayerFpmInSeason(plr.steamId),
+        await this.mmrBucketService.getPlayerInMatchFpm(plr.steamId, matchId),
       );
 
     this.logger.log(

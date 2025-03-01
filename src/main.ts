@@ -127,5 +127,13 @@ async function bootstrap() {
   // console.log(await r1());
   //
   // console.log(await r1());
+
+  // for(let i = 0; i < 1000; i++){
+  //   await app.get(GameServerService).generateFakeMatch()
+  //
+  //   // await wait(10000);
+  // }
+
+
 }
 bootstrap();

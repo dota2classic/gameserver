@@ -42,6 +42,7 @@ export class SaveGameResultsHandler
       return;
     }
 
+    this.logger.log(`Saving match result ${event.matchId}`)
     let modeOverride =
       (event.type === MatchmakingMode.UNRANKED ||
         event.type === MatchmakingMode.RANKED) &&

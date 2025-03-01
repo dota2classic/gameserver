@@ -525,11 +525,6 @@ export const HeroMap = [
     localized_name: 'Earth Spirit',
   },
   {
-    name: 'abyssal_underlord',
-    id: 108,
-    localized_name: 'Abyssal Underlord',
-  },
-  {
     name: 'terrorblade',
     id: 109,
     localized_name: 'Terrorblade',
@@ -553,11 +548,6 @@ export const HeroMap = [
     name: 'winter_wyvern',
     id: 112,
     localized_name: 'Winter Wyvern',
-  },
-  {
-    name: 'arc_warden',
-    id: 113,
-    localized_name: 'Arc Warden',
   },
 ]
 

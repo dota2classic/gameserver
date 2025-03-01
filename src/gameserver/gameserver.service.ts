@@ -17,6 +17,11 @@ import { DotaTeam } from 'gateway/shared-types/dota-team';
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { ProcessAchievementsCommand } from 'gameserver/command/ProcessAchievements/process-achievements.command';
 import { ConfigService } from '@nestjs/config';
+import { GameResultsEvent, PlayerInMatchDTO } from 'gateway/events/gs/game-results.event';
+import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
+import { HeroMap } from 'util/items';
+import { SaveGameResultsCommand } from 'gameserver/command/SaveGameResults/save-game-results.command';
+import { SteamIds } from 'gameserver/steamids';
 
 export interface MatchD2Com {
   id: number;
@@ -147,40 +152,6 @@ export class GameServerService {
     });
   }
 
-  public async getGamesPlayed(
-    season: GameSeasonEntity,
-    pid: PlayerId,
-    modes: MatchmakingMode[] | undefined,
-    beforeTimestamp: string,
-  ) {
-    let plr = await this.versionPlayerRepository.findOne({
-      where: { steamId: pid.value, seasonId: season.id },
-    });
-
-    if (!plr) {
-      plr = new VersionPlayerEntity(
-        pid.value,
-        VersionPlayerEntity.STARTING_MMR,
-        season.id,
-      );
-      await this.versionPlayerRepository.save(plr);
-    }
-
-    let q = this.playerInMatchRepository
-      .createQueryBuilder("pim")
-      .innerJoin("pim.match", "m")
-      .where("pim.playerId = :id", { id: plr.steamId })
-      .andWhere("m.timestamp > :season", { season: season.startTimestamp })
-      .andWhere("m.timestamp < :current_timestamp", {
-        current_timestamp: beforeTimestamp,
-      });
-
-    if (modes != undefined)
-      q = q.andWhere("m.matchmaking_mode in (:...modes)", { modes });
-
-    return q.getCount();
-  }
-
   public async debugProcessRankedMatch(id: number) {
     const match = await this.finishedMatchRepository.findOneOrFail({
       where: {
@@ -205,5 +176,74 @@ export class GameServerService {
         match.matchmaking_mode,
       ),
     );
+  }
+
+
+  public async generateFakeMatch(){
+    let m = new MatchEntity();
+    m.server = "fdf"
+    m.finished = true;
+    m.mode = MatchmakingMode.UNRANKED;
+    m.started = true;
+    m = await this.matchEntityRepository.save(m)
+    function shuffle(array: any[]) {
+      let currentIndex = array.length;
+
+      // While there remain elements to shuffle...
+      while (currentIndex != 0) {
+
+        // Pick a remaining element...
+        let randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+
+        // And swap it with the current element.
+        [array[currentIndex], array[randomIndex]] = [
+          array[randomIndex], array[currentIndex]];
+      }
+    }
+    shuffle(SteamIds);
+
+    const g: GameResultsEvent = {
+      matchId: m.id,
+      winner: Math.random() > 0.5 ? DotaTeam.RADIANT : DotaTeam.DIRE,
+      duration: Math.round(Math.random() * 2000) + 500 ,
+      gameMode: Dota_GameMode.ALLPICK,
+      type: MatchmakingMode.UNRANKED,
+      timestamp: new Date().getTime() / 1000,
+      server: "fdf",
+      players: Array.from({ length: 10}, (_, idx) => this.mockPim(SteamIds[idx].steam_id, idx < 5 ? DotaTeam.RADIANT : DotaTeam.DIRE)),
+    };
+
+    await this.cbus.execute(new SaveGameResultsCommand(g));
+  }
+
+  private mockPim(steamId: string, team: DotaTeam): PlayerInMatchDTO {
+    const randint = (max: number) => Math.round(Math.random() * max)
+    return {
+      steam_id: steamId,
+      team: team,
+      kills: randint(15),
+      deaths: randint(15),
+      assists: randint(15),
+      level: randint(20) + 3,
+
+      item0: randint(4) + 1,
+      item1: randint(4) + 1,
+      item2: randint(4) + 1,
+      item3: randint(4) + 1,
+      item4: randint(4) + 1,
+      item5: randint(4) + 1,
+
+      gpm: randint(600),
+      xpm: randint(600),
+      last_hits: randint(100),
+      denies: randint(20),
+      networth: randint(20_000),
+      heroDamage: randint(10_000),
+      towerDamage: randint(10_000),
+      heroHealing: randint(10_000),
+      abandoned: Math.random() > 0.98,
+      hero: 'npc_dota_hero_' + HeroMap[Math.floor(Math.random() * HeroMap.length)].name,
+    }
   }
 }
