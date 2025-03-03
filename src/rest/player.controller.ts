@@ -33,6 +33,7 @@ import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { makePage } from 'gateway/util/make-page';
 import { AchievementKey } from 'gateway/shared-types/achievemen-key';
 import { LeaderboardService } from 'gameserver/service/leaderboard.service';
+import { GameSeasonService } from 'gameserver/service/game-season.service';
 
 @Controller("player")
 @ApiTags("player")
@@ -58,6 +59,7 @@ export class PlayerController {
     @InjectRepository(AchievementEntity)
     private readonly achievementEntityRepository: Repository<AchievementEntity>,
     private readonly leaderboardService: LeaderboardService,
+    private readonly gameSeasonService: GameSeasonService
   ) {}
 
   @Get("/:id/achievements")
@@ -171,9 +173,7 @@ offset $2 limit $3`,
 
   @CacheTTL(120)
   @Get("/summary/:id")
-  async playerSummary(
-    @Param("id") steamId: string,
-  ): Promise<PlayerSummaryDto> {
+  async playerSummary(@Param("id") steamId: string): Promise<PlayerSummaryDto> {
     await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steamId)));
 
     return this.leaderboardService.getPlayerSummary(steamId);
@@ -188,14 +188,24 @@ offset $2 limit $3`,
     name: "per_page",
     required: false,
   })
+  @ApiQuery({
+    name: "season_id",
+    required: false,
+  })
   async leaderboard(
     @Query("page", NullableIntPipe) page: number,
     @Query("per_page", NullableIntPipe) perPage: number = 100,
+    @Query("season_id", NullableIntPipe) seasonId?: number,
   ): Promise<LeaderboardEntryPageDto> {
+
+
     const [data, total] = await this.leaderboardViewRepository.findAndCount({
+      where: {
+        seasonId: (seasonId || await this.gameSeasonService.getCurrentSeason().then(it => it.id))
+      },
       order: {
         rank: "ASC",
-        mmr: "DESC",
+        mmr: "DESC"
       },
       take: perPage,
       skip: perPage * page,

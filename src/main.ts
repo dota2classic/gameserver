@@ -17,6 +17,10 @@ import configuration from 'config/configuration';
 import { ConfigService } from '@nestjs/config';
 import { WinstonWrapper } from 'util/logger';
 
+import { types } from 'pg';
+
+types.setTypeParser(types.builtins.NUMERIC, (value: string): number => parseFloat(value))
+
 export function prepareModels(publisher: EventPublisher) {
   // publisher.mergeClassContext(GameServerModel);
 }

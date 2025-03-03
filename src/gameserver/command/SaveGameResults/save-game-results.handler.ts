@@ -10,6 +10,7 @@ import { DataSource, Repository } from 'typeorm';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
+import { GameSeasonService } from 'gameserver/service/game-season.service';
 
 @CommandHandler(SaveGameResultsCommand)
 export class SaveGameResultsHandler
@@ -24,6 +25,7 @@ export class SaveGameResultsHandler
     private readonly playerInMatchRepository: Repository<PlayerInMatchEntity>,
     @InjectRepository(GameServerSessionEntity)
     private readonly gameServerSessionModelRepository: Repository<GameServerSessionEntity>,
+    private readonly gameSeasonService: GameSeasonService,
     private readonly ebus: EventBus,
     private readonly datasource: DataSource,
   ) {}
@@ -41,6 +43,7 @@ export class SaveGameResultsHandler
       });
       return;
     }
+    const season = await this.gameSeasonService.getCurrentSeason();
 
     this.logger.log(`Saving match result ${event.matchId}`)
     let modeOverride =
@@ -60,6 +63,7 @@ export class SaveGameResultsHandler
           modeOverride,
           event.duration,
           event.server,
+          season.id
         );
 
         m.externalMatchId = event.externalMatchId;

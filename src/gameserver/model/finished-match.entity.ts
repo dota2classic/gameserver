@@ -1,7 +1,18 @@
-import { Column, CreateDateColumn, Entity, Index, OneToMany, PrimaryColumn, Relation } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryColumn,
+  Relation,
+} from 'typeorm';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 
 @Entity('finished_match')
 export default class FinishedMatchEntity {
@@ -38,6 +49,17 @@ export default class FinishedMatchEntity {
   )
   players!: Relation<PlayerInMatchEntity>[];
 
+
+  @ManyToOne(() => GameSeasonEntity, (t) => t.players)
+  @JoinColumn({
+    referencedColumnName: "id",
+    name: "season_id",
+  })
+  season: GameSeasonEntity;
+
+  @Column({ name: "season_id", default: 1 })
+  seasonId: number;
+
   constructor(
     id: number | undefined,
     winner: number,
@@ -46,6 +68,7 @@ export default class FinishedMatchEntity {
     matchmaking_mode: MatchmakingMode,
     duration: number,
     server: string,
+    seasonId: number
   ) {
     this.id = id;
     this.winner = winner;
@@ -54,5 +77,6 @@ export default class FinishedMatchEntity {
     this.matchmaking_mode = matchmaking_mode;
     this.duration = duration;
     this.server = server;
+    this.seasonId = seasonId
   }
 }

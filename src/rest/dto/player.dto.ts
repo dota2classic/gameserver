@@ -8,11 +8,10 @@ export class LeaderboardEntryDto {
   rank: number | null;
 
   steamId: string;
+  seasonId: number;
   mmr: number;
 
   games: number;
-  seasonGames: number;
-
   wins: number;
 
   kills: number;

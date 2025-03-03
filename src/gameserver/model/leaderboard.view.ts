@@ -2,75 +2,41 @@ import { Index, ViewColumn, ViewEntity } from 'typeorm';
 
 @ViewEntity({
   expression: `
-with current_season as (
 select
-    *
+    vp.steam_id,
+    vp.season_id as season_id,
+    sum(count(1)) over (partition by vp.steam_id, vp.season_id) as games,
+    sum(count(1) filter (where pim.team = fm.winner)) over (partition by vp.steam_id, vp.season_id) as wins,
+    vp.mmr as mmr,
+    avg(avg(pim.kills)) over (partition by vp.season_id, vp.steam_id) as kills,
+    avg(avg(pim.deaths)) over (partition by vp.season_id, vp.steam_id) as deaths,
+    avg(avg(pim.assists)) over (partition by vp.season_id, vp.steam_id) as assists,
+    sum(sum(fm.duration)) over (partition by vp.season_id, vp.steam_id) as play_time,
+    row_number() over (partition by vp.season_id order by vp.mmr desc) as rank
 from
-    game_season gs
-order by
-    gs.start_timestamp desc
-limit 1),
-cte as (
-select
-    plr."playerId" as steam_id,
-    count(*)::int as games,
-    (count(*) filter (
-where
-    fm.timestamp >= cs.start_timestamp))::int as season_games,
-    (count(*) filter (
-where
-    fm.winner = plr.team))::int as wins,
-    coalesce(vp.mmr,
-    -1) as mmr
-from
-    player_in_match plr
-inner join current_season cs on
-    true
-left join version_player vp on
-    plr."playerId" = vp.steam_id
-    and vp.season_id = cs.id
-inner join finished_match fm on
-    plr."matchId" = fm.id
-    and fm.matchmaking_mode in (0, 1)
+    version_player vp
+inner join 
+    game_season gs on gs.id = vp.season_id
+inner join
+    player_in_match pim on pim."playerId" = vp.steam_id
+inner join 
+    finished_match fm on pim."matchId" = fm.id and fm.matchmaking_mode in (0, 1) and fm.season_id = vp.season_id
 group by
-    plr."playerId",
-    vp.mmr)
-select
-    p.steam_id,
-    p.wins,
-    p.games,
-    p.season_games,
-    p.mmr as mmr,
-    avg(pim.kills)::float as kills,
-    avg(pim.deaths)::float as deaths,
-    avg(pim.assists)::float as assists,
-    sum(m.duration)::int as play_time,
-    (row_number() over (
-order by
-    p.mmr desc,
-    p.games desc))::int as rank
-from
-    cte p
-inner join player_in_match pim on
-    pim."playerId" = p.steam_id
-inner join finished_match m on
-    pim."matchId" = m.id
-group by
-    p.steam_id,
-    p.mmr,
-    p.games,
-    p.season_games,
-    p.wins
+    vp.steam_id,
+    vp.season_id
 order by
     rank asc,
-    games desc
+    games desc;
 `,
   materialized: true,
 })
+@Index(['steamId', 'seasonId'], { unique: true })
 export class LeaderboardView {
-  @Index({ unique: true })
   @ViewColumn({ name: "steam_id"})
   steamId: string;
+
+  @ViewColumn({ name: "season_id"})
+  seasonId: number;
 
   @ViewColumn()
   rank: number | null;
@@ -82,9 +48,6 @@ export class LeaderboardView {
   @Index()
   @ViewColumn()
   games: number;
-
-  @ViewColumn({ name: "season_games"})
-  seasonGames: number;
 
   @ViewColumn()
   wins: number;

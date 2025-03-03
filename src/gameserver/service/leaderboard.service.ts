@@ -6,13 +6,14 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 
 interface CalcPlayerStats {
   steam_id: string;
-  mmr: number;
+  season_id: number;
 
+  mmr: number;
   games: number;
-  season_games: number;
 
   wins: number;
 
@@ -36,6 +37,7 @@ export class LeaderboardService {
     const entry = await this.getPlayerLeaderboardEntry(steamId);
     const matchAccessLevel =
       await this.playerService.getMatchAccessLevel(steamId);
+
     return {
       ...entry,
       accessLevel: matchAccessLevel,
@@ -62,10 +64,10 @@ export class LeaderboardService {
       rank: lb.rank,
 
       steamId: lb.steamId,
+      seasonId: lb.seasonId,
       mmr: lb.mmr,
 
       games: lb.games,
-      seasonGames: lb.seasonGames,
       wins: lb.wins,
 
       kills: lb.kills,
@@ -79,10 +81,9 @@ export class LeaderboardService {
   private async approximatePlayerLeaderboardEntry(
     steamId: string,
   ): Promise<LeaderboardEntryDto> {
-    const stats: CalcPlayerStats =
-      await this.playerInMatchEntityRepository.query(
-        `
-with current_season as (
+    const stats: CalcPlayerStats = await this.playerInMatchEntityRepository
+      .query(
+        `with current_season as (
 select
     *
 from
@@ -90,52 +91,51 @@ from
 order by
     gs.start_timestamp desc
 limit 1)
-    select
-    pim."playerId" as steam_id,
-    vp.mmr,
-    count(1)::int as games,
-    (count(1) filter (
-where
-    fm.timestamp >= cs.start_timestamp))::int as season_games,
-    (count(1) filter(
-where
-    pim.team = fm.winner))::int as wins,
-    avg(pim.kills)::float as kills,
-    avg(pim.deaths)::float as deaths,
-    avg(pim.assists)::float as assists,
-    sum(fm.duration)::int as play_time
+select
+    vp.steam_id,
+    vp.season_id as season_id,
+    sum(count(1)) over (partition by vp.steam_id, vp.season_id) as games,
+    sum(count(1) filter (where pim.team = fm.winner)) over (partition by vp.steam_id, vp.season_id) as wins,
+    vp.mmr as mmr,
+    avg(avg(pim.kills)) over (partition by vp.season_id, vp.steam_id) as kills,
+    avg(avg(pim.deaths)) over (partition by vp.season_id, vp.steam_id) as deaths,
+    avg(avg(pim.assists)) over (partition by vp.season_id, vp.steam_id) as assists,
+    sum(sum(fm.duration)) over (partition by vp.season_id, vp.steam_id) as play_time,
+    row_number() over (partition by vp.season_id order by vp.mmr desc) as rank
 from
-    player_in_match pim
-inner join finished_match fm on
-    pim."matchId" = fm.id
-inner join current_season cs on
-    true
-left join version_player vp on
-    vp.steam_id = pim."playerId"
-    and vp.season_id = cs.id
-where
-    pim."playerId" = $1
+    version_player vp
+inner join  current_season gs on gs.id = vp.season_id
+inner join
+    player_in_match pim on pim."playerId" = vp.steam_id
+inner join 
+    finished_match fm on pim."matchId" = fm.id and fm.matchmaking_mode in (0, 1) and fm.season_id = vp.season_id
+where vp.steam_id = $1
 group by
-    pim."playerId",
-    vp.mmr`,
+    vp.steam_id,
+    vp.season_id
+order by
+    rank asc,
+    games desc;
+`,
         [steamId],
-      );
+      )
+      .then((it) => it[0]);
 
     return {
       rank: -1,
 
-      steamId: stats.steam_id,
-      mmr: stats.mmr,
+      steamId: steamId,
+      mmr: stats.mmr || VersionPlayerEntity.STARTING_MMR,
+      seasonId: stats.season_id,
 
-      games: stats.games,
-      seasonGames: stats.season_games,
-      wins: stats.wins,
+      games: stats.games || 0,
+      wins: stats.wins || 0,
 
-      kills: stats.kills,
-      deaths: stats.deaths,
-      assists: stats.assists,
+      kills: stats.kills || 0,
+      deaths: stats.deaths || 0,
+      assists: stats.assists || 0,
 
-      playtime: stats.play_time,
+      playtime: stats.play_time || 0,
     };
   }
 }

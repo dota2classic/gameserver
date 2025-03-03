@@ -42,6 +42,7 @@ export async function createFakeMatch(
     mode,
     duration,
     "",
+    1
   );
 
   await matchRep.save(match);

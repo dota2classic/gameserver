@@ -11,7 +11,7 @@ export class GameSeasonService {
   ) {}
 
   public async getCurrentSeason(): Promise<GameSeasonEntity> {
-    return this.gameSeasonEntityRepository.findOne({
+    return this.gameSeasonEntityRepository.findOneOrFail({
       where: {
         startTimestamp: LessThanOrEqual(new Date()),
       },

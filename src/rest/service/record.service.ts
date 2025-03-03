@@ -177,6 +177,7 @@ export class RecordService {
       .orderBy("3", "DESC", "NULLS LAST")
       .limit(1)
       .getRawOne<{ fm_id: number; steam_id: string; mk: number }>();
+
     if (!d) {
       return {
         steamId: steamId,

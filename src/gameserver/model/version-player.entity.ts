@@ -16,7 +16,7 @@ export class VersionPlayerEntity {
   })
   season: GameSeasonEntity;
 
-  @Column({ name: "season_id", default: 1 })
+  @PrimaryColumn({ name: "season_id", default: 1 })
   seasonId: number;
 
   public static STARTING_MMR = 2500;
