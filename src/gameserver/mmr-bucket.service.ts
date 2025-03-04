@@ -15,13 +15,12 @@ export class MmrBucketService {
   public async getPlayerInMatchFpm(steamId: string, matchId: number) {
     const d = await this.datasource.query<{ fpm: number }[]>(
       `
-       select
-    (60 * fantasy_score(pim) / fm.duration)::numeric as fpm 
+  select
+    60.0 * fantasy_score(pim) / fm.duration as fpm 
   from
     player_in_match pim
   inner join finished_match fm on
     fm.id = pim."matchId"
-  inner join version_player vp on vp.steam_id = pim."playerId"
   where
     pim."playerId" = $1
     and fm.matchmaking_mode in (0, 1)

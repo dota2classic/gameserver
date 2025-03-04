@@ -6,6 +6,7 @@ import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { DotaTeam } from 'gateway/shared-types/dota-team';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { TestEnvironment } from '@test/useFullModule';
+import { LessThanOrEqual } from 'typeorm';
 
 export async function createSeason(te: TestEnvironment) {
   const seasonRep = te.repo(GameSeasonEntity);
@@ -22,6 +23,17 @@ export async function createFakeMatch(
   duration: number = 100,
 ): Promise<FinishedMatchEntity> {
   const matchRep = te.repo(FinishedMatchEntity);
+
+  const seasonRep = te.repo<GameSeasonEntity>(GameSeasonEntity);
+
+  const season = await seasonRep.findOneOrFail({
+    where: {
+      startTimestamp: LessThanOrEqual(new Date()),
+    },
+    order: {
+      startTimestamp: "DESC"
+    },
+  })
 
   const meRep = te.repo(MatchEntity);
 
@@ -42,7 +54,7 @@ export async function createFakeMatch(
     mode,
     duration,
     "",
-    1
+    season.id
   );
 
   await matchRep.save(match);

@@ -31,6 +31,7 @@ import { PlayerController } from 'rest/player.controller';
 import { InfoController } from 'rest/info/info.controller';
 import { MetaController } from 'rest/meta/meta.controller';
 import { CrimeController } from 'rest/crime/crime.controller';
+import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import SpyInstance = jest.SpyInstance;
 
 export interface TestEnvironment {
@@ -194,6 +195,12 @@ export function useFullModule(): TestEnvironment {
       te.service(DataSource).createQueryRunner(),
     );
     console.log("Created fantasy score function")
+
+    const gs = await te.repo<GameSeasonEntity>(GameSeasonEntity);
+    await gs.save({
+      id: 1,
+      startTimestamp: new Date(2000, 1, 1)
+    })
 
     // Mocks:
   });

@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, In, LessThanOrEqual, Repository } from 'typeorm';
+import { Connection, In, Repository } from 'typeorm';
 import { PlayerId } from 'gateway/shared-types/player-id';
-import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { LeaderboardView } from 'gameserver/model/leaderboard.view';
@@ -137,19 +136,6 @@ export class GameServerService {
       `refresh materialized view item_hero_view`,
     );
     this.logger.log("Refreshed item_hero_view");
-  }
-
-  public async getCurrentSeason(
-    version: Dota2Version,
-  ): Promise<GameSeasonEntity> {
-    return this.gameSeasonRepository.findOne({
-      where: {
-        startTimestamp: LessThanOrEqual(new Date()),
-      },
-      order: {
-        startTimestamp: "DESC",
-      },
-    });
   }
 
   public async debugProcessRankedMatch(id: number) {
