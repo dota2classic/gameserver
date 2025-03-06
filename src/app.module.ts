@@ -32,9 +32,11 @@ import configuration from 'config/configuration';
 import { MmrBucketService } from 'gameserver/mmr-bucket.service';
 import { RecordController } from 'rest/record.controller';
 import { RecordService } from 'rest/service/record.service';
+import { MetricsModule } from 'metrics/metrics.module';
 
 @Module({
   imports: [
+    MetricsModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],

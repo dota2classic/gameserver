@@ -21,16 +21,8 @@ import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { HeroMap } from 'util/items';
 import { SaveGameResultsCommand } from 'gameserver/command/SaveGameResults/save-game-results.command';
 import { SteamIds } from 'gameserver/steamids';
-
-export interface MatchD2Com {
-  id: number;
-  players: Player[];
-  timestamp: number;
-  duration: number;
-  server: string;
-  winner: DotaTeam;
-  matchmaking_mode: MatchmakingMode;
-}
+import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
+import { MetricsService } from 'metrics/metrics.service';
 
 export interface Player {
   steam64: string;
@@ -56,14 +48,6 @@ export interface Player {
   item5: number;
 }
 
-interface MMRConfig {
-  calibrationGames: number;
-  kindCalibrationGames: number;
-  baseMmr: number;
-  maxDeviation: number;
-  avgDiffCap: number;
-}
-
 @Injectable()
 export class GameServerService {
   private readonly logger = new Logger(GameServerService.name);
@@ -86,6 +70,9 @@ export class GameServerService {
     private readonly ebus: EventBus,
     @InjectRepository(MatchEntity)
     private readonly matchEntityRepository: Repository<MatchEntity>,
+    @InjectRepository(GameServerSessionEntity)
+    private readonly sessionRepo: Repository<GameServerSessionEntity>,
+    private readonly metrics: MetricsService,
     private readonly config: ConfigService,
   ) {
     // this.migrateShit();
@@ -164,27 +151,27 @@ export class GameServerService {
     );
   }
 
-
-  public async generateFakeMatch(){
+  public async generateFakeMatch() {
     let m = new MatchEntity();
-    m.server = "fdf"
+    m.server = "fdf";
     m.finished = true;
     m.mode = MatchmakingMode.UNRANKED;
     m.started = true;
-    m = await this.matchEntityRepository.save(m)
+    m = await this.matchEntityRepository.save(m);
     function shuffle(array: any[]) {
       let currentIndex = array.length;
 
       // While there remain elements to shuffle...
       while (currentIndex != 0) {
-
         // Pick a remaining element...
         let randomIndex = Math.floor(Math.random() * currentIndex);
         currentIndex--;
 
         // And swap it with the current element.
         [array[currentIndex], array[randomIndex]] = [
-          array[randomIndex], array[currentIndex]];
+          array[randomIndex],
+          array[currentIndex],
+        ];
       }
     }
     shuffle(SteamIds);
@@ -192,19 +179,34 @@ export class GameServerService {
     const g: GameResultsEvent = {
       matchId: m.id,
       winner: Math.random() > 0.5 ? DotaTeam.RADIANT : DotaTeam.DIRE,
-      duration: Math.round(Math.random() * 2000) + 500 ,
+      duration: Math.round(Math.random() * 2000) + 500,
       gameMode: Dota_GameMode.ALLPICK,
       type: MatchmakingMode.UNRANKED,
       timestamp: new Date().getTime() / 1000,
       server: "fdf",
-      players: Array.from({ length: 10}, (_, idx) => this.mockPim(SteamIds[idx].steam_id, idx < 5 ? DotaTeam.RADIANT : DotaTeam.DIRE)),
+      players: Array.from({ length: 10 }, (_, idx) =>
+        this.mockPim(
+          SteamIds[idx].steam_id,
+          idx < 5 ? DotaTeam.RADIANT : DotaTeam.DIRE,
+        ),
+      ),
     };
 
     await this.cbus.execute(new SaveGameResultsCommand(g));
   }
 
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  public async collectMetrics() {
+    const sessions = await this.sessionRepo.find({});
+
+    this.metrics.recordParallelGames(sessions.length);
+    this.metrics.recordParallelPlayers(
+      sessions.reduce((a, b) => a + b.players.length, 0),
+    );
+  }
+
   private mockPim(steamId: string, team: DotaTeam): PlayerInMatchDTO {
-    const randint = (max: number) => Math.round(Math.random() * max)
+    const randint = (max: number) => Math.round(Math.random() * max);
     return {
       steam_id: steamId,
       team: team,
@@ -229,7 +231,9 @@ export class GameServerService {
       towerDamage: randint(10_000),
       heroHealing: randint(10_000),
       abandoned: Math.random() > 0.98,
-      hero: 'npc_dota_hero_' + HeroMap[Math.floor(Math.random() * HeroMap.length)].name,
-    }
+      hero:
+        "npc_dota_hero_" +
+        HeroMap[Math.floor(Math.random() * HeroMap.length)].name,
+    };
   }
 }

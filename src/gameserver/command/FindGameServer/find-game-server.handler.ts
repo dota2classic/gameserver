@@ -1,7 +1,6 @@
 import { CommandHandler, EventBus, ICommandHandler, QueryBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
-import { GameServerSessionRepository } from 'gameserver/repository/game-server-session.repository';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -24,7 +23,6 @@ export class FindGameServerHandler
   private readonly logger = new Logger(FindGameServerHandler.name);
 
   constructor(
-    private readonly gsSessionRepository: GameServerSessionRepository,
     @InjectRepository(GameServerSessionEntity)
     private readonly gameServerSessionModelRepository: Repository<GameServerSessionEntity>,
     private readonly ebus: EventBus,
