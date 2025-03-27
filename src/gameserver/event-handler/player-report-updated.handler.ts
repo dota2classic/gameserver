@@ -34,13 +34,13 @@ export class PlayerReportUpdatedHandler
       if (!r) {
         r = new PlayerReportStatusEntity();
         r.steam_id = p.steam_id;
-        r.updatedWithMatch = event.matchId;
+        r.updated_with_match_id = event.matchId;
         await this.playerReportRepository.save(r);
         continue;
       }
 
-      if (!r.updatedWithMatch) {
-        r.updatedWithMatch = event.matchId;
+      if (!r.updated_with_match_id) {
+        r.updated_with_match_id = event.matchId;
         await this.playerReportRepository.save(r);
       }
 
@@ -48,7 +48,7 @@ export class PlayerReportUpdatedHandler
         .createQueryBuilder('pim')
         .innerJoin('pim.match', 'm')
         .where('m.id > :last_id', {
-          last_id: r.updatedWithMatch || Number.MAX_SAFE_INTEGER,
+          last_id: r.updated_with_match_id || Number.MAX_SAFE_INTEGER,
         })
         .andWhere('pim.playerId = :pid', { pid: p.steam_id})
         .andWhere('m.matchmaking_mode in (:...modes)', {
@@ -60,7 +60,7 @@ export class PlayerReportUpdatedHandler
       if (gamesSinceLast >= GAMES_TO_ADD_REPORT) {
         r.reports += FREE_REPORT_PER_GAMES;
         r.reports = Math.min(r.reports, MAX_REPORTS_AVAILABLE);
-        r.updatedWithMatch = event.matchId;
+        r.updated_with_match_id = event.matchId;
         await this.playerReportRepository.save(r);
       }
     }

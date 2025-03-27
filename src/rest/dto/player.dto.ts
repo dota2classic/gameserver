@@ -1,8 +1,8 @@
 import { BanReason } from 'gateway/shared-types/ban';
-import { PlayerId } from 'gateway/shared-types/player-id';
 import { Page } from 'gateway/shared-types/page';
 import { ApiProperty } from '@nestjs/swagger';
 import { MatchAccessLevel } from 'rest/service/player.service';
+import { PlayerAspect } from 'gateway/shared-types/player-aspect';
 
 export class LeaderboardEntryDto {
   rank: number | null;
@@ -50,10 +50,13 @@ export class BanStatusDto {
 }
 
 export class ReportPlayerDto {
-  public readonly reported: PlayerId;
-  public readonly reporter: PlayerId;
+  public readonly reportedSteamId: string;
+  public readonly reporterSteamId: string;
   public readonly text: string;
   public readonly matchId: number;
+
+  @ApiProperty({ enum: PlayerAspect, enumName: 'PlayerAspect' })
+  public readonly aspect: PlayerAspect;
 }
 
 export class PlayerTeammateDto {

@@ -19,7 +19,6 @@ import { GameServerService } from 'gameserver/gameserver.service';
 import { PlayerService } from 'rest/service/player.service';
 import { HeroStatsDto } from 'rest/dto/hero.dto';
 import { BanStatus } from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
-import { PlayerReportEvent } from 'gameserver/event/player-report.event';
 import { LeaderboardView } from 'gameserver/model/leaderboard.view';
 import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
@@ -243,10 +242,10 @@ offset $2 limit $3`,
     };
   }
 
+
+
   @Post("/report")
   async reportPlayer(@Body() dto: ReportPlayerDto) {
-    this.ebus.publish(
-      new PlayerReportEvent(dto.matchId, dto.reporter, dto.reported, dto.text),
-    );
+
   }
 }

@@ -6,9 +6,8 @@ export class PlayerReportStatusEntity {
   @PrimaryColumn()
   steam_id: string;
 
-
   @Column({ nullable: true, default: null})
-  updatedWithMatch: number
+  updated_with_match_id: number
 
   @Column({ default: 1 })
   reports: number
