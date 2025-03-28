@@ -24,9 +24,13 @@ export class MetricsService {
 
   @Cron(CronExpression.EVERY_5_SECONDS)
   private async pushMetrics() {
-    await this.pushgateway.pushAdd({
-      jobName: "gameserver",
-    });
+    try {
+      await this.pushgateway.pushAdd({
+        jobName: "gameserver",
+      });
+    } catch (e) {
+      // its ok
+    }
   }
 
   @Cron(CronExpression.EVERY_WEEKEND)

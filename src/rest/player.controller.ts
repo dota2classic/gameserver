@@ -33,6 +33,7 @@ import { makePage } from 'gateway/util/make-page';
 import { AchievementKey } from 'gateway/shared-types/achievemen-key';
 import { LeaderboardService } from 'gameserver/service/leaderboard.service';
 import { GameSeasonService } from 'gameserver/service/game-season.service';
+import { PlayerReportService } from 'gameserver/service/player-report.service';
 
 @Controller("player")
 @ApiTags("player")
@@ -58,7 +59,8 @@ export class PlayerController {
     @InjectRepository(AchievementEntity)
     private readonly achievementEntityRepository: Repository<AchievementEntity>,
     private readonly leaderboardService: LeaderboardService,
-    private readonly gameSeasonService: GameSeasonService
+    private readonly gameSeasonService: GameSeasonService,
+    private readonly report: PlayerReportService
   ) {}
 
   @Get("/:id/achievements")
@@ -246,6 +248,12 @@ offset $2 limit $3`,
 
   @Post("/report")
   async reportPlayer(@Body() dto: ReportPlayerDto) {
-
+    await this.report.handlePlayerReport(
+      dto.reporterSteamId,
+      dto.reportedSteamId,
+      dto.aspect,
+      dto.text,
+      dto.matchId
+    )
   }
 }
