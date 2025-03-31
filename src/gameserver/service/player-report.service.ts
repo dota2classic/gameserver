@@ -38,7 +38,7 @@ export class PlayerReportService {
     }
 
     await this.ds.transaction(async (tx) => {
-      await tx.upsert(
+      await tx.save(
         PlayerReportEntity,
         {
           reporterSteamId: reporter,
@@ -46,9 +46,8 @@ export class PlayerReportService {
           commentary: commentary,
           aspect: aspect,
           matchId,
-        },
-        ["reporterSteamId", "reportedSteamId", "matchId"],
-      );
+        }
+      )
       await tx.update(
         PlayerReportStatusEntity,
         {
