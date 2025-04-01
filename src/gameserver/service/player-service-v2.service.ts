@@ -47,7 +47,7 @@ export class PlayerServiceV2 {
     const result: { any_wins: number; any_games: number }[] =
       await this.playerInMatchRepository.query(
         `
-select count(*) filter(where pa.win) as any_wins, count(pa)::int as any_games
+select (count(*) filter(where pa.win))::int as any_wins, count(pa)::int as any_games
 from player_activity pa
 where pa.steam_id = $1
 `,
