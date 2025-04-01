@@ -5,12 +5,12 @@ import { GetPlayerInfoQuery } from 'gateway/queries/GetPlayerInfo/get-player-inf
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
-import { PlayerService } from 'rest/service/player.service';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
+import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
 
 @QueryHandler(GetPlayerInfoQuery)
 export class GetPlayerInfoHandler
@@ -25,7 +25,7 @@ export class GetPlayerInfoHandler
     private readonly cbus: CommandBus,
     @InjectRepository(PlayerBanEntity)
     private readonly playerBanRepository: Repository<PlayerBanEntity>,
-    private readonly playerService: PlayerService,
+    private readonly playerServiceV2: PlayerServiceV2,
   ) {}
 
   async execute(
@@ -72,6 +72,9 @@ group by vp.steam_id, vp.mmr`,
 
     const humanGamesPlayed = await this.getPlayedGames(command.playerId.value);
 
+    const accessLevel = await this.playerServiceV2.getMatchAccessLevel(command.playerId.value)
+
+
     return new GetPlayerInfoQueryResult(
       command.playerId,
       command.version,
@@ -80,6 +83,7 @@ group by vp.steam_id, vp.mmr`,
       query?.recent_kda || 1,
       humanGamesPlayed || 0,
       ban?.asBanStatus() || BanStatus.NOT_BANNED,
+      accessLevel
     );
   }
 

@@ -5,7 +5,7 @@ import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
-import { MatchAccessLevel } from 'rest/service/player.service';
+import { MatchAccessLevel } from 'gateway/shared-types/match-access-level';
 
 function getMatchAccessLevel(anyGames: number, anyWins: number) {
   if (anyWins) return MatchAccessLevel.HUMAN_GAMES;

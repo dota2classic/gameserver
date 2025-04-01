@@ -1,8 +1,8 @@
 import { BanReason } from 'gateway/shared-types/ban';
 import { Page } from 'gateway/shared-types/page';
 import { ApiProperty } from '@nestjs/swagger';
-import { MatchAccessLevel } from 'rest/service/player.service';
 import { PlayerAspect } from 'gateway/shared-types/player-aspect';
+import { MatchAccessLevel } from 'gateway/shared-types/match-access-level';
 
 export class LeaderboardEntryDto {
   rank: number | null;
@@ -45,6 +45,7 @@ export class PlayerReportsDto {
 export class PlayerSummaryDto extends LeaderboardEntryDto {
 
   calibrationGamesLeft: number;
+  @ApiProperty({ enum: MatchAccessLevel, enumName: 'MatchAccessLevel' })
   accessLevel: MatchAccessLevel
   reports: PlayerAspectCountDto[]
 

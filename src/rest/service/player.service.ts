@@ -4,36 +4,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerService } from 'gameserver/gameserver.service';
 import { HeroStatsDto, PlayerHeroPerformance } from 'rest/dto/hero.dto';
-import { PlayerSummaryDto } from 'rest/dto/player.dto';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 
-/**
- * EDUCATION = need to finish education, either win or lose
- * SIMPLE_MODES = 1+ games, 0 wins
- * HUMAN_GAMES = 1+ wins
- */
-export enum MatchAccessLevel {
-  EDUCATION,
-  SIMPLE_MODES,
-  HUMAN_GAMES,
-}
-
-export function getMatchAccessLevel(anyGames: number, anyWins: number) {
-  if (anyWins) return MatchAccessLevel.HUMAN_GAMES;
-  if (anyGames) return MatchAccessLevel.SIMPLE_MODES;
-  return MatchAccessLevel.EDUCATION;
-}
-
-export type Summary = Omit<
-  PlayerSummaryDto,
-  "rank" | "newbieUnrankedGamesLeft"
-> & {
-  ranked_games: number;
-  unranked_games: number;
-  any_games: number;
-  any_wins: number;
-};
 
 // TODO: we probably need to orm this shit up
 @Injectable()
