@@ -125,17 +125,17 @@ order by
       rank: -1,
 
       steamId: steamId,
-      mmr: stats.mmr || VersionPlayerEntity.STARTING_MMR,
-      seasonId: stats.season_id,
+      mmr: stats?.mmr || VersionPlayerEntity.STARTING_MMR,
+      seasonId: stats?.season_id || 1,
 
-      games: stats.games || 0,
-      wins: stats.wins || 0,
+      games: stats?.games || 0,
+      wins: stats?.wins || 0,
 
-      kills: stats.kills || 0,
-      deaths: stats.deaths || 0,
-      assists: stats.assists || 0,
+      kills: stats?.kills || 0,
+      deaths: stats?.deaths || 0,
+      assists: stats?.assists || 0,
 
-      playtime: stats.play_time || 0,
+      playtime: stats?.play_time || 0,
     };
   }
 }
