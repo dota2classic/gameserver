@@ -29,13 +29,24 @@ export class LeaderboardEntryPageDto extends Page<LeaderboardEntryDto> {
   pages: number;
 }
 
+export class PlayerAspectCountDto {
+  @ApiProperty({ enum: PlayerAspect, enumName: 'PlayerAspect' })
+  aspect: PlayerAspect;
+  count: number;
+}
 
+export class PlayerReportsDto {
+  steamId: string;
+  playerAspects: PlayerAspectCountDto[]
+
+}
 
 
 export class PlayerSummaryDto extends LeaderboardEntryDto {
 
   calibrationGamesLeft: number;
   accessLevel: MatchAccessLevel
+  reports: PlayerAspectCountDto[]
 
 }
 

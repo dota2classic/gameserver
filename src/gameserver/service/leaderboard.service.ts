@@ -33,7 +33,7 @@ export class LeaderboardService {
     private readonly playerService: PlayerServiceV2,
   ) {}
 
-  public async getPlayerSummary(steamId: string): Promise<PlayerSummaryDto> {
+  public async getPlayerSummary(steamId: string): Promise<Omit<PlayerSummaryDto, "reports">> {
     const entry = await this.getPlayerLeaderboardEntry(steamId);
     const matchAccessLevel =
       await this.playerService.getMatchAccessLevel(steamId);

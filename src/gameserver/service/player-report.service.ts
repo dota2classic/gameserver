@@ -6,6 +6,7 @@ import { PlayerAspect } from 'gateway/shared-types/player-aspect';
 import { EventBus } from '@nestjs/cqrs';
 import { PlayerReportStateUpdatedEvent } from 'gameserver/event/player-report-state-updated.event';
 import { PlayerReportStatusEntity } from 'gameserver/model/player-report-status.entity';
+import { PlayerReportsDto } from 'rest/dto/player.dto';
 
 @Injectable()
 export class PlayerReportService {
@@ -18,7 +19,26 @@ export class PlayerReportService {
     private readonly ds: DataSource,
   ) {}
 
-  public async getPlayerReportState() {}
+  public async getPlayerReportState(
+    steamId: string,
+  ): Promise<PlayerReportsDto> {
+    const some = await this.ds
+      .createQueryBuilder()
+      .select("pr.chosen_aspect, count(*)::int")
+      .from(PlayerReportEntity, "pr")
+      .where("pr.reported_steam_id = :steamId", { steamId })
+      .groupBy("pr.aspect")
+      .getRawMany<{ chosen_aspect: PlayerAspect; count: number }>();
+
+    const playerAspects = Object.keys(PlayerAspect).filter(key => isNaN(Number(key))).map((aspect) => ({
+    aspect: PlayerAspect[aspect],
+      count: some.find((t) => t.chosen_aspect === PlayerAspect[aspect])?.count || 0,
+    }));
+    return {
+      steamId,
+      playerAspects: playerAspects,
+    };
+  }
 
   public async handlePlayerReport(
     reporter: string,
@@ -38,16 +58,13 @@ export class PlayerReportService {
     }
 
     await this.ds.transaction(async (tx) => {
-      await tx.save(
-        PlayerReportEntity,
-        {
-          reporterSteamId: reporter,
-          reportedSteamId: reported,
-          commentary: commentary,
-          aspect: aspect,
-          matchId,
-        }
-      )
+      await tx.save(PlayerReportEntity, {
+        reporterSteamId: reporter,
+        reportedSteamId: reported,
+        commentary: commentary,
+        aspect: aspect,
+        matchId,
+      });
       await tx.update(
         PlayerReportStatusEntity,
         {

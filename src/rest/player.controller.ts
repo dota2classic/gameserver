@@ -60,7 +60,7 @@ export class PlayerController {
     private readonly achievementEntityRepository: Repository<AchievementEntity>,
     private readonly leaderboardService: LeaderboardService,
     private readonly gameSeasonService: GameSeasonService,
-    private readonly report: PlayerReportService
+    private readonly report: PlayerReportService,
   ) {}
 
   @Get("/:id/achievements")
@@ -177,7 +177,14 @@ offset $2 limit $3`,
   async playerSummary(@Param("id") steamId: string): Promise<PlayerSummaryDto> {
     await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steamId)));
 
-    return this.leaderboardService.getPlayerSummary(steamId);
+    const [summary, reports] = await Promise.combine([
+      this.leaderboardService.getPlayerSummary(steamId),
+      this.report.getPlayerReportState(steamId),
+    ]);
+    return {
+      ...summary,
+      reports: reports.playerAspects
+    };
   }
 
   @Get("/leaderboard")
@@ -198,15 +205,15 @@ offset $2 limit $3`,
     @Query("per_page", NullableIntPipe) perPage: number = 100,
     @Query("season_id", NullableIntPipe) seasonId?: number,
   ): Promise<LeaderboardEntryPageDto> {
-
-
     const [data, total] = await this.leaderboardViewRepository.findAndCount({
       where: {
-        seasonId: (seasonId || await this.gameSeasonService.getCurrentSeason().then(it => it.id))
+        seasonId:
+          seasonId ||
+          (await this.gameSeasonService.getCurrentSeason().then((it) => it.id)),
       },
       order: {
         rank: "ASC",
-        mmr: "DESC"
+        mmr: "DESC",
       },
       take: perPage,
       skip: perPage * page,
@@ -244,8 +251,6 @@ offset $2 limit $3`,
     };
   }
 
-
-
   @Post("/report")
   async reportPlayer(@Body() dto: ReportPlayerDto) {
     await this.report.handlePlayerReport(
@@ -253,7 +258,7 @@ offset $2 limit $3`,
       dto.reportedSteamId,
       dto.aspect,
       dto.text,
-      dto.matchId
-    )
+      dto.matchId,
+    );
   }
 }
