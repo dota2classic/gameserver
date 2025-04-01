@@ -32,6 +32,7 @@ import { InfoController } from 'rest/info/info.controller';
 import { MetaController } from 'rest/meta/meta.controller';
 import { CrimeController } from 'rest/crime/crime.controller';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
+import { MetricsService } from 'metrics/metrics.service';
 import SpyInstance = jest.SpyInstance;
 
 export interface TestEnvironment {
@@ -80,15 +81,14 @@ export function useFullModule(): TestEnvironment {
       .withPassword("redispass")
       .start();
 
-    te.containers.rabbit = await new RabbitMQContainer()
-      .start();
+    te.containers.rabbit = await new RabbitMQContainer().start();
 
     te.queryMocks = {};
 
     te.module = await Test.createTestingModule({
       imports: [
         await ConfigModule.forRoot({
-          isGlobal: true
+          isGlobal: true,
         }),
         CqrsModule.forRoot(),
         TypeOrmModule.forRoot({
@@ -138,7 +138,7 @@ export function useFullModule(): TestEnvironment {
                       // password: te.containers.rabbit.get(),
                     },
                   ],
-                  queue: 'gameserver_commands',
+                  queue: "gameserver_commands",
                   queueOptions: {
                     durable: true,
                   },
@@ -148,7 +148,7 @@ export function useFullModule(): TestEnvironment {
             },
             inject: [],
             imports: [],
-          }
+          },
         ]),
       ],
       providers: [
@@ -163,6 +163,10 @@ export function useFullModule(): TestEnvironment {
         MmrBucketService,
         Mapper,
         ...GameServerDomain,
+        {
+          provide: MetricsService,
+          useValue: jest.fn(),
+        },
       ],
       controllers: [
         CoreController,
@@ -173,18 +177,14 @@ export function useFullModule(): TestEnvironment {
         InfoController,
         MetaController,
         CrimeController,
-      ]
+      ],
     }).compile();
 
     te.app = await te.module.createNestApplication({
-      logger: new WinstonWrapper(
-        'localhost',
-        7777,
-        true,
-      ),
+      logger: new WinstonWrapper("localhost", 7777, true),
     });
 
-    await te.app.listen(0)
+    await te.app.listen(0);
 
     te.service = (con) => te.module.get(con);
     te.repo = (con) => te.module.get(getRepositoryToken(con));
@@ -194,13 +194,13 @@ export function useFullModule(): TestEnvironment {
     await new FantasyFunction1739896254921().up(
       te.service(DataSource).createQueryRunner(),
     );
-    console.log("Created fantasy score function")
+    console.log("Created fantasy score function");
 
     const gs = await te.repo<GameSeasonEntity>(GameSeasonEntity);
     await gs.save({
       id: 1,
-      startTimestamp: new Date(2000, 1, 1)
-    })
+      startTimestamp: new Date(2000, 1, 1),
+    });
 
     // Mocks:
   });
