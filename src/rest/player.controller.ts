@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Param, Post, Query } from '@nestjs/common';
 import { CacheTTL } from '@nestjs/cache-manager';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Mapper } from 'rest/mapper';
@@ -40,7 +40,7 @@ import { PlayerQualityService } from 'gameserver/service/player-quality.service'
 @Controller("player")
 @ApiTags("player")
 export class PlayerController {
-  private static leaderboardLimit = 1000;
+  private logger = new Logger(PlayerController.name);
 
   constructor(
     private readonly mapper: Mapper,
@@ -254,9 +254,9 @@ offset $2 limit $3`,
     };
   }
 
-
   @Get("/smurf_data/:id")
   async smurfData(@Param("id") steamId: string): Promise<SmurfData> {
+    this.logger.log("Get smurf data for " + steamId);
     const data = await this.playerQuality.getSmurfData(steamId);
     return {
       relatedBans: data.map((info) => ({

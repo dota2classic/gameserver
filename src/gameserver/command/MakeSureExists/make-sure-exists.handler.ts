@@ -31,10 +31,10 @@ export class MakeSureExistsHandler
   }
 
   private async makeSureExists(steam_id: string) {
-    const p = await this.versionPlayerRepository.findOne({
-      where: { steamId: steam_id },
-    });
     const season = await this.gsService.getCurrentSeason();
+    const p = await this.versionPlayerRepository.findOne({
+      where: { steamId: steam_id, seasonId: season.id },
+    });
     if (!p) {
       const vp = new VersionPlayerEntity(
         steam_id,
