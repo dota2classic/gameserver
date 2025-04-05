@@ -31,6 +31,7 @@ export class PlayerQualityService {
       },
     });
     // Find all steam ids which share this ip
+    if (allIps.length === 0) return [];
 
     return await this.playerIpEntityRepository
       .createQueryBuilder("pip")
