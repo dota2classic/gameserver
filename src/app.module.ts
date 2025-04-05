@@ -53,7 +53,7 @@ import { MetricsModule } from 'metrics/metrics.module';
           type: "postgres",
           migrations: ["dist/src/database/migrations/*.*"],
           migrationsRun: true,
-          // logging: undefined,
+          logging: undefined,
         };
       },
       imports: [],
