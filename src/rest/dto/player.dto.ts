@@ -51,6 +51,10 @@ export class PlayerSummaryDto extends LeaderboardEntryDto {
 
 }
 
+export class SmurfData {
+  relatedBans: BanStatusDto[]
+}
+
 export class BanStatusDto {
   public readonly steam_id: string;
   public readonly isBanned: boolean;

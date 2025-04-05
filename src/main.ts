@@ -136,6 +136,8 @@ async function bootstrap() {
   //   await app.get(GameServerService).generateFakeMatch()
   // }
 
+  // await app.get(PlayerQualityService).onPlayerIpUpdated('1852498426')
+
 
 }
 bootstrap();

@@ -11,6 +11,7 @@ import {
   PlayerTeammateDto,
   PlayerTeammatePage,
   ReportPlayerDto,
+  SmurfData,
 } from 'rest/dto/player.dto';
 import { CommandBus, EventBus } from '@nestjs/cqrs';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
@@ -34,6 +35,7 @@ import { AchievementKey } from 'gateway/shared-types/achievemen-key';
 import { LeaderboardService } from 'gameserver/service/leaderboard.service';
 import { GameSeasonService } from 'gameserver/service/game-season.service';
 import { PlayerReportService } from 'gameserver/service/player-report.service';
+import { PlayerQualityService } from 'gameserver/service/player-quality.service';
 
 @Controller("player")
 @ApiTags("player")
@@ -61,6 +63,7 @@ export class PlayerController {
     private readonly leaderboardService: LeaderboardService,
     private readonly gameSeasonService: GameSeasonService,
     private readonly report: PlayerReportService,
+    private readonly playerQuality: PlayerQualityService,
   ) {}
 
   @Get("/:id/achievements")
@@ -183,7 +186,7 @@ offset $2 limit $3`,
     ]);
     return {
       ...summary,
-      reports: reports.playerAspects
+      reports: reports.playerAspects,
     };
   }
 
@@ -248,6 +251,22 @@ offset $2 limit $3`,
     return {
       steam_id,
       ...res,
+    };
+  }
+
+
+  @Get("/smurf_data/:id")
+  async smurfData(@Param("id") steamId: string): Promise<SmurfData> {
+    const data = await this.playerQuality.getSmurfData(steamId);
+    return {
+      relatedBans: data.map((info) => ({
+        steam_id: info.steam_id,
+        isBanned: info.end_time.getTime() > Date.now(),
+        // iso
+        bannedUntil: info.end_time.toISOString(),
+
+        status: info.reason,
+      })),
     };
   }
 

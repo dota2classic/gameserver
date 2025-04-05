@@ -35,6 +35,7 @@ import { GameSeasonService } from 'gameserver/service/game-season.service';
 import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
 import { LeaderboardService } from 'gameserver/service/leaderboard.service';
 import { PlayerReportService } from 'gameserver/service/player-report.service';
+import { PlayerQualityService } from 'gameserver/service/player-quality.service';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -86,7 +87,8 @@ const Services = [
   GameSeasonService,
   PlayerServiceV2,
   LeaderboardService,
-  PlayerReportService
+  PlayerReportService,
+  PlayerQualityService
 ];
 const Sagas = [GameserverSaga];
 

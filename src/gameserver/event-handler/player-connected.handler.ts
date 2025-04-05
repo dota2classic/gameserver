@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { InteractionType, PlayerIpEntity } from 'gameserver/model/player-ip.entity';
 import { Repository } from 'typeorm';
 import { Logger } from '@nestjs/common';
+import { PlayerQualityService } from 'gameserver/service/player-quality.service';
 
 @EventsHandler(PlayerConnectedEvent)
 export class PlayerConnectedHandler
@@ -14,6 +15,7 @@ export class PlayerConnectedHandler
   constructor(
     @InjectRepository(PlayerIpEntity)
     private readonly playerIpEntityRepository: Repository<PlayerIpEntity>,
+    private readonly playerQuality: PlayerQualityService
   ) {}
 
   async handle(event: PlayerConnectedEvent) {
@@ -27,5 +29,7 @@ export class PlayerConnectedHandler
       InteractionType.MATCH_CONNECT,
     );
     await this.playerIpEntityRepository.save(e);
+
+    await this.playerQuality.onPlayerIpUpdated(event.playerId.value)
   }
 }
