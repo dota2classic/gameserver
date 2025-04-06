@@ -2,7 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { makeGaugeProvider, PrometheusModule, PrometheusUseFactoryOptions } from '@willsoto/nestjs-prometheus';
 import { MetricsService } from 'metrics/metrics.service';
-import { PrometheusGuardedController } from 'prometheus-guarded.controller';
+import { PrometheusGuardedController } from './prometheus-guarded.controller';
 
 @Global()
 @Module({
