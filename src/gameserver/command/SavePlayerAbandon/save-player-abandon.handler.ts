@@ -40,6 +40,11 @@ export class SavePlayerAbandonHandler
 
     this.ebus.publish(new CrimeLogCreatedEvent(crime.id));
 
-    this.metrics.recordAbandon(event.mode);
+    this.metrics.recordAbandon(
+      event.mode,
+      await this.playerCrimeLogEntityRepository.count({
+        where: { lobby_type: event.mode, crime: BanReason.ABANDON },
+      }),
+    );
   }
 }

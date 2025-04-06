@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Counter, Gauge } from 'prom-client';
+import { Gauge } from 'prom-client';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
@@ -11,7 +11,7 @@ export class MetricsService {
     @InjectMetric("d2c_parallel_players")
     private readonly parallelPlayers: Gauge<string>,
     @InjectMetric("d2c_parallel_players")
-    private readonly abandonCount: Counter<string>,
+    private readonly abandonCount: Gauge<string>,
   ) {}
 
   public recordParallelGames(cnt: number) {
@@ -22,7 +22,7 @@ export class MetricsService {
     this.parallelPlayers.set(cnt);
   }
 
-  public recordAbandon(mode: MatchmakingMode) {
-    this.abandonCount.labels("mode", mode.toString()).inc();
+  public recordAbandon(mode: MatchmakingMode, count: number) {
+    this.abandonCount.labels("mode", mode.toString()).set(count);
   }
 }

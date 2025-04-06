@@ -59,6 +59,7 @@
     "fluent-logger": "^3.4.1",
     "ioredis": "^5.4.1",
     "js-yaml": "^4.1.0",
+    "passport": "^0.7.0",
     "passport-http": "^0.3.0",
     "pg": "^8.13.1",
     "pg-hstore": "^2.3.4",

@@ -1,11 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  makeCounterProvider,
-  makeGaugeProvider,
-  PrometheusModule,
-  PrometheusUseFactoryOptions,
-} from '@willsoto/nestjs-prometheus';
+import { makeGaugeProvider, PrometheusModule, PrometheusUseFactoryOptions } from '@willsoto/nestjs-prometheus';
 import { MetricsService } from 'metrics/metrics.service';
 import { PrometheusGuardedController } from './prometheus-guarded.controller';
 import { PrometheusBasicAuthStrategy } from 'metrics/prometheus-basic-auth.strategy';
@@ -41,7 +36,7 @@ import { PrometheusBasicAuthStrategy } from 'metrics/prometheus-basic-auth.strat
       help: "123",
       labelNames: []
     }),
-    makeCounterProvider({
+    makeGaugeProvider({
       name: "d2c_abandon_count",
       help: "123",
       labelNames: ["mode"]
