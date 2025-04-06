@@ -10,7 +10,7 @@ import { BanStatus } from 'gateway/queries/GetPlayerInfo/get-player-info-query.r
 
 interface PlayerIpWithBans {
   steam_id: string;
-  end_time: Date;
+  end_time: Date | null;
   reason: BanReason;
 }
 
@@ -46,7 +46,8 @@ export class PlayerQualityService {
     const result = await this.getSmurfData(steamId);
 
     const hasActiveBan =
-      result.filter((t) => t.end_time.getTime() > Date.now()).length > 0;
+      result.filter((t) => t.end_time && t.end_time.getTime() > Date.now())
+        .length > 0;
 
     if (!hasActiveBan) {
       return;
@@ -55,14 +56,14 @@ export class PlayerQualityService {
     this.ebus.publish(
       new PlayerSmurfDetectedEvent(
         result.map((it) => it.steam_id),
-        result.map(
-          (it) =>
-            new BanStatus(
-              new Date().getTime() < it.end_time.getTime(),
-              it.end_time.toISOString(),
-              it.reason,
-            ),
-        ),
+        result.map((it) => {
+          const endTime = it.end_time || new Date(0);
+          return new BanStatus(
+            new Date().getTime() < endTime.getTime(),
+            endTime.toISOString(),
+            it.reason,
+          );
+        }),
       ),
     );
   }

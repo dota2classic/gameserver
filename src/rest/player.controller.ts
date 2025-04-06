@@ -261,9 +261,11 @@ offset $2 limit $3`,
     return {
       relatedBans: data.map((info) => ({
         steam_id: info.steam_id,
-        isBanned: info.end_time.getTime() > Date.now(),
+        isBanned: info.end_time && info.end_time.getTime() > Date.now(),
         // iso
-        bannedUntil: info.end_time.toISOString(),
+        bannedUntil:
+          (info.end_time && info.end_time.toISOString()) ||
+          new Date(0).toISOString(),
 
         status: info.reason,
       })),
