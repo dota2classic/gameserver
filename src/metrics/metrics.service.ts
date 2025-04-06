@@ -10,7 +10,7 @@ export class MetricsService {
     private readonly parallelGames: Gauge<string>,
     @InjectMetric("d2c_parallel_players")
     private readonly parallelPlayers: Gauge<string>,
-    @InjectMetric("d2c_parallel_players")
+    @InjectMetric("d2c_abandon_count")
     private readonly abandonCount: Gauge<string>,
   ) {}
 
@@ -23,6 +23,6 @@ export class MetricsService {
   }
 
   public recordAbandon(mode: MatchmakingMode, count: number) {
-    this.abandonCount.labels("mode", mode.toString()).set(count);
+    this.abandonCount.labels(mode.toString()).set(count);
   }
 }

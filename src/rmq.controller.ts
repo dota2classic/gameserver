@@ -61,9 +61,6 @@ export class RmqController {
       .catch((e) => {
         this.logger.error(
           "Error while processing message",
-          {
-            msg: msg,
-          },
           e,
         );
         channel.nack(originalMsg);
