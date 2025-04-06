@@ -13,6 +13,7 @@ import { PrometheusGuardedController } from './prometheus-guarded.controller';
           pushgateway: {
             url: config.get("pushgateway_url")!,
           },
+          path: "/api/v1/metrics",
         };
       },
       global: true,

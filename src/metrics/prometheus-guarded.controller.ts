@@ -5,7 +5,7 @@ import { ApiExcludeController } from '@nestjs/swagger';
 import { PrometheusBasicAuthStrategy } from 'metrics/prometheus-basic-auth.strategy';
 
 @ApiExcludeController()
-@Controller()
+@Controller("/api/v1/metrics")
 export class PrometheusGuardedController extends PrometheusController {
   @Get()
   @UseGuards(PrometheusBasicAuthStrategy)
