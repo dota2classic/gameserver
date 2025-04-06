@@ -55,6 +55,7 @@ export class PlayerQualityService {
 
     this.ebus.publish(
       new PlayerSmurfDetectedEvent(
+        steamId,
         result.map((it) => it.steam_id),
         result.map((it) => {
           const endTime = it.end_time || new Date(0);
