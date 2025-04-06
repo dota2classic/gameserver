@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { makeGaugeProvider, PrometheusModule, PrometheusUseFactoryOptions } from '@willsoto/nestjs-prometheus';
 import { MetricsService } from 'metrics/metrics.service';
 import { PrometheusGuardedController } from './prometheus-guarded.controller';
+import { PrometheusBasicAuthStrategy } from 'metrics/prometheus-basic-auth.strategy';
 
 @Global()
 @Module({
@@ -24,6 +25,7 @@ import { PrometheusGuardedController } from './prometheus-guarded.controller';
   ],
   providers: [
     MetricsService,
+    PrometheusBasicAuthStrategy,
     makeGaugeProvider({
       name: "d2c_parallel_games",
       help: "123",
@@ -34,6 +36,7 @@ import { PrometheusGuardedController } from './prometheus-guarded.controller';
       help: "123",
       labelNames: []
     }),
+
   ],
   exports: [MetricsService],
 })
