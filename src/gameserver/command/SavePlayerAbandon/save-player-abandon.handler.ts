@@ -6,6 +6,7 @@ import { BanReason } from 'gateway/shared-types/ban';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
+import { MetricsService } from 'metrics/metrics.service';
 
 @CommandHandler(SavePlayerAbandonCommand)
 export class SavePlayerAbandonHandler
@@ -17,6 +18,7 @@ export class SavePlayerAbandonHandler
     @InjectRepository(PlayerCrimeLogEntity)
     private readonly playerCrimeLogEntityRepository: Repository<PlayerCrimeLogEntity>,
     private readonly ebus: EventBus,
+    private readonly metrics: MetricsService,
   ) {}
 
   async execute({ event }: SavePlayerAbandonCommand) {
@@ -31,11 +33,13 @@ export class SavePlayerAbandonHandler
       event.playerId.value,
       BanReason.ABANDON,
       event.mode,
-      event.matchId
+      event.matchId,
     );
 
     await this.playerCrimeLogEntityRepository.save(crime);
 
     this.ebus.publish(new CrimeLogCreatedEvent(crime.id));
+
+    this.metrics.recordAbandon(event.mode);
   }
 }
