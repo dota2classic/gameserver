@@ -22,7 +22,7 @@ export class PlayerCrimeLogEntity {
   @Column({ default: false })
   handled: boolean;
 
-  @Column({ default: 0 })
+  @Column({ default: 0, type: "bigint" })
   banTime: number;
 
   @CreateDateColumn({ type: "timestamptz" })
