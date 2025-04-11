@@ -8,10 +8,10 @@ import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch
 import { PlayerId } from 'gateway/shared-types/player-id';
 import * as uuidr from 'uuid';
 import { ProcessAchievementsCommand } from 'gameserver/command/ProcessAchievements/process-achievements.command';
-import { MatchRecordedEvent } from 'gameserver/event/match-recorded.event';
 import { PrepareGameCommand } from 'gameserver/command/PrepareGame/prepare-game.command';
 import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
 import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
+import { MatchRecordedEvent } from 'gateway/events/gs/match-recorded.event';
 
 export const uuid = (): string => uuidr.v4();
 

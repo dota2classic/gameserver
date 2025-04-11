@@ -4,13 +4,13 @@ import { SaveGameResultsCommand } from 'gameserver/command/SaveGameResults/save-
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
-import { MatchRecordedEvent } from 'gameserver/event/match-recorded.event';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { GameSeasonService } from 'gameserver/service/game-season.service';
+import { MatchRecordedEvent } from 'gateway/events/gs/match-recorded.event';
 
 @CommandHandler(SaveGameResultsCommand)
 export class SaveGameResultsHandler

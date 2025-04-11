@@ -17,6 +17,7 @@ import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.even
 import { AchievementCompleteEvent } from 'gateway/events/gs/achievement-complete.event';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { PlayerSmurfDetectedEvent } from 'gateway/events/bans/player-smurf-detected.event';
+import { MatchRecordedEvent } from 'gateway/events/gs/match-recorded.event';
 
 @Injectable()
 export class AppService {
@@ -65,7 +66,8 @@ export class AppService {
       BanSystemEvent,
       PlayerNotLoadedEvent,
       AchievementCompleteEvent,
-      PlayerSmurfDetectedEvent
+      PlayerSmurfDetectedEvent,
+      MatchRecordedEvent
     ];
 
     this.ebus

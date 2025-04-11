@@ -1,13 +1,13 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { MatchRecordedEvent } from 'gameserver/event/match-recorded.event';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { FREE_REPORT_PER_GAMES, GAMES_TO_ADD_REPORT, MAX_REPORTS_AVAILABLE } from 'gateway/shared-types/timings';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { PlayerReportStatusEntity } from 'gameserver/model/player-report-status.entity';
 import { Logger } from '@nestjs/common';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
+import { MatchRecordedEvent } from 'gateway/events/gs/match-recorded.event';
 
 @EventsHandler(MatchRecordedEvent)
 export class PlayerReportUpdatedHandler
