@@ -14,6 +14,7 @@ interface CalcPlayerStats {
 
   mmr: number;
   games: number;
+  abandons: number;
 
   wins: number;
 
@@ -69,6 +70,7 @@ export class LeaderboardService {
 
       games: lb.games,
       wins: lb.wins,
+      abandons: lb.abandons,
 
       kills: lb.kills,
       deaths: lb.deaths,
@@ -96,6 +98,7 @@ select
     vp.season_id as season_id,
     sum(count(1)) over (partition by vp.steam_id, vp.season_id) as games,
     sum(count(1) filter (where pim.team = fm.winner)) over (partition by vp.steam_id, vp.season_id) as wins,
+    sum(count(1) filter (where pim.abandoned)) over (partition by vp.steam_id, vp.season_id) as abandons,
     vp.mmr as mmr,
     avg(avg(pim.kills)) over (partition by vp.season_id, vp.steam_id) as kills,
     avg(avg(pim.deaths)) over (partition by vp.season_id, vp.steam_id) as deaths,
@@ -130,6 +133,7 @@ order by
 
       games: stats?.games || 0,
       wins: stats?.wins || 0,
+      abandons: stats?.abandons || 0,
 
       kills: stats?.kills || 0,
       deaths: stats?.deaths || 0,
