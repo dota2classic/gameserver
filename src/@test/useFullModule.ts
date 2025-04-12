@@ -77,6 +77,22 @@ export function useFullModule(): TestEnvironment {
       .withPassword("password")
       .start();
 
+
+//     const client = new pg.Client(te.containers.pg.getConnectionUri());
+//     await client.connect();
+//     await client.query(`
+//         create or replace
+//         function fantasy_score(pim player_in_match) returns numeric
+// language plpgsql
+// as
+// $$
+// begin
+// return pim.kills * 0.3 + pim.deaths * -0.3 + pim.assists * 0.2 + pim.last_hits * 0.003 + pim.denies * 0.005 + pim.gpm * 0.002 + pim.xpm * 0.002 + pim.hero_healing * 0.01 + pim.hero_damage * 0.003 + pim.tower_damage * 0.01;
+// end;
+// $$;`);
+//     await client.end()
+
+
     te.containers.redis = await new RedisContainer()
       .withPassword("redispass")
       .start();
@@ -102,8 +118,8 @@ export function useFullModule(): TestEnvironment {
           username: te.containers.pg.getUsername(),
           password: te.containers.pg.getPassword(),
           entities: Entities,
-          synchronize: true,
-          dropSchema: true,
+          migrations: ["dist/src/database/migrations/*.*"],
+          migrationsRun: true,
           ssl: false,
         }),
         TypeOrmModule.forFeature(Entities),
