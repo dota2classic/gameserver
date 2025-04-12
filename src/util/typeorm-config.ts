@@ -17,6 +17,7 @@ import { AchievementEntity } from 'gameserver/model/achievement.entity';
 import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
 import { PlayerIpEntity } from 'gameserver/model/player-ip.entity';
 import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
+import { MmrBucketView } from 'gameserver/model/mmr-bucket.view';
 
 export const Entities: Function[] = [
   GameSeasonEntity,
@@ -42,6 +43,8 @@ export const Entities: Function[] = [
   AchievementEntity,
 
   LeaderboardView,
+  MmrBucketView,
+
 
   ItemView,
   ItemHeroView,

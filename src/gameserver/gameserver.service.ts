@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, In, Repository } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -14,7 +14,6 @@ import { CommandBus, EventBus } from '@nestjs/cqrs';
 import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
 import { DotaTeam } from 'gateway/shared-types/dota-team';
 import { MatchEntity } from 'gameserver/model/match.entity';
-import { ProcessAchievementsCommand } from 'gameserver/command/ProcessAchievements/process-achievements.command';
 import { ConfigService } from '@nestjs/config';
 import { GameResultsEvent, PlayerInMatchDTO } from 'gateway/events/gs/game-results.event';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
@@ -23,6 +22,7 @@ import { SaveGameResultsCommand } from 'gameserver/command/SaveGameResults/save-
 import { SteamIds } from 'gameserver/steamids';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { MetricsService } from 'metrics/metrics.service';
+import { MmrBucketView } from 'gameserver/model/mmr-bucket.view';
 
 export interface Player {
   steam64: string;
@@ -49,7 +49,7 @@ export interface Player {
 }
 
 @Injectable()
-export class GameServerService {
+export class GameServerService implements OnApplicationBootstrap {
   private readonly logger = new Logger(GameServerService.name);
 
   constructor(
@@ -70,43 +70,14 @@ export class GameServerService {
     private readonly ebus: EventBus,
     @InjectRepository(MatchEntity)
     private readonly matchEntityRepository: Repository<MatchEntity>,
+    @InjectRepository(MmrBucketView)
+    private readonly mmrBucketViewRepository: Repository<MmrBucketView>,
     @InjectRepository(GameServerSessionEntity)
     private readonly sessionRepo: Repository<GameServerSessionEntity>,
     private readonly metrics: MetricsService,
     private readonly config: ConfigService,
   ) {
-    // this.migrateShit();
-    // this.migrateItems();
-    // this.migrated2com();
-    if (config.get("prod")) {
-      // this.migratePendoSite();
-      // this.testMMRPreview();
-      this.refreshLeaderboardView();
-    }
 
-    return;
-    setTimeout(async () => {
-      const matches = await this.finishedMatchRepository.find({
-        where: {
-          matchmaking_mode: In([
-            MatchmakingMode.RANKED,
-            MatchmakingMode.UNRANKED,
-          ]),
-        },
-        // take: 1000
-      });
-
-      for (let i = 0; i < matches.length; i++) {
-        const match = matches[i];
-        await this.cbus.execute(
-          new ProcessAchievementsCommand(match.id, MatchmakingMode.UNRANKED),
-        );
-
-        this.logger.log(
-          `Achievements complete for ${i + 1} / ${matches.length}`,
-        );
-      }
-    }, 100);
   }
 
   @Cron(CronExpression.EVERY_HOUR)
@@ -115,6 +86,13 @@ export class GameServerService {
       `refresh materialized view leaderboard_view`,
     );
     this.logger.log("Refreshed leaderboard_view");
+
+    await this.leaderboardViewRepository.query(
+      `refresh materialized view mmr_bucket_view`,
+    );
+
+    this.logger.log("Refreshed mmr_bucket_view");
+
     await this.leaderboardViewRepository.query(
       `refresh materialized view item_view`,
     );
@@ -235,5 +213,9 @@ export class GameServerService {
         "npc_dota_hero_" +
         HeroMap[Math.floor(Math.random() * HeroMap.length)].name,
     };
+  }
+
+  async onApplicationBootstrap() {
+    await this.refreshLeaderboardView();
   }
 }
