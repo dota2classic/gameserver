@@ -26,7 +26,6 @@ import { ProcessAchievementsHandler } from 'gameserver/command/ProcessAchievemen
 import { AchievementService } from 'gameserver/achievement.service';
 import { PrepareGameHandler } from 'gameserver/command/PrepareGame/prepare-game.handler';
 import { LobbyReadyHandler } from 'gameserver/event-handler/lobby-ready.handler';
-import { SrcdsServerStartedHandler } from 'gameserver/event-handler/srcds-server-started.handler';
 import { PlayerConnectedHandler } from 'gameserver/event-handler/player-connected.handler';
 import { SaveGameResultsHandler } from 'gameserver/command/SaveGameResults/save-game-results.handler';
 import { SaveMatchFailedHandler } from 'gameserver/command/SaveMatchFailed/save-match-failed.handler';
@@ -36,6 +35,7 @@ import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
 import { LeaderboardService } from 'gameserver/service/leaderboard.service';
 import { PlayerReportService } from 'gameserver/service/player-report.service';
 import { PlayerQualityService } from 'gameserver/service/player-quality.service';
+import { AssignStartedServerHandler } from 'gameserver/command/AssignStartedServer/assign-started-server.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -47,11 +47,11 @@ const CommandHandlers = [
   SaveGameResultsHandler,
   SaveMatchFailedHandler,
   SavePlayerAbandonHandler,
+  AssignStartedServerHandler
 ];
 const EventHandlers = [
   PlayerConnectedHandler,
   LiveMatchUpdateHandler,
-  SrcdsServerStartedHandler,
 
   GameServerStoppedHandler,
   GameServerDiscoveredHandler,

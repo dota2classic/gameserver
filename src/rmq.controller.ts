@@ -8,6 +8,8 @@ import { ConfigService } from '@nestjs/config';
 import { SaveGameResultsCommand } from 'gameserver/command/SaveGameResults/save-game-results.command';
 import { SaveMatchFailedCommand } from 'gameserver/command/SaveMatchFailed/save-match-failed.command';
 import { SavePlayerAbandonCommand } from 'gameserver/command/SavePlayerAbandon/save-player-abandon.command';
+import { SrcdsServerStartedEvent } from 'gateway/events/srcds-server-started.event';
+import { AssignStartedServerCommand } from 'gameserver/command/AssignStartedServer/assign-started-server.command';
 
 @Controller()
 export class RmqController {
@@ -17,6 +19,15 @@ export class RmqController {
     private readonly cbus: CommandBus,
     private readonly config: ConfigService,
   ) {}
+
+
+  @MessagePattern(SrcdsServerStartedEvent.name)
+  async SrcdsServerStartedEvent(
+    @Payload() data: SrcdsServerStartedEvent,
+    @Ctx() context: RmqContext,
+  ) {
+    await this.processMessage(new AssignStartedServerCommand(data.server, data.matchId, data.info), context);
+  }
 
   @MessagePattern(GameResultsEvent.name)
   async GameResultsEvent(
@@ -60,7 +71,7 @@ export class RmqController {
       .then(() => channel.ack(originalMsg))
       .catch((e) => {
         this.logger.error(
-          "Error while processing message",
+          `Error while processing message`,
           e,
         );
         channel.nack(originalMsg);

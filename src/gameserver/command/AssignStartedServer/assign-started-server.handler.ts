@@ -1,22 +1,22 @@
-import { EventBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { SrcdsServerStartedEvent } from 'gateway/events/srcds-server-started.event';
-import { MatchEntity } from 'gameserver/model/match.entity';
+import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
+import { Logger } from '@nestjs/common';
+import { AssignStartedServerCommand } from 'gameserver/command/AssignStartedServer/assign-started-server.command';
 import { InjectRepository } from '@nestjs/typeorm';
+import { MatchEntity } from 'gameserver/model/match.entity';
 import { DataSource, Repository } from 'typeorm';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
+import { SrcdsServerStartedEvent } from 'gateway/events/srcds-server-started.event';
 import { GameSessionCreatedEvent } from 'gateway/events/game-session-created.event';
 import { MatchStartedEvent } from 'gateway/events/match-started.event';
 import { GameServerInfo } from 'gateway/shared-types/game-server-info';
 import { Dota_GameRulesState } from 'gateway/shared-types/dota-game-rules-state';
 import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
 import { DotaConnectionState } from 'gateway/shared-types/dota-player-connection-state';
-import { Logger } from '@nestjs/common';
 
-@EventsHandler(SrcdsServerStartedEvent)
-export class SrcdsServerStartedHandler
-  implements IEventHandler<SrcdsServerStartedEvent>
-{
-  private logger = new Logger(SrcdsServerStartedHandler.name);
+@CommandHandler(AssignStartedServerCommand)
+export class AssignStartedServerHandler implements ICommandHandler<AssignStartedServerCommand> {
+
+  private readonly logger = new Logger(AssignStartedServerHandler.name)
 
   constructor(
     @InjectRepository(MatchEntity)
@@ -27,16 +27,16 @@ export class SrcdsServerStartedHandler
     private readonly datasource: DataSource,
   ) {}
 
-  async handle(event: SrcdsServerStartedEvent) {
+  async execute(cmd: AssignStartedServerCommand) {
     this.logger.log("Srcds server started: assigning server url")
     const m = await this.matchEntityRepository.findOneOrFail({
-      where: { id: event.matchId },
+      where: { id: cmd.matchId },
     });
 
-    m.server = event.server;
+    m.server = cmd.server;
     await this.matchEntityRepository.save(m);
 
-    const session = await this.createGameSession(event);
+    const session = await this.createGameSession(cmd);
 
     //
 
