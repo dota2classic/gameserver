@@ -15,9 +15,9 @@ import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
 import './util/promise';
 import configuration from 'config/configuration';
 import { ConfigService } from '@nestjs/config';
-import { WinstonWrapper } from 'util/logger';
 
 import { types } from 'pg';
+import { WinstonWrapper } from '@dota2classic/nest_logger';
 
 types.setTypeParser(types.builtins.NUMERIC, (value: string): number => parseFloat(value))
 
@@ -35,6 +35,7 @@ async function bootstrap() {
     logger: new WinstonWrapper(
       config.get("fluentbit.host"),
       config.get<number>("fluentbit.port"),
+      config.get<string>("fluentbit.application"),
       config.get<boolean>("fluentbit.disabled"),
     ),
   });

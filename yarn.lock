@@ -528,6 +528,14 @@
     enabled "2.0.x"
     kuler "^2.0.0"
 
+"@dota2classic/nest_logger@^0.0.9":
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/@dota2classic/nest_logger/-/nest_logger-0.0.9.tgz#56ef81ea4b90bcdda5ec17518e50618a6f6ec5a7"
+  integrity sha512-RY4uEpNeHovCZxjQLIaQMIb6qttsRFHFSU5gx/W0ZUjsIm4Isj9n5WybgRklVJ6VS78h9v94VrxT9PiSymQjfA==
+  dependencies:
+    fluent-logger "^3.4.1"
+    winston "^3.17.0"
+
 "@eslint-community/eslint-utils@^4.2.0", "@eslint-community/eslint-utils@^4.4.0":
   version "4.4.1"
   resolved "https://registry.yarnpkg.com/@eslint-community/eslint-utils/-/eslint-utils-4.4.1.tgz#d1145bf2c20132d6400495d6df4bf59362fd9d56"

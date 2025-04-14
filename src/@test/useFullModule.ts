@@ -22,7 +22,6 @@ import { Mapper } from 'rest/mapper';
 import { GameServerDomain } from 'gameserver';
 import { ConfigModule } from '@nestjs/config';
 import { RabbitMQContainer, StartedRabbitMQContainer } from '@testcontainers/rabbitmq';
-import { WinstonWrapper } from 'util/logger';
 import { CoreController } from 'core.controller';
 import { RmqController } from 'rmq.controller';
 import { QueryController } from 'query.controller';
@@ -33,6 +32,7 @@ import { MetaController } from 'rest/meta/meta.controller';
 import { CrimeController } from 'rest/crime/crime.controller';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import { MetricsService } from 'metrics/metrics.service';
+import { WinstonWrapper } from '@dota2classic/nest_logger';
 import SpyInstance = jest.SpyInstance;
 
 export interface TestEnvironment {
@@ -197,7 +197,7 @@ export function useFullModule(): TestEnvironment {
     }).compile();
 
     te.app = await te.module.createNestApplication({
-      logger: new WinstonWrapper("localhost", 7777, true),
+      logger: new WinstonWrapper("localhost", 7777,  "demo", true),
     });
 
     await te.app.listen(0);
