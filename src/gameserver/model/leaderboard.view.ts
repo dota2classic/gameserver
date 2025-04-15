@@ -24,7 +24,8 @@ inner join
     finished_match fm on pim."matchId" = fm.id and fm.matchmaking_mode in (0, 1) and fm.season_id = vp.season_id
 group by
     vp.steam_id,
-    vp.season_id
+    vp.season_id,
+    vp.mmr
 order by
     rank asc,
     games desc;
