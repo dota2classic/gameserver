@@ -115,7 +115,8 @@ inner join
 where vp.steam_id = $1
 group by
     vp.steam_id,
-    vp.season_id
+    vp.season_id,
+    vp.mmr
 order by
     rank asc,
     games desc;
