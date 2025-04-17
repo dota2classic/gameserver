@@ -12,10 +12,11 @@ import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 import { makePage } from 'gateway/util/make-page';
 import { MatchMapper } from 'rest/match/match.mapper';
 import { EntityNotFoundFilter } from 'rest/exception/entity-not-found.filter';
+import { PlayerReportService } from 'gameserver/service/player-report.service';
+import { MatchReportMatrixDto } from 'rest/dto/player.dto';
 
-
-@Controller('match')
-@ApiTags('match')
+@Controller("match")
+@ApiTags("match")
 export class MatchController {
   constructor(
     private readonly mapper: MatchMapper,
@@ -27,25 +28,26 @@ export class MatchController {
     private readonly mmrChangeLogEntityRepository: Repository<MmrChangeLogEntity>,
     // private readonly metaService: MetaService,
     private readonly matchService: MatchService,
+    private readonly playerReportService: PlayerReportService,
   ) {}
 
   // remove meta service from here
   @ApiQuery({
-    name: 'page',
+    name: "page",
     required: true,
   })
   @ApiQuery({
-    name: 'per_page',
+    name: "per_page",
     required: false,
   })
   @ApiQuery({
-    name: 'hero',
+    name: "hero",
   })
-  @Get('/by_hero')
+  @Get("/by_hero")
   async heroMatches(
-    @Query('page', NullableIntPipe) page: number,
-    @Query('per_page', NullableIntPipe) perPage: number = 25,
-    @Query('hero') hero: string,
+    @Query("page", NullableIntPipe) page: number,
+    @Query("per_page", NullableIntPipe) perPage: number = 25,
+    @Query("hero") hero: string,
   ): Promise<MatchPageDto> {
     const raw = await this.matchService.heroMatches(page, perPage, hero);
 
@@ -56,71 +58,92 @@ export class MatchController {
   }
 
   @ApiQuery({
-    name: 'page',
+    name: "page",
     required: true,
   })
   @ApiQuery({
-    name: 'per_page',
+    name: "per_page",
     required: false,
   })
   @ApiQuery({
-    name: 'mode',
+    name: "mode",
     required: false,
   })
-  @Get('/all')
+  @Get("/all")
   async matches(
-    @Query('page', NullableIntPipe) page: number,
-    @Query('per_page', NullableIntPipe) perPage: number = 25,
-    @Query('mode') mode?: MatchmakingMode,
+    @Query("page", NullableIntPipe) page: number,
+    @Query("per_page", NullableIntPipe) perPage: number = 25,
+    @Query("mode") mode?: MatchmakingMode,
   ): Promise<MatchPageDto> {
-    const [matches, cnt] = await this.matchService.getMatchPage(page, perPage, mode);
+    const [matches, cnt] = await this.matchService.getMatchPage(
+      page,
+      perPage,
+      mode,
+    );
     return makePage(matches, cnt, page, perPage, this.mapper.mapMatch);
   }
 
-
-  @Get('/:id')
+  @Get("/:id")
   @UseFilters(new EntityNotFoundFilter())
-  async getMatch(@Param('id', NullableIntPipe) id: number): Promise<MatchDto> {
+  async getMatch(@Param("id", NullableIntPipe) id: number): Promise<MatchDto> {
     const match = await this.matchRepository.findOneOrFail({
       where: { id },
-      relations: ['players', 'players.mmrChange']
+      relations: ["players", "players.mmrChange"],
     });
 
     return this.mapper.mapMatch(match);
   }
 
+  @Get("/:id/reportMatrix")
+  @UseFilters(new EntityNotFoundFilter())
+  async getMatchReportMatrix(
+    @Param("id") id: number,
+  ): Promise<MatchReportMatrixDto> {
+    const rm = await this.playerReportService.getReportMatrix(id);
+    return {
+      matchId: id,
+      timestamp: rm.length
+        ? new Date(rm[0].match_date).toISOString()
+        : new Date(0).toISOString(),
+      reports: rm.map((r) => ({
+        steamId: r.reported_steam_id,
+        reported: r.reporters.filter(Boolean),
+      })),
+    };
+  }
+
   @ApiQuery({
-    name: 'page',
+    name: "page",
     required: true,
   })
   @ApiQuery({
-    name: 'per_page',
+    name: "per_page",
     required: false,
   })
   @ApiQuery({
-    name: 'mode',
+    name: "mode",
     required: false,
   })
   @ApiQuery({
-    name: 'hero',
+    name: "hero",
     required: false,
   })
-  @Get('/player/:id')
+  @Get("/player/:id")
   async playerMatches(
-    @Param('id') steam_id: string,
-    @Query('page', NullableIntPipe) page: number,
-    @Query('per_page', NullableIntPipe) perPage: number = 25,
-    @Query('mode', NullableIntPipe) mode?: MatchmakingMode,
-    @Query('hero') hero?: string,
+    @Param("id") steam_id: string,
+    @Query("page", NullableIntPipe) page: number,
+    @Query("per_page", NullableIntPipe) perPage: number = 25,
+    @Query("mode", NullableIntPipe) mode?: MatchmakingMode,
+    @Query("hero") hero?: string,
   ): Promise<MatchPageDto> {
-    const [matches, total] = await this.matchService.getPlayerMatches(steam_id, page, perPage, mode, hero);
-
-    return makePage(
-      matches,
-      total,
+    const [matches, total] = await this.matchService.getPlayerMatches(
+      steam_id,
       page,
       perPage,
-      this.mapper.mapMatch
-    )
+      mode,
+      hero,
+    );
+
+    return makePage(matches, total, page, perPage, this.mapper.mapMatch);
   }
 }

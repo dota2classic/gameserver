@@ -30,10 +30,14 @@ export class PlayerReportService {
       .groupBy("pr.aspect")
       .getRawMany<{ chosen_aspect: PlayerAspect; count: number }>();
 
-    const playerAspects = Object.keys(PlayerAspect).filter(key => isNaN(Number(key))).map((aspect) => ({
-    aspect: PlayerAspect[aspect],
-      count: some.find((t) => t.chosen_aspect === PlayerAspect[aspect])?.count || 0,
-    }));
+    const playerAspects = Object.keys(PlayerAspect)
+      .filter((key) => isNaN(Number(key)))
+      .map((aspect) => ({
+        aspect: PlayerAspect[aspect],
+        count:
+          some.find((t) => t.chosen_aspect === PlayerAspect[aspect])?.count ||
+          0,
+      }));
     return {
       steamId,
       playerAspects: playerAspects,
@@ -83,5 +87,25 @@ export class PlayerReportService {
         steam_id: reporter,
       },
     });
+  }
+
+  public async getReportMatrix(matchId: number) {
+    return await this.ds.query<
+      { reported_steam_id: string; match_date: string; reporters: string[] }[]
+    >(
+      `
+SELECT 
+       pim."playerId" AS reported_steam_id,
+       fm."timestamp" as match_date,
+       array_agg(DISTINCT pr.reporter_steam_id) AS reporters
+FROM player_in_match pim
+    LEFT JOIN finished_match fm ON fm.id = pim."matchId" 
+    LEFT JOIN player_report pr ON pr.match_id = pim."matchId" AND pr.reported_steam_id = pim."playerId"
+WHERE 
+    pim."matchId" = $1
+GROUP
+    BY 1, 2
+`, [matchId]
+    );
   }
 }

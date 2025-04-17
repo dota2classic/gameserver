@@ -11,7 +11,7 @@ export const getTypeormConfig = (
     type: "postgres",
     database: "postgres",
 
-    port: 5432,
+    port: cs.get<number>('postgres.port') || 5432,
     host: cs.get("postgres.host"),
     username: cs.get("postgres.username"),
     password: cs.get("postgres.password"),

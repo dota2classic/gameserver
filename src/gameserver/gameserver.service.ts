@@ -216,6 +216,6 @@ export class GameServerService implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap() {
-    await this.refreshLeaderboardView();
+    // await this.refreshLeaderboardView();
   }
 }

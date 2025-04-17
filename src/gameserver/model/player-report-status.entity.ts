@@ -3,7 +3,9 @@ import { Column, Entity, PrimaryColumn } from 'typeorm';
 @Entity('player_report_status')
 export class PlayerReportStatusEntity {
 
-  @PrimaryColumn()
+  @PrimaryColumn({
+    unique: true
+  })
   steam_id: string;
 
   @Column({ nullable: true, default: null})

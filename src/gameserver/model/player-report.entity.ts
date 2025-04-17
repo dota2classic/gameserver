@@ -1,10 +1,14 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 import { PlayerAspect } from 'gateway/shared-types/player-aspect';
 
 @Entity("player_report")
+@Index(
+  "PlayerReport_only_one_report_per_match_for_player_pair",
+  ["reporterSteamId", "reportedSteamId", "matchId"],
+  { unique: true },
+)
 export class PlayerReportEntity {
-
-  @PrimaryGeneratedColumn('increment')
+  @PrimaryGeneratedColumn("increment")
   id: number;
 
   @CreateDateColumn()
@@ -28,5 +32,4 @@ export class PlayerReportEntity {
 
   @Column({ name: "commentary", default: "" })
   commentary: string;
-
 }

@@ -20,40 +20,35 @@ export class LeaderboardEntryDto {
   assists: number;
 
   playtime: number;
-
 }
 
 export class LeaderboardEntryPageDto extends Page<LeaderboardEntryDto> {
-  data: LeaderboardEntryDto[]
+  data: LeaderboardEntryDto[];
   page: number;
   perPage: number;
   pages: number;
 }
 
 export class PlayerAspectCountDto {
-  @ApiProperty({ enum: PlayerAspect, enumName: 'PlayerAspect' })
+  @ApiProperty({ enum: PlayerAspect, enumName: "PlayerAspect" })
   aspect: PlayerAspect;
   count: number;
 }
 
 export class PlayerReportsDto {
   steamId: string;
-  playerAspects: PlayerAspectCountDto[]
-
+  playerAspects: PlayerAspectCountDto[];
 }
 
-
 export class PlayerSummaryDto extends LeaderboardEntryDto {
-
   calibrationGamesLeft: number;
-  @ApiProperty({ enum: MatchAccessLevel, enumName: 'MatchAccessLevel' })
-  accessLevel: MatchAccessLevel
-  reports: PlayerAspectCountDto[]
-
+  @ApiProperty({ enum: MatchAccessLevel, enumName: "MatchAccessLevel" })
+  accessLevel: MatchAccessLevel;
+  reports: PlayerAspectCountDto[];
 }
 
 export class SmurfData {
-  relatedBans: BanStatusDto[]
+  relatedBans: BanStatusDto[];
 }
 
 export class BanStatusDto {
@@ -62,7 +57,7 @@ export class BanStatusDto {
   // iso
   public readonly bannedUntil: string;
 
-  @ApiProperty({ enum: BanReason, enumName: 'BanReason' })
+  @ApiProperty({ enum: BanReason, enumName: "BanReason" })
   public readonly status: BanReason;
 }
 
@@ -72,8 +67,18 @@ export class ReportPlayerDto {
   public readonly text: string;
   public readonly matchId: number;
 
-  @ApiProperty({ enum: PlayerAspect, enumName: 'PlayerAspect' })
+  @ApiProperty({ enum: PlayerAspect, enumName: "PlayerAspect" })
   public readonly aspect: PlayerAspect;
+}
+
+export class ReportedMatrixDto {
+  public readonly steamId: string;
+  public readonly reported: string[];
+}
+export class MatchReportMatrixDto {
+  public readonly matchId: number;
+  public readonly timestamp: string;
+  public readonly reports: ReportedMatrixDto[];
 }
 
 export class PlayerTeammateDto {
@@ -85,9 +90,8 @@ export class PlayerTeammateDto {
   public readonly rank: number;
 }
 
-
 export class PlayerTeammatePage extends Page<PlayerTeammateDto> {
-  data: PlayerTeammateDto[]
+  data: PlayerTeammateDto[];
   page: number;
   perPage: number;
   pages: number;
