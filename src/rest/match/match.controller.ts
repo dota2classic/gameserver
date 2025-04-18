@@ -98,8 +98,9 @@ export class MatchController {
   @UseFilters(new EntityNotFoundFilter())
   async getMatchReportMatrix(
     @Param("id") id: number,
+    @Query("steamId") steamId: string,
   ): Promise<MatchReportMatrixDto> {
-    const rm = await this.playerReportService.getReportMatrix(id);
+    const rm = await this.playerReportService.getReportMatrix(id, steamId);
     return {
       matchId: id,
       timestamp: rm.length

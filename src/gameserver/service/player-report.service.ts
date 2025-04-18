@@ -89,23 +89,25 @@ export class PlayerReportService {
     });
   }
 
-  public async getReportMatrix(matchId: number) {
+  public async getReportMatrix(matchId: number, steamId: string) {
     return await this.ds.query<
       { reported_steam_id: string; match_date: string; reporters: string[] }[]
     >(
-      `
-SELECT 
-       pim."playerId" AS reported_steam_id,
-       fm."timestamp" as match_date,
+      `WITH cur_fm AS
+  (SELECT *
+   FROM finished_match fm
+   INNER JOIN player_in_match this_plr ON this_plr."playerId" = $2
+   AND this_plr."matchId" = fm.id
+   WHERE id = $1)
+SELECT pim."playerId" AS reported_steam_id,
+       fm."timestamp" AS match_date,
        array_agg(DISTINCT pr.reporter_steam_id) AS reporters
 FROM player_in_match pim
-    LEFT JOIN finished_match fm ON fm.id = pim."matchId" 
-    LEFT JOIN player_report pr ON pr.match_id = pim."matchId" AND pr.reported_steam_id = pim."playerId"
-WHERE 
-    pim."matchId" = $1
-GROUP
-    BY 1, 2
-`, [matchId]
+INNER JOIN cur_fm fm ON fm.id = pim."matchId"
+LEFT JOIN player_report pr ON pr.match_id = pim."matchId"
+AND pr.reported_steam_id = pim."playerId" GROUP
+    BY 1,
+       2`, [matchId, steamId]
     );
   }
 }
