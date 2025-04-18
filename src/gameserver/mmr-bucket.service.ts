@@ -34,7 +34,7 @@ export class MmrBucketService {
       `,
       [steamId, matchId],
     );
-    return d[0].fpm;
+    return Math.max(0, d[0].fpm);
   }
 
   public async getPlayerFpmInSeason(steamId: string) {
