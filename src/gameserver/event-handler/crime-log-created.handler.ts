@@ -29,6 +29,11 @@ export const getBasePunishment = (crime: BanReason) => {
       return MEDIUM_PUNISHMENT;
     case BanReason.ABANDON:
       return HARD_PUNISHMENT;
+    case BanReason.REPORTS:
+      // return HARD_PUNISHMENT;
+      return 0;
+    case BanReason.COMMUNICATION_REPORTS:
+      return 0;
     default:
       return 0;
   }
@@ -39,11 +44,15 @@ export const getPunishmentCumulativeInterval = (crime: BanReason): string => {
     case BanReason.INFINITE_BAN:
       return "1y";
     case BanReason.GAME_DECLINE:
-      return "4h";
+      return "6h";
     case BanReason.LOAD_FAILURE:
-      return "24h";
+      return "3d";
     case BanReason.ABANDON:
-      return "21d";
+      return "30d";
+    case BanReason.REPORTS:
+      return "30d"
+    case BanReason.COMMUNICATION_REPORTS:
+      return "30d"
     default:
       return "1m";
   }
@@ -82,7 +91,7 @@ export class CrimeLogCreatedHandler
       )
       .then((proms) => {
         this.logger.log(
-          `Initial cathing up in crimes finished, ${proms.length} crimes handled`,
+          `Initial catching up in crimes finished, ${proms.length} crimes handled`,
         );
       });
   }

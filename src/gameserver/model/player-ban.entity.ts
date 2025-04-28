@@ -7,7 +7,7 @@ export class PlayerBanEntity {
   @PrimaryColumn()
   steam_id: string;
 
-  @Column({ type: "timestamptz" })
+  @Column({ type: "timestamptz", name: "end_time" })
   endTime: Date;
 
   @Column()

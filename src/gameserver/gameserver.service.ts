@@ -23,6 +23,9 @@ import { SteamIds } from 'gameserver/steamids';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { MetricsService } from 'metrics/metrics.service';
 import { MmrBucketView } from 'gameserver/model/mmr-bucket.view';
+import { wait } from 'util/wait';
+import { PlayerReportService } from 'gameserver/service/player-report.service';
+import { PlayerAspect } from 'gateway/shared-types/player-aspect';
 
 export interface Player {
   steam64: string;
@@ -76,9 +79,8 @@ export class GameServerService implements OnApplicationBootstrap {
     private readonly sessionRepo: Repository<GameServerSessionEntity>,
     private readonly metrics: MetricsService,
     private readonly config: ConfigService,
-  ) {
-
-  }
+    private readonly reportService: PlayerReportService,
+  ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
   async refreshLeaderboardView() {
@@ -136,7 +138,7 @@ export class GameServerService implements OnApplicationBootstrap {
     m.mode = MatchmakingMode.UNRANKED;
     m.started = true;
     m = await this.matchEntityRepository.save(m);
-    function shuffle(array: any[]) {
+    function shuffle<T>(array: T[]): T[] {
       let currentIndex = array.length;
 
       // While there remain elements to shuffle...
@@ -151,6 +153,7 @@ export class GameServerService implements OnApplicationBootstrap {
           array[currentIndex],
         ];
       }
+      return array;
     }
     shuffle(SteamIds);
 
@@ -171,6 +174,33 @@ export class GameServerService implements OnApplicationBootstrap {
     };
 
     await this.cbus.execute(new SaveGameResultsCommand(g));
+
+    await wait(1000);
+    // Do some reports
+    for (let player of g.players) {
+      const reported = shuffle(
+        g.players
+          .filter((t) => t.steam_id !== player.steam_id)
+          .map((it) => it.steam_id),
+      )[0];
+      const aspect: PlayerAspect = shuffle(
+        Object.keys(PlayerAspect)
+          .filter((key) => isNaN(Number(key)))
+          .map((it) => PlayerAspect[it]),
+      )[0];
+
+      try{
+        await this.reportService.handlePlayerReport(
+          player.steam_id,
+          reported,
+          aspect,
+          "",
+          m.id,
+        );
+      }catch (e) {
+        this.logger.warn("Error while generating fake report", e)
+      }
+    }
   }
 
   @Cron(CronExpression.EVERY_10_SECONDS)
