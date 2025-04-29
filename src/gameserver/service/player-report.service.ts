@@ -11,10 +11,10 @@ import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { BanReason } from 'gateway/shared-types/ban';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { PlayerReportBanCreatedEvent } from 'gateway/events/bans/player-report-ban-created.event';
 
 @Injectable()
 export class PlayerReportService {
-
   private logger = new Logger(PlayerReportService.name);
 
   constructor(
@@ -121,9 +121,6 @@ AND pr.reported_steam_id = pim."playerId" GROUP
     );
   }
 
-
-
-
   @Cron(CronExpression.EVERY_MINUTE)
   public async getPlayersAspectPerformance() {
     const minGamesToBeReportable = 5;
@@ -173,18 +170,17 @@ ORDER BY 2 DESC,
         PlayerAspect.GOOD,
         PlayerAspect.FRIENDLY,
         minGamesToBeReportable,
-        '3 days'
+        "3 days",
       ],
     );
 
     const ruiners = q.filter((t) => t.ruin_degree >= ruinThreshold);
     const toxic = q.filter((t) => t.toxic_degree >= toxicThreshold);
 
+    this.logger.log(q);
 
-    this.logger.log(q)
-
-    this.logger.log("Applying crimes to ruiners:", ruiners)
-    this.logger.log("Applying crimes to toxics:", toxic)
+    this.logger.log("Applying crimes to ruiners:", ruiners);
+    this.logger.log("Applying crimes to toxics:", toxic);
 
     await this.ds.transaction(async (tx) => {
       // Update cutoff timestamp
@@ -210,6 +206,13 @@ ORDER BY 2 DESC,
             ),
         ),
       );
+
+      this.ebus.publishAll(
+        ruiners.map(
+          (ruiner) => new PlayerReportBanCreatedEvent(ruiner.steam_id),
+        ),
+      );
+
       await tx.save(
         toxic.map(
           (r) =>
