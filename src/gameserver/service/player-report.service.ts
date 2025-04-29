@@ -207,6 +207,7 @@ ORDER BY 2 DESC,
         ),
       );
 
+
       this.ebus.publishAll(
         ruiners.map(
           (ruiner) => new PlayerReportBanCreatedEvent(ruiner.steam_id),
