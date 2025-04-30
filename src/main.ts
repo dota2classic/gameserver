@@ -18,7 +18,6 @@ import { ConfigService } from '@nestjs/config';
 
 import { types } from 'pg';
 import { WinstonWrapper } from '@dota2classic/nest_logger';
-import { GameServerService } from 'gameserver/gameserver.service';
 
 types.setTypeParser(types.builtins.NUMERIC, (value: string): number =>
   parseFloat(value),
@@ -136,9 +135,9 @@ async function bootstrap() {
   //
   // console.log(await r1());
 
-  for(let i = 0; i < 100; i++){
-    await app.get(GameServerService).generateFakeMatch()
-  }
+  // for(let i = 0; i < 100; i++){
+  //   await app.get(GameServerService).generateFakeMatch()
+  // }
 
   // await app.get(PlayerQualityService).onPlayerIpUpdated('1852498426')
 }
