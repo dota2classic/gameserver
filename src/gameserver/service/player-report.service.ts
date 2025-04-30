@@ -11,7 +11,6 @@ import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { BanReason } from 'gateway/shared-types/ban';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { PlayerReportBanCreatedEvent } from 'gateway/events/bans/player-report-ban-created.event';
 
 @Injectable()
 export class PlayerReportService {
@@ -208,11 +207,12 @@ ORDER BY 2 DESC,
       );
 
 
-      this.ebus.publishAll(
-        ruiners.map(
-          (ruiner) => new PlayerReportBanCreatedEvent(ruiner.steam_id),
-        ),
-      );
+      // FIXME: make this happen when it actually does bans
+      // this.ebus.publishAll(
+      //   ruiners.map(
+      //     (ruiner) => new PlayerReportBanCreatedEvent(ruiner.steam_id),
+      //   ),
+      // );
 
       await tx.save(
         toxic.map(
