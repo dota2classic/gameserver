@@ -18,6 +18,7 @@ import { AchievementCompleteEvent } from 'gateway/events/gs/achievement-complete
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { PlayerSmurfDetectedEvent } from 'gateway/events/bans/player-smurf-detected.event';
 import { MatchRecordedEvent } from 'gateway/events/gs/match-recorded.event';
+import { PlayerReportBanCreatedEvent } from 'gateway/events/bans/player-report-ban-created.event';
 
 @Injectable()
 export class AppService {
@@ -65,6 +66,7 @@ export class AppService {
       KillServerRequestedEvent,
       BanSystemEvent,
       PlayerNotLoadedEvent,
+      PlayerReportBanCreatedEvent,
       AchievementCompleteEvent,
       PlayerSmurfDetectedEvent,
       MatchRecordedEvent
