@@ -1,4 +1,4 @@
-import { EventBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
+import { CommandBus, EventBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BanReason } from 'gateway/shared-types/ban';
@@ -6,6 +6,7 @@ import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
 import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
+import { LeaveGameSessionCommand } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.command';
 
 @EventsHandler(PlayerNotLoadedEvent)
 export class PlayerNotLoadedHandler
@@ -18,6 +19,7 @@ export class PlayerNotLoadedHandler
       PlayerCrimeLogEntity
     >,
     private readonly ebus: EventBus,
+    private readonly cbus: CommandBus
   ) {}
 
   async handle(event: PlayerNotLoadedEvent) {
@@ -32,5 +34,10 @@ export class PlayerNotLoadedHandler
     await this.playerCrimeLogEntityRepository.save(crime);
 
     this.ebus.publish(new CrimeLogCreatedEvent(crime.id));
+
+
+    await this.cbus.execute(
+      new LeaveGameSessionCommand(event.playerId.value, event.matchId),
+    );
   }
 }

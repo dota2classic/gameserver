@@ -36,6 +36,7 @@ import { LeaderboardService } from 'gameserver/service/leaderboard.service';
 import { PlayerReportService } from 'gameserver/service/player-report.service';
 import { PlayerQualityService } from 'gameserver/service/player-quality.service';
 import { AssignStartedServerHandler } from 'gameserver/command/AssignStartedServer/assign-started-server.handler';
+import { LeaveGameSessionHandler } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -47,7 +48,8 @@ const CommandHandlers = [
   SaveGameResultsHandler,
   SaveMatchFailedHandler,
   SavePlayerAbandonHandler,
-  AssignStartedServerHandler
+  AssignStartedServerHandler,
+  LeaveGameSessionHandler
 ];
 const EventHandlers = [
   PlayerConnectedHandler,

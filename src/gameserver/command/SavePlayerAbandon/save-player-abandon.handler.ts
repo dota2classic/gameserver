@@ -1,4 +1,4 @@
-import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { SavePlayerAbandonCommand } from 'gameserver/command/SavePlayerAbandon/save-player-abandon.command';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 import { MetricsService } from 'metrics/metrics.service';
+import { LeaveGameSessionCommand } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.command';
 
 @CommandHandler(SavePlayerAbandonCommand)
 export class SavePlayerAbandonHandler
@@ -19,11 +20,18 @@ export class SavePlayerAbandonHandler
     private readonly playerCrimeLogEntityRepository: Repository<PlayerCrimeLogEntity>,
     private readonly ebus: EventBus,
     private readonly metrics: MetricsService,
+    private readonly cbus: CommandBus,
   ) {}
 
   async execute({ event }: SavePlayerAbandonCommand) {
     // Let them abandon ffs
     this.logger.log("PlayerAbandonEvent", { index: event.abandonIndex });
+
+
+    await this.cbus.execute(
+      new LeaveGameSessionCommand(event.playerId.value, event.matchId),
+    );
+
     if (event.abandonIndex > 0) {
       this.logger.log("Player abandoned not first, not creating crime");
       return;
