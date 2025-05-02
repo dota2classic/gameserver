@@ -5,6 +5,7 @@ import { Mapper } from 'rest/mapper';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import {
+  AbandonSessionDto,
   BanStatusDto,
   LeaderboardEntryPageDto,
   PlayerSummaryDto,
@@ -36,6 +37,7 @@ import { LeaderboardService } from 'gameserver/service/leaderboard.service';
 import { GameSeasonService } from 'gameserver/service/game-season.service';
 import { PlayerReportService } from 'gameserver/service/player-report.service';
 import { PlayerQualityService } from 'gameserver/service/player-quality.service';
+import { LeaveGameSessionCommand } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.command';
 
 @Controller("player")
 @ApiTags("player")
@@ -280,6 +282,13 @@ offset $2 limit $3`,
       dto.aspect,
       dto.text,
       dto.matchId,
+    );
+  }
+
+  @Post("/abandon")
+  async abandonSession(@Body() dto: AbandonSessionDto) {
+    await this.cbus.execute(
+      new LeaveGameSessionCommand(dto.steamId, dto.matchId),
     );
   }
 }

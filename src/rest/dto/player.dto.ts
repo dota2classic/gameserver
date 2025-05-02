@@ -71,6 +71,11 @@ export class ReportPlayerDto {
   public readonly aspect: PlayerAspect;
 }
 
+export class AbandonSessionDto {
+  public readonly matchId: number;
+  public readonly steamId: string;
+}
+
 export class ReportedMatrixDto {
   public readonly steamId: string;
   public readonly reported: string[];
