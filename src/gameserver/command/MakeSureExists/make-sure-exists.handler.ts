@@ -35,13 +35,17 @@ export class MakeSureExistsHandler
     const p = await this.versionPlayerRepository.findOne({
       where: { steamId: steam_id, seasonId: season.id },
     });
-    if (!p) {
-      const vp = new VersionPlayerEntity(
-        steam_id,
-        VersionPlayerEntity.STARTING_MMR,
-        season.id,
-      );
-      await this.versionPlayerRepository.save(vp);
-    }
+
+    await this.versionPlayerRepository
+      .createQueryBuilder()
+      .insert()
+      .values(
+        new VersionPlayerEntity(
+          steam_id,
+          VersionPlayerEntity.STARTING_MMR,
+          season.id,
+        ),
+      )
+      .orIgnore();
   }
 }
