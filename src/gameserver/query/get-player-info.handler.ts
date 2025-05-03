@@ -47,25 +47,37 @@ export class GetPlayerInfoHandler
 
     const query: QueryResult | undefined = (
       await this.playerBanRepository.query(
-        `with recent_games as (select (pim.team = fm.winner)    as win,
-                             (pim.team != fm.winner)   as loss,
-                             (pim.kills + pim.assists) as ka,
-                             (pim.deaths)              as deaths
-                      from player_in_match pim
-                               inner join finished_match fm on fm.id = pim."matchId"
-                      where pim."playerId" = $1
-                        and fm.matchmaking_mode in (0, 1)
-                      order by fm.timestamp desc
-                      limit $2)
-select vp.steam_id                                               as steam_id,
-       vp.mmr::int                                               as mmr,
-       (sum(rg.win::int)::float / greatest(1, count(rg)))::float as winrate,
-       avg(rg.ka / greatest(rg.deaths, 1))::float                as recent_kda
-from version_player vp,
+        `WITH current_season AS
+  (SELECT *
+   FROM game_season gs
+   ORDER BY gs.start_timestamp DESC
+   LIMIT 1),
+     recent_games AS
+  (SELECT (pim.team = fm.winner) AS win,
+          (pim.team != fm.winner) AS loss,
+          (pim.kills + pim.assists) AS ka,
+          (pim.deaths) AS deaths
+   FROM player_in_match pim
+   LEFT JOIN current_season cs ON TRUE
+   INNER JOIN finished_match fm ON fm.id = pim."matchId"
+   AND fm.timestamp >= cs.start_timestamp
+   WHERE pim."playerId" = $1
+     AND fm.matchmaking_mode IN (0,
+                                 1)
+   ORDER BY fm.timestamp DESC
+   LIMIT $2)
+SELECT vp.steam_id AS steam_id,
+       vp.mmr::int AS mmr,
+       (sum(rg.win::int)::float / greatest(1, count(rg)))::float AS winrate,
+       avg(rg.ka / greatest(rg.deaths, 1))::float AS recent_kda,
+       count(rg) AS games
+FROM version_player vp,
      recent_games rg
-
-where vp.steam_id = $1
-group by vp.steam_id, vp.mmr`,
+LEFT JOIN current_season cs ON TRUE
+WHERE vp.steam_id = $1
+  AND vp.season_id = cs.id
+GROUP BY vp.steam_id,
+         vp.mmr`,
         [command.playerId.value, 20],
       )
     )[0];
