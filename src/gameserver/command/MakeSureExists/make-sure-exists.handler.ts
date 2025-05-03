@@ -32,9 +32,6 @@ export class MakeSureExistsHandler
 
   private async makeSureExists(steam_id: string) {
     const season = await this.gsService.getCurrentSeason();
-    const p = await this.versionPlayerRepository.findOne({
-      where: { steamId: steam_id, seasonId: season.id },
-    });
 
     await this.versionPlayerRepository
       .createQueryBuilder()
@@ -46,6 +43,7 @@ export class MakeSureExistsHandler
           season.id,
         ),
       )
-      .orIgnore();
+      .orIgnore()
+      .execute()
   }
 }
