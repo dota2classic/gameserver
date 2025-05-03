@@ -122,7 +122,7 @@ AND pr.reported_steam_id = pim."playerId" GROUP
 
   @Cron(CronExpression.EVERY_MINUTE)
   public async getPlayersAspectPerformance() {
-    const minGamesToBeReportable = 5;
+    const minGamesToBeReportable = 10;
     const ruinThreshold = 0.25;
     const toxicThreshold = 0.2;
 
@@ -169,7 +169,7 @@ ORDER BY 2 DESC,
         PlayerAspect.GOOD,
         PlayerAspect.FRIENDLY,
         minGamesToBeReportable,
-        "3 days",
+        "30 days",
       ],
     );
 
