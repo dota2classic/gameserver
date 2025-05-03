@@ -176,8 +176,6 @@ ORDER BY 2 DESC,
     const ruiners = q.filter((t) => t.ruin_degree >= ruinThreshold);
     const toxic = q.filter((t) => t.toxic_degree >= toxicThreshold);
 
-    this.logger.log(q);
-
     this.logger.log("Applying crimes to ruiners:" + ruiners.length);
     this.logger.log("Applying crimes to toxics:" + toxic.length);
 
