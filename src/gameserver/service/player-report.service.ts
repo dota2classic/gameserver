@@ -178,8 +178,8 @@ ORDER BY 2 DESC,
 
     this.logger.log(q);
 
-    this.logger.log("Applying crimes to ruiners:", ruiners);
-    this.logger.log("Applying crimes to toxics:", toxic);
+    this.logger.log("Applying crimes to ruiners:" + ruiners.length);
+    this.logger.log("Applying crimes to toxics:" + toxic.length);
 
     await this.ds.transaction(async (tx) => {
       // Update cutoff timestamp

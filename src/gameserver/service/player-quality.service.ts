@@ -37,7 +37,7 @@ export class PlayerQualityService {
       .createQueryBuilder("pip")
       .leftJoinAndSelect(PlayerBanEntity, "pbe", "pbe.steam_id = pip.steamId")
       .where("pip.ip in (:...ips)", { ips: allIps.map((it) => it.ip) })
-      .select('distinct pip.steam_id, pbe."endTime" as end_time, pbe.reason')
+      .select('distinct pip.steam_id, pbe.end_time as end_time, pbe.reason')
       .getRawMany<PlayerIpWithBans>();
   }
 
