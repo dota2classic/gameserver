@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
+import { GameSeasonService } from 'gameserver/service/game-season.service';
 
 interface CalcPlayerStats {
   steam_id: string;
@@ -31,6 +32,7 @@ export class LeaderboardService {
     private readonly leaderboardViewRepository: Repository<LeaderboardView>,
     @InjectRepository(PlayerInMatchEntity)
     private readonly playerInMatchEntityRepository: Repository<PlayerInMatchEntity>,
+    private readonly gameSeasonService : GameSeasonService,
     private readonly playerService: PlayerServiceV2,
   ) {}
 
@@ -52,8 +54,9 @@ export class LeaderboardService {
   private async getPlayerLeaderboardEntry(
     steamId: string,
   ): Promise<LeaderboardEntryDto> {
+    const season = await this.gameSeasonService.getCurrentSeason();
     const lb = await this.leaderboardViewRepository.findOne({
-      where: { steamId },
+      where: { steamId, seasonId: season.id },
     });
 
     // if it exists in the view, we happy
