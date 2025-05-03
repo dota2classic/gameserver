@@ -82,13 +82,16 @@ export class GameServerService implements OnApplicationBootstrap {
     private readonly reportService: PlayerReportService,
   ) {}
 
-  @Cron(CronExpression.EVERY_HOUR)
-  async refreshLeaderboardView() {
+  @Cron(CronExpression.EVERY_5_MINUTES)
+  async refreshLeaderboard() {
     await this.leaderboardViewRepository.query(
       `refresh materialized view leaderboard_view`,
     );
     this.logger.log("Refreshed leaderboard_view");
+  }
 
+  @Cron(CronExpression.EVERY_HOUR)
+  async refreshLeaderboardView() {
     await this.leaderboardViewRepository.query(
       `refresh materialized view mmr_bucket_view`,
     );
@@ -189,7 +192,7 @@ export class GameServerService implements OnApplicationBootstrap {
           .map((it) => PlayerAspect[it]),
       )[0];
 
-      try{
+      try {
         await this.reportService.handlePlayerReport(
           player.steam_id,
           reported,
@@ -197,8 +200,8 @@ export class GameServerService implements OnApplicationBootstrap {
           "",
           m.id,
         );
-      }catch (e) {
-        this.logger.warn("Error while generating fake report", e)
+      } catch (e) {
+        this.logger.warn("Error while generating fake report", e);
       }
     }
   }
