@@ -8,6 +8,7 @@ import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { GameSeasonService } from 'gameserver/service/game-season.service';
+import { sum } from 'util/avg';
 
 interface CalcPlayerStats {
   steam_id: string;
@@ -32,22 +33,56 @@ export class LeaderboardService {
     private readonly leaderboardViewRepository: Repository<LeaderboardView>,
     @InjectRepository(PlayerInMatchEntity)
     private readonly playerInMatchEntityRepository: Repository<PlayerInMatchEntity>,
-    private readonly gameSeasonService : GameSeasonService,
+    private readonly gameSeasonService: GameSeasonService,
     private readonly playerService: PlayerServiceV2,
   ) {}
 
-  public async getPlayerSummary(steamId: string): Promise<Omit<PlayerSummaryDto, "reports">> {
-    const entry = await this.getPlayerLeaderboardEntry(steamId);
-    const matchAccessLevel =
-      await this.playerService.getMatchAccessLevel(steamId);
+  public async getPlayerSummary(
+    steamId: string,
+  ): Promise<Omit<PlayerSummaryDto, "reports">> {
+    const [season, overall, matchAccessLevel] = await Promise.combine([
+      this.getPlayerLeaderboardEntry(steamId),
+      this.getPlayerLeaderboardEntryOverall(steamId),
+      this.playerService.getMatchAccessLevel(steamId),
+    ]);
 
     return {
-      ...entry,
+      steamId,
+      season,
+      overall,
       accessLevel: matchAccessLevel,
       calibrationGamesLeft: Math.max(
-        ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES - entry.games,
+        ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES - season.games,
         0,
       ),
+    };
+  }
+
+  private async getPlayerLeaderboardEntryOverall(steamId: string) {
+    const lb = await this.leaderboardViewRepository.find({
+      where: { steamId },
+    });
+
+    if (!lb) {
+      return this.approximatePlayerLeaderboardEntry(steamId, false);
+    }
+
+    return {
+      rank: -1,
+
+      steamId: steamId,
+      seasonId: -1,
+      mmr: -1,
+
+      games: sum(lb.map((it) => it.games)),
+      wins: sum(lb.map((it) => it.wins)),
+      abandons: sum(lb.map((it) => it.abandons)),
+
+      kills: sum(lb.map((it) => it.kills)),
+      deaths: sum(lb.map((it) => it.deaths)),
+      assists: sum(lb.map((it) => it.assists)),
+
+      playtime: sum(lb.map((it) => it.playtime)),
     };
   }
 
@@ -61,7 +96,7 @@ export class LeaderboardService {
 
     // if it exists in the view, we happy
     if (!lb) {
-      return this.approximatePlayerLeaderboardEntry(steamId);
+      return this.approximatePlayerLeaderboardEntry(steamId, true);
     }
 
     return {
@@ -85,6 +120,7 @@ export class LeaderboardService {
 
   private async approximatePlayerLeaderboardEntry(
     steamId: string,
+    seasonal: boolean = true,
   ): Promise<LeaderboardEntryDto> {
     const stats: CalcPlayerStats = await this.playerInMatchEntityRepository
       .query(
@@ -94,7 +130,7 @@ select
 from
     game_season gs
 order by
-    gs.start_timestamp desc
+    gs.start_timestamp ${seasonal ? "DESC" : "ASC"}
 limit 1)
 select
     vp.steam_id,

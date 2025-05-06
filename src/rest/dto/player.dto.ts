@@ -40,7 +40,11 @@ export class PlayerReportsDto {
   playerAspects: PlayerAspectCountDto[];
 }
 
-export class PlayerSummaryDto extends LeaderboardEntryDto {
+export class PlayerSummaryDto {
+  steamId: string;
+  season: LeaderboardEntryDto;
+  overall: LeaderboardEntryDto;
+
   calibrationGamesLeft: number;
   @ApiProperty({ enum: MatchAccessLevel, enumName: "MatchAccessLevel" })
   accessLevel: MatchAccessLevel;
