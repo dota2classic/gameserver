@@ -11,6 +11,7 @@ import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
 import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
+import { DodgeService } from 'rest/service/dodge.service';
 
 @QueryHandler(GetPlayerInfoQuery)
 export class GetPlayerInfoHandler
@@ -26,6 +27,7 @@ export class GetPlayerInfoHandler
     @InjectRepository(PlayerBanEntity)
     private readonly playerBanRepository: Repository<PlayerBanEntity>,
     private readonly playerServiceV2: PlayerServiceV2,
+    private readonly dodge: DodgeService
   ) {}
 
   async execute(
@@ -86,6 +88,7 @@ GROUP BY vp.steam_id,
 
     const accessLevel = await this.playerServiceV2.getMatchAccessLevel(command.playerId.value)
 
+    const dodgeList = await this.dodge.getDodgeList(command.playerId.value).then(it => it.map(x => x.dodgedSteamId))
 
     return new GetPlayerInfoQueryResult(
       command.playerId,
@@ -95,7 +98,8 @@ GROUP BY vp.steam_id,
       query?.recent_kda || 1,
       humanGamesPlayed || 0,
       ban?.asBanStatus() || BanStatus.NOT_BANNED,
-      accessLevel
+      accessLevel,
+      dodgeList
     );
   }
 

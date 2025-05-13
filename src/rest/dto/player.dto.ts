@@ -105,3 +105,15 @@ export class PlayerTeammatePage extends Page<PlayerTeammateDto> {
   perPage: number;
   pages: number;
 }
+
+
+export class DodgePlayerDto {
+  steamId: string;
+  toDodgeSteamId: string;
+}
+
+
+export class DodgeListEntryDto {
+  steamId: string;
+  createdAt: string;
+}

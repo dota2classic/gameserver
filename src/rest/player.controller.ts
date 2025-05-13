@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Logger, Param, Post, Query } from '@nestjs/common';
 import { CacheTTL } from '@nestjs/cache-manager';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Mapper } from 'rest/mapper';
@@ -7,6 +7,8 @@ import { Connection, Repository } from 'typeorm';
 import {
   AbandonSessionDto,
   BanStatusDto,
+  DodgeListEntryDto,
+  DodgePlayerDto,
   LeaderboardEntryPageDto,
   PlayerSummaryDto,
   PlayerTeammateDto,
@@ -38,6 +40,7 @@ import { GameSeasonService } from 'gameserver/service/game-season.service';
 import { PlayerReportService } from 'gameserver/service/player-report.service';
 import { PlayerQualityService } from 'gameserver/service/player-quality.service';
 import { LeaveGameSessionCommand } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.command';
+import { DodgeService } from 'rest/service/dodge.service';
 
 @Controller("player")
 @ApiTags("player")
@@ -66,6 +69,7 @@ export class PlayerController {
     private readonly gameSeasonService: GameSeasonService,
     private readonly report: PlayerReportService,
     private readonly playerQuality: PlayerQualityService,
+    private readonly dodge: DodgeService,
   ) {}
 
   @Get("/:id/achievements")
@@ -282,6 +286,39 @@ offset $2 limit $3`,
       dto.aspect,
       dto.text,
       dto.matchId,
+    );
+  }
+
+  @Get("/dodge_list")
+  async getDodgeList(
+    @Query("steamId") steamId: string,
+  ): Promise<DodgeListEntryDto[]> {
+    return this.dodge.getDodgeList(steamId).then((all) =>
+      all.map((it) => ({
+        steamId: it.steamId,
+        createdAt: it.createdAt.toISOString(),
+      })),
+    );
+  }
+
+  @Post("/dodge_list")
+  async dodgePlayer(@Body() dto: DodgePlayerDto): Promise<DodgeListEntryDto[]> {
+    return this.dodge.dodgePlayer(dto.steamId, dto.toDodgeSteamId).then((all) =>
+      all.map((it) => ({
+        steamId: it.steamId,
+        createdAt: it.createdAt.toISOString(),
+      })),
+    );
+  }
+
+
+  @Delete("/dodge_list")
+  async unDodgePlayer(@Body() dto: DodgePlayerDto): Promise<DodgeListEntryDto[]> {
+    return this.dodge.unDodgePlayer(dto.steamId, dto.toDodgeSteamId).then((all) =>
+      all.map((it) => ({
+        steamId: it.steamId,
+        createdAt: it.createdAt.toISOString(),
+      })),
     );
   }
 

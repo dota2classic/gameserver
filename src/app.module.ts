@@ -33,6 +33,7 @@ import { MmrBucketService } from 'gameserver/mmr-bucket.service';
 import { RecordController } from 'rest/record.controller';
 import { RecordService } from 'rest/service/record.service';
 import { MetricsModule } from 'metrics/metrics.module';
+import { DodgeService } from 'rest/service/dodge.service';
 
 @Module({
   imports: [
@@ -125,6 +126,7 @@ import { MetricsModule } from 'metrics/metrics.module';
     MetaMapper,
     InfoMapper,
     InfoService,
+    DodgeService,
     MmrBucketService,
     Mapper,
     RecordService,
