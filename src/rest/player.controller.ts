@@ -293,33 +293,25 @@ offset $2 limit $3`,
   async getDodgeList(
     @Query("steamId") steamId: string,
   ): Promise<DodgeListEntryDto[]> {
-    return this.dodge.getDodgeList(steamId).then((all) =>
-      all.map((it) => ({
-        steamId: it.steamId,
-        createdAt: it.createdAt.toISOString(),
-      })),
-    );
+    return this.dodge
+      .getDodgeList(steamId)
+      .then((all) => all.map(this.mapper.mapDodgeEntry));
   }
 
   @Post("/dodge_list")
   async dodgePlayer(@Body() dto: DodgePlayerDto): Promise<DodgeListEntryDto[]> {
-    return this.dodge.dodgePlayer(dto.steamId, dto.toDodgeSteamId).then((all) =>
-      all.map((it) => ({
-        steamId: it.steamId,
-        createdAt: it.createdAt.toISOString(),
-      })),
-    );
+    return this.dodge
+      .dodgePlayer(dto.steamId, dto.toDodgeSteamId)
+      .then((all) => all.map(this.mapper.mapDodgeEntry));
   }
 
-
   @Delete("/dodge_list")
-  async unDodgePlayer(@Body() dto: DodgePlayerDto): Promise<DodgeListEntryDto[]> {
-    return this.dodge.unDodgePlayer(dto.steamId, dto.toDodgeSteamId).then((all) =>
-      all.map((it) => ({
-        steamId: it.steamId,
-        createdAt: it.createdAt.toISOString(),
-      })),
-    );
+  async unDodgePlayer(
+    @Body() dto: DodgePlayerDto,
+  ): Promise<DodgeListEntryDto[]> {
+    return this.dodge
+      .unDodgePlayer(dto.steamId, dto.toDodgeSteamId)
+      .then((all) => all.map(this.mapper.mapDodgeEntry));
   }
 
   @Post("/abandon")

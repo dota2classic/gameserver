@@ -9,6 +9,8 @@ import { AchievementService } from 'gameserver/achievement.service';
 import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 import { PlayerRecordDto } from 'rest/dto/record.dto';
 import { RecordEntry } from 'rest/service/record.service';
+import { DodgeListEntryDto } from 'rest/dto/player.dto';
+import { DodgeListEntity } from 'gameserver/model/dodge-list.entity';
 
 @Injectable()
 export class Mapper {
@@ -90,6 +92,8 @@ export class Mapper {
     };
   };
 
-
-
+  public mapDodgeEntry = (it: DodgeListEntity): DodgeListEntryDto => ({
+    steamId: it.dodgedSteamId,
+    createdAt: it.createdAt.toISOString(),
+  });
 }
