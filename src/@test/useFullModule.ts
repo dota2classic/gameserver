@@ -33,6 +33,7 @@ import { CrimeController } from 'rest/crime/crime.controller';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import { MetricsService } from 'metrics/metrics.service';
 import { WinstonWrapper } from '@dota2classic/nest_logger';
+import { DodgeService } from 'rest/service/dodge.service';
 import SpyInstance = jest.SpyInstance;
 
 export interface TestEnvironment {
@@ -177,6 +178,7 @@ export function useFullModule(): TestEnvironment {
         InfoMapper,
         InfoService,
         MmrBucketService,
+        DodgeService,
         Mapper,
         ...GameServerDomain,
         {
