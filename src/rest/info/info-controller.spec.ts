@@ -113,6 +113,8 @@ describe("InfoController", () => {
           game_mode: Dota_GameMode.RANKED_AP,
           dota_map: Dota_Map.DOTA681,
           enabled: false,
+          enableCheats: false,
+          fillBots: false
         } satisfies UpdateGamemodeDto)
         .expect(200);
 
@@ -128,6 +130,8 @@ describe("InfoController", () => {
         enabled: false,
         dotaGameMode: Dota_GameMode.RANKED_AP,
         dotaMap: Dota_Map.DOTA681,
+        enableCheats: false,
+        fillBots: false
       } satisfies MatchmakingModeMappingEntity);
     });
   });
