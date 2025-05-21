@@ -7,7 +7,6 @@ import { Repository } from 'typeorm';
 import { ClientProxy } from '@nestjs/microservices';
 import {
   FullMatchPlayer,
-  GSMatchInfo,
   LaunchGameServerCommand,
 } from 'gateway/commands/LaunchGameServer/launch-game-server.command';
 import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
@@ -15,6 +14,7 @@ import { GetUserInfoQueryResult } from 'gateway/queries/GetUserInfo/get-user-inf
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
 import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
+import { Role } from 'gateway/shared-types/roles';
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
@@ -38,27 +38,28 @@ export class FindGameServerHandler
   }
 
   async execute(command: FindGameServerCommand) {
-    const gsInfo = await this.extendMatchInfo(command.info);
+    const launchGameServerCommand = await this.extendMatchInfo(command.info);
 
-    const m = new MatchEntity();
+    let m = new MatchEntity();
     m.server = MatchEntity.NOT_DECIDED_SERVER;
     m.mode = command.info.mode;
     m.started = false;
     m.finished = false;
     m.matchInfoJson = {
-      ...gsInfo,
+      ...launchGameServerCommand,
     };
 
-    await this.matchEntityRepository.save(m);
+    m = await this.matchEntityRepository.save(m);
+    launchGameServerCommand.matchId = m.id
 
     this.logger.log("Created match stub");
 
-    await this.submitQueueTask(m.id, gsInfo);
+    await this.submitQueueTask(launchGameServerCommand);
   }
 
   private async extendMatchInfo(
     matchInfo: GamePreparedEvent,
-  ): Promise<GSMatchInfo> {
+  ): Promise<LaunchGameServerCommand> {
     const players: FullMatchPlayer[] = [];
 
     // TODO: i dont like it and want to move username resolving into operator
@@ -67,28 +68,29 @@ export class FindGameServerHandler
         GetUserInfoQuery,
         GetUserInfoQueryResult
       >(new GetUserInfoQuery(t.playerId));
+
+      // FIXME: add server mutes
       players.push(
-        new FullMatchPlayer(t.playerId, t.team, res.name, t.partyId),
+        new FullMatchPlayer(t.playerId.value, res.name, res.roles.includes(Role.OLD), false, t.partyId, t.team),
       );
     });
 
     await Promise.all(resolves);
 
-    return new GSMatchInfo(
+    return new LaunchGameServerCommand(
+      -1,
       matchInfo.mode,
-      matchInfo.map,
       matchInfo.gameMode,
       matchInfo.roomId,
-      players,
-      matchInfo.version,
-      0,
+      matchInfo.map,
+      players
     );
   }
 
-  private async submitQueueTask(matchId: number, info: GSMatchInfo) {
+  private async submitQueueTask(cmd: LaunchGameServerCommand) {
     this.rmq.emit(
       LaunchGameServerCommand.name,
-      new LaunchGameServerCommand(matchId, info),
+      cmd,
     );
     this.logger.log("Submitted start server command to queue");
   }
