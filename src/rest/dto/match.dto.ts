@@ -6,10 +6,10 @@ import { ApiProperty } from '@nestjs/swagger';
 export class MatchDto {
   id: number;
 
-  @ApiProperty({ enum: MatchmakingMode, enumName: 'MatchmakingMode' })
+  @ApiProperty({ enum: MatchmakingMode, enumName: "MatchmakingMode" })
   mode: MatchmakingMode;
 
-  @ApiProperty({ enum: Dota_GameMode, enumName: 'Dota_GameMode' })
+  @ApiProperty({ enum: Dota_GameMode, enumName: "Dota_GameMode" })
   game_mode: Dota_GameMode;
 
   radiant: PlayerInMatchDto[];
@@ -24,15 +24,16 @@ export class MmrChangeDto {
   mmr_after: number;
   is_hidden: boolean;
   change: number;
+  calibration: boolean;
 }
 export class MatchMmrData {
   id: number;
   player_mmr_data: MmrChangeDto[];
 }
 
-
 export class PlayerInMatchDto {
   steam_id: string;
+  partyIndex: number;
 
   team: number;
   hero: string;

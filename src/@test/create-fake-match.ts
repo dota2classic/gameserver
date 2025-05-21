@@ -76,6 +76,7 @@ export async function fillMatch(
   for (let i = 0; i < count; i++) {
     const pim = new PlayerInMatchEntity();
     pim.match = fm;
+    pim.partyIndex = Math.floor(i / 2);
     pim.playerId = `${fm.id}${randInt(1000000)}${i}`;
     pim.abandoned = false;
     pim.denies = randInt(50);

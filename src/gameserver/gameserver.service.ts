@@ -221,6 +221,7 @@ export class GameServerService implements OnApplicationBootstrap {
     return {
       steam_id: steamId,
       team: team,
+      partyIndex: Number(steamId) % 10,
       kills: randint(15),
       deaths: randint(15),
       assists: randint(15),

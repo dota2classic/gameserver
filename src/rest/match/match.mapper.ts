@@ -24,6 +24,7 @@ export class MatchMapper {
 
   public mapPlayerInMatch = (it: PlayerInMatchEntity): PlayerInMatchDto => ({
     steam_id: it.playerId,
+    partyIndex: it.partyIndex || -1,
 
     team: it.team,
     level: it.level,
@@ -60,5 +61,6 @@ export class MatchMapper {
     mmr_after: mmr.mmrAfter,
     change: mmr.change,
     is_hidden: mmr.hiddenMmr,
+    calibration: mmr.calibration
   });
 }

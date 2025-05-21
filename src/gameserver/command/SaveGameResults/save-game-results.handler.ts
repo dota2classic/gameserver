@@ -74,6 +74,7 @@ export class SaveGameResultsHandler
           const pim = new PlayerInMatchEntity();
 
           pim.match = m;
+          pim.partyIndex = t.partyIndex;
           // kda
           pim.kills = t.kills;
           pim.deaths = t.deaths;

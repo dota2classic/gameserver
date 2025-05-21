@@ -99,8 +99,11 @@ export default class PlayerInMatchEntity {
   @OneToMany(type => MmrChangeLogEntity, t => t.pim, { eager: true })
   mmrChange: MmrChangeLogEntity[]
 
-  @Column('uuid', { nullable: true, default: null})
-  party_id?: string;
+  @Column({
+    name: "party_index",
+    nullable: true
+  })
+  partyIndex?: number
 }
 
 /**

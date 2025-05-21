@@ -177,7 +177,7 @@ export class ProcessRankedMatchHandler
         steamId: In(
           [...command.losers, ...command.winners].map((t) => t.value),
         ),
-        seasonId: currentSeason.id
+        seasonId: currentSeason.id,
       },
     });
 
@@ -285,6 +285,8 @@ export class ProcessRankedMatchHandler
       change.playerId = steamId;
       change.loserAverage = Number(loserAverage);
       change.winnerAverage = Number(winnerAverage);
+      change.calibration =
+        cb < ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES;
       change.change = Number(mmrChange);
       change.winner = winner;
       change.hiddenMmr = true;

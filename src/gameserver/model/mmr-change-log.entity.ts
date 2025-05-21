@@ -30,6 +30,9 @@ export class MmrChangeLogEntity {
   @Column({ type: "float" })
   change: number;
 
+  @Column({ type: "boolean", name: "calibration_game", default: false })
+  calibration: boolean;
+
   @Column({ type: "float", default: 1.0, name: "player_performance_coefficient" })
   playerPerformanceCoefficient: number;
 
