@@ -30,7 +30,7 @@ export class AssignStartedServerHandler implements ICommandHandler<AssignStarted
   async execute(cmd: AssignStartedServerCommand) {
     this.logger.log("Srcds server started: assigning server url")
     const m = await this.matchEntityRepository.findOneOrFail({
-      where: { id: cmd.matchId },
+      where: { id: cmd.info.matchId },
     });
 
     m.server = cmd.server;
@@ -44,14 +44,14 @@ export class AssignStartedServerHandler implements ICommandHandler<AssignStarted
       new GameSessionCreatedEvent(
         session.url,
         session.matchId,
-        session.asGsMatchInfo(),
+        session.asSummary(),
       ),
     );
 
     this.ebus.publish(
       new MatchStartedEvent(
         session.matchId,
-        session.asGsMatchInfo(),
+        session.asSummary(),
         new GameServerInfo(session.url),
       ),
     );
@@ -61,10 +61,10 @@ export class AssignStartedServerHandler implements ICommandHandler<AssignStarted
     return this.datasource.transaction(async (em) => {
       // Session
       const session = new GameServerSessionEntity(
-        event.matchId,
+        event.info.matchId,
         event.server,
         event.info.roomId,
-        event.info.mode,
+        event.info.lobbyType,
         event.info.gameMode,
         event.info.map,
         Dota_GameRulesState.WAIT_FOR_PLAYERS_TO_LOAD,
@@ -72,14 +72,14 @@ export class AssignStartedServerHandler implements ICommandHandler<AssignStarted
       );
 
       await em.save(GameServerSessionEntity, session);
-      this.logger.log(`Game server session created ${event.matchId}`)
+      this.logger.log(`Game server session created ${event.info.matchId}`)
 
       // Players
       const players = event.info.players.map(
         (p) =>
           new GameSessionPlayerEntity(
-            p.playerId.value,
-            event.matchId,
+            p.steamId,
+            event.info.matchId,
             p.partyId,
             p.team,
             DotaConnectionState.DOTA_CONNECTION_STATE_NOT_YET_CONNECTED,
@@ -89,7 +89,7 @@ export class AssignStartedServerHandler implements ICommandHandler<AssignStarted
       await em.save(GameSessionPlayerEntity, players);
       session.players = players;
 
-      this.logger.log(`Game server session players created ${event.matchId}`)
+      this.logger.log(`Game server session players created ${event.info.matchId}`)
 
       return session;
     });

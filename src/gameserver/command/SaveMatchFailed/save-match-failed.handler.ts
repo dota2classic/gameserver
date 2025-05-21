@@ -40,7 +40,7 @@ export class SaveMatchFailedHandler
 
     this.ebus.publishAll(
       event.failedPlayers.map(
-        pl => new PlayerNotLoadedEvent(pl, event.matchId, match.matchInfoJson.mode),
+        pl => new PlayerNotLoadedEvent(pl, event.matchId, match.matchInfoJson.lobbyType),
       ),
     );
   }

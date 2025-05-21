@@ -32,7 +32,7 @@ export class GameserverSaga {
   findServer = (events$: Observable<any>): Observable<ICommand> => {
     return events$.pipe(
       ofType(GamePreparedEvent),
-      map((e: GamePreparedEvent) => new FindGameServerCommand(e, 0)),
+      map((e: GamePreparedEvent) => new FindGameServerCommand(e)),
     );
   };
 

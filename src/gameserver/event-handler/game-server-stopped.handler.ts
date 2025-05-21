@@ -31,7 +31,7 @@ export class GameServerStoppedHandler
         new GameSessionFinishedEvent(
           runningSession.url,
           runningSession.matchId,
-          runningSession.asGsMatchInfo(),
+          runningSession.asSummary(),
         ),
       );
     }

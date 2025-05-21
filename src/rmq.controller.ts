@@ -26,7 +26,7 @@ export class RmqController {
     @Payload() data: SrcdsServerStartedEvent,
     @Ctx() context: RmqContext,
   ) {
-    await this.processMessage(new AssignStartedServerCommand(data.server, data.matchId, data.info), context);
+    await this.processMessage(new AssignStartedServerCommand(data.server, data.info), context);
   }
 
   @MessagePattern(GameResultsEvent.name)

@@ -3,10 +3,8 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { Dota_GameRulesState } from 'gateway/shared-types/dota-game-rules-state';
 import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
-import { GSMatchInfo } from 'gateway/commands/LaunchGameServer/launch-game-server.command';
 import { Dota_Map } from 'gateway/shared-types/dota-map';
-import { Dota2Version } from 'gateway/shared-types/dota2version';
-import { PlayerId } from 'gateway/shared-types/player-id';
+import { MatchSummary } from 'gateway/shared-types/match-summary';
 
 @Entity("game_server_session")
 export class GameServerSessionEntity {
@@ -60,20 +58,18 @@ export class GameServerSessionEntity {
     this.duration = duration;
   }
 
-  public asGsMatchInfo(): GSMatchInfo {
+  public asSummary(): MatchSummary {
     return {
-      mode: this.matchmaking_mode,
+      matchId: this.matchId,
+      lobbyType: this.matchmaking_mode,
       map: this.map,
       gameMode: this.gameMode,
       roomId: this.roomId,
       players: this.players.map((plr) => ({
-        playerId: new PlayerId(plr.steamId),
-        name: "",
+        steamId: plr.steamId,
         partyId: plr.partyId,
         team: plr.team,
       })),
-      version: Dota2Version.Dota_684,
-      averageMMR: 0,
     };
   }
 }
