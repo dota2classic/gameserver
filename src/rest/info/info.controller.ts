@@ -79,6 +79,8 @@ export class InfoController {
       dto.game_mode,
       dto.dota_map,
       dto.enabled,
+      dto.enableCheats,
+      dto.fillBots
     );
   }
 

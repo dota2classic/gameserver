@@ -15,6 +15,8 @@ export class LobbyReadyHandler implements IEventHandler<LobbyReadyEvent> {
         event.version,
         event.roomId,
         event.players,
+        event.enableCheats,
+        event.fillBots
       ),
     );
   }

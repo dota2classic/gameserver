@@ -43,5 +43,7 @@ export function createGameMode(
     dotaGameMode: mode,
     dotaMap: map,
     enabled,
+    fillBots: false,
+    enableCheats: false
   } satisfies MatchmakingModeMappingEntity);
 }

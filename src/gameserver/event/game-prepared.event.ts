@@ -12,5 +12,7 @@ export class GamePreparedEvent {
     public readonly version: Dota2Version,
     public readonly roomId: string,
     public readonly players: MatchPlayer[],
+    public readonly enableCheats: boolean,
+    public readonly fillBots: boolean
   ) {}
 }

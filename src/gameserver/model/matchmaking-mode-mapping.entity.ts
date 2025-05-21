@@ -16,4 +16,10 @@ export class MatchmakingModeMappingEntity {
 
   @Column({ name: "dota_map", default: Dota_Map.DOTA })
   public dotaMap: Dota_Map;
+
+  @Column({ name: "fill_bots", default: false })
+  public fillBots: boolean;
+
+  @Column({ name: "enable_cheats", default: false })
+  public enableCheats: boolean;
 }

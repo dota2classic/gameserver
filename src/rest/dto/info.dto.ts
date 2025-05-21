@@ -36,17 +36,21 @@ export class MatchmakingModeInfoDto {
   dota_map: Dota_Map;
 
   enabled: boolean;
+  fillBots: boolean;
+  enableCheats: boolean;
 }
 
 export class UpdateGamemodeDto {
   enabled: boolean;
+  enableCheats: boolean;
+  fillBots: boolean;
+
   @ApiProperty({ enum: Dota_GameMode, enumName: "Dota_GameMode" })
   game_mode: Dota_GameMode;
 
   @ApiProperty({ enum: Dota_Map, enumName: "Dota_Map" })
   dota_map: Dota_Map;
 }
-
 
 export class GameSeasonDto {
   id: number;

@@ -37,6 +37,8 @@ export class InfoMapper {
     game_mode: it.dotaGameMode,
     dota_map: it.dotaMap,
     enabled: it.enabled,
+    enableCheats: it.enableCheats,
+    fillBots: it.fillBots,
   });
 
   public mapGameSeason = (it: {

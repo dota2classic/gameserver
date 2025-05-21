@@ -32,6 +32,8 @@ export class PrepareGameHandler implements ICommandHandler<PrepareGameCommand> {
         Dota2Version.Dota_684,
         command.roomId,
         command.players,
+        mapping?.enableCheats || false,
+        mapping?.fillBots || false
       ),
     );
   }

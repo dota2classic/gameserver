@@ -18,6 +18,8 @@ export class InfoService {
     game_mode: Dota_GameMode,
     dota_map: Dota_Map,
     enabled: boolean,
+    enableCheats: boolean,
+    fillBots: boolean,
   ) {
     await this.matchmakingModeMappingEntityRepository.upsert(
       {
@@ -25,6 +27,8 @@ export class InfoService {
         dotaGameMode: game_mode,
         dotaMap: dota_map,
         enabled,
+        enableCheats,
+        fillBots,
       },
       ["lobbyType"],
     );

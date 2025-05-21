@@ -83,7 +83,9 @@ export class FindGameServerHandler
       matchInfo.gameMode,
       matchInfo.roomId,
       matchInfo.map,
-      players
+      matchInfo.fillBots,
+      matchInfo.enableCheats,
+      players,
     );
   }
 
