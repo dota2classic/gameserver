@@ -12,7 +12,7 @@ import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 import { makePage } from 'gateway/util/make-page';
 import { MatchMapper } from 'rest/match/match.mapper';
 import { EntityNotFoundFilter } from 'rest/exception/entity-not-found.filter';
-import { PlayerReportService } from 'gameserver/service/player-report.service';
+import { PlayerFeedbackService } from 'gameserver/service/player-feedback.service';
 import { MatchReportMatrixDto } from 'rest/dto/player.dto';
 
 @Controller("match")
@@ -28,7 +28,7 @@ export class MatchController {
     private readonly mmrChangeLogEntityRepository: Repository<MmrChangeLogEntity>,
     // private readonly metaService: MetaService,
     private readonly matchService: MatchService,
-    private readonly playerReportService: PlayerReportService,
+    private readonly playerReportService: PlayerFeedbackService,
   ) {}
 
   // remove meta service from here

@@ -37,7 +37,7 @@ import { makePage } from 'gateway/util/make-page';
 import { AchievementKey } from 'gateway/shared-types/achievemen-key';
 import { LeaderboardService } from 'gameserver/service/leaderboard.service';
 import { GameSeasonService } from 'gameserver/service/game-season.service';
-import { PlayerReportService } from 'gameserver/service/player-report.service';
+import { PlayerFeedbackService } from 'gameserver/service/player-feedback.service';
 import { PlayerQualityService } from 'gameserver/service/player-quality.service';
 import { LeaveGameSessionCommand } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.command';
 import { DodgeService } from 'rest/service/dodge.service';
@@ -67,7 +67,7 @@ export class PlayerController {
     private readonly achievementEntityRepository: Repository<AchievementEntity>,
     private readonly leaderboardService: LeaderboardService,
     private readonly gameSeasonService: GameSeasonService,
-    private readonly report: PlayerReportService,
+    private readonly report: PlayerFeedbackService,
     private readonly playerQuality: PlayerQualityService,
     private readonly dodge: DodgeService,
   ) {}

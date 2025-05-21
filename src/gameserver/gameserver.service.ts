@@ -24,7 +24,7 @@ import { GameServerSessionEntity } from 'gameserver/model/game-server-session.en
 import { MetricsService } from 'metrics/metrics.service';
 import { MmrBucketView } from 'gameserver/model/mmr-bucket.view';
 import { wait } from 'util/wait';
-import { PlayerReportService } from 'gameserver/service/player-report.service';
+import { PlayerFeedbackService } from 'gameserver/service/player-feedback.service';
 import { PlayerAspect } from 'gateway/shared-types/player-aspect';
 
 export interface Player {
@@ -79,7 +79,7 @@ export class GameServerService implements OnApplicationBootstrap {
     private readonly sessionRepo: Repository<GameServerSessionEntity>,
     private readonly metrics: MetricsService,
     private readonly config: ConfigService,
-    private readonly reportService: PlayerReportService,
+    private readonly reportService: PlayerFeedbackService,
   ) {}
 
   @Cron(CronExpression.EVERY_5_MINUTES)

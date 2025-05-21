@@ -33,7 +33,7 @@ import { SavePlayerAbandonHandler } from 'gameserver/command/SavePlayerAbandon/s
 import { GameSeasonService } from 'gameserver/service/game-season.service';
 import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
 import { LeaderboardService } from 'gameserver/service/leaderboard.service';
-import { PlayerReportService } from 'gameserver/service/player-report.service';
+import { PlayerFeedbackService } from 'gameserver/service/player-feedback.service';
 import { PlayerQualityService } from 'gameserver/service/player-quality.service';
 import { AssignStartedServerHandler } from 'gameserver/command/AssignStartedServer/assign-started-server.handler';
 import { LeaveGameSessionHandler } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.handler';
@@ -89,7 +89,7 @@ const Services = [
   GameSeasonService,
   PlayerServiceV2,
   LeaderboardService,
-  PlayerReportService,
+  PlayerFeedbackService,
   PlayerQualityService
 ];
 const Sagas = [GameserverSaga];
