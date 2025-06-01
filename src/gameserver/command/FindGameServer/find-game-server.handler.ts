@@ -33,9 +33,7 @@ export class FindGameServerHandler
     @Inject("RMQ") private readonly rmq: ClientProxy,
     @InjectRepository(MatchmakingModeMappingEntity)
     private readonly matchmakingModeMappingEntityRepository: Repository<MatchmakingModeMappingEntity>,
-  ) {
-
-  }
+  ) {}
 
   async execute(command: FindGameServerCommand) {
     const launchGameServerCommand = await this.extendMatchInfo(command.info);
@@ -50,9 +48,9 @@ export class FindGameServerHandler
     };
 
     m = await this.matchEntityRepository.save(m);
-    launchGameServerCommand.matchId = m.id
+    launchGameServerCommand.matchId = m.id;
 
-    this.logger.log("Created match stub");
+    this.logger.log("Created match stub", { match_id: m.id, lobby_type: m.mode });
 
     await this.submitQueueTask(launchGameServerCommand);
   }
@@ -71,7 +69,14 @@ export class FindGameServerHandler
 
       // FIXME: add server mutes
       players.push(
-        new FullMatchPlayer(t.playerId.value, res.name, res.roles.includes(Role.OLD), false, t.partyId, t.team),
+        new FullMatchPlayer(
+          t.playerId.value,
+          res.name,
+          res.roles.includes(Role.OLD),
+          false,
+          t.partyId,
+          t.team,
+        ),
       );
     });
 
@@ -90,10 +95,7 @@ export class FindGameServerHandler
   }
 
   private async submitQueueTask(cmd: LaunchGameServerCommand) {
-    this.rmq.emit(
-      LaunchGameServerCommand.name,
-      cmd,
-    );
+    this.rmq.emit(LaunchGameServerCommand.name, cmd);
     this.logger.log("Submitted start server command to queue");
   }
 }

@@ -80,7 +80,6 @@ export class MatchController {
       perPage,
       mode,
     );
-    console.log(matches[0].players)
     return makePage(matches, cnt, page, perPage, this.mapper.mapMatch);
   }
 

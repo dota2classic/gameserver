@@ -19,7 +19,6 @@ import { PlayerDeclinedGameHandler } from 'gameserver/event-handler/player-decli
 import { ServerNotRespondingHandler } from 'gameserver/event-handler/server-not-responding.handler';
 import { GetReportsAvailableHandler } from 'gameserver/query/get-reports-available.handler';
 import { PlayerReportUpdatedHandler } from 'gameserver/event-handler/player-report-updated.handler';
-import { PlayerReportedHandler } from 'gameserver/event-handler/player-reported.handler';
 import { LiveMatchUpdateHandler } from 'gameserver/event-handler/live-match-update.handler';
 import { ServerStatusHandler } from 'gameserver/event-handler/server-status.handler';
 import { ProcessAchievementsHandler } from 'gameserver/command/ProcessAchievements/process-achievements.handler';
@@ -74,7 +73,6 @@ const EventHandlers = [
 
   ServerNotRespondingHandler,
   PlayerReportUpdatedHandler,
-  PlayerReportedHandler,
 ];
 
 const QueryHandlers = [
