@@ -54,7 +54,7 @@ import { DodgeService } from 'rest/service/dodge.service';
           type: "postgres",
           migrations: ["dist/src/database/migrations/*.*"],
           migrationsRun: true,
-          logging: undefined,
+          logging: ["error"],
         };
       },
       imports: [],

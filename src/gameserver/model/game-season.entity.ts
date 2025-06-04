@@ -1,5 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryColumn, Relation } from 'typeorm';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
+import { RecalibrationEntity } from 'gameserver/model/recalibration.entity';
 
 @Entity("game_season")
 export class GameSeasonEntity {
@@ -11,4 +12,11 @@ export class GameSeasonEntity {
 
   @OneToMany(() => VersionPlayerEntity, (t) => t.season)
   players: Relation<VersionPlayerEntity>[];
+
+
+  @OneToMany(() => RecalibrationEntity, (t) => t.season)
+  recalibrations: Relation<RecalibrationEntity>[];
+
+
+
 }

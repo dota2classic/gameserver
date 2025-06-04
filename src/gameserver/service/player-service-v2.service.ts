@@ -6,6 +6,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { MatchAccessLevel } from 'gateway/shared-types/match-access-level';
+import { RecalibrationEntity } from 'gameserver/model/recalibration.entity';
+import { GameSeasonService } from 'gameserver/service/game-season.service';
 
 function getMatchAccessLevel(anyGames: number, anyWins: number) {
   if (anyWins) return MatchAccessLevel.HUMAN_GAMES;
@@ -20,9 +22,12 @@ export class PlayerServiceV2 {
     private readonly versionPlayerRepository: Repository<VersionPlayerEntity>,
     @InjectRepository(PlayerInMatchEntity)
     private readonly playerInMatchRepository: Repository<PlayerInMatchEntity>,
+    @InjectRepository(RecalibrationEntity)
+    private readonly recalibrationEntityRepository: Repository<RecalibrationEntity>,
+    private readonly gameSeasonService: GameSeasonService,
   ) {}
 
-  public async getGamesPlayed(
+  public async getCalibrationGame(
     season: GameSeasonEntity,
     steamId: string,
     modes: MatchmakingMode[] | undefined,
@@ -32,7 +37,19 @@ export class PlayerServiceV2 {
       .createQueryBuilder("pim")
       .innerJoin("pim.match", "m")
       .where("pim.playerId = :id", { id: steamId })
-      .andWhere("m.timestamp > :season", { season: season.startTimestamp })
+      .leftJoin(
+        RecalibrationEntity,
+        "recalibration",
+        "recalibration.season_id = :season and recalibration.steam_id = :steamId",
+        {
+          season: season.id,
+          steamId,
+        },
+      )
+      .andWhere(
+        "m.timestamp > GREATEST(:seasonStart, recalibration.created_at)",
+        { seasonStart: season.startTimestamp },
+      )
       .andWhere("m.timestamp < :current_timestamp", {
         current_timestamp: beforeTimestamp,
       });
@@ -55,5 +72,13 @@ where pa.steam_id = $1
       );
 
     return getMatchAccessLevel(result[0].any_games, result[0].any_wins);
+  }
+
+  async startRecalibration(steamId: string) {
+    const currentSeason = await this.gameSeasonService.getCurrentSeason();
+    await this.recalibrationEntityRepository.save({
+      steamId,
+      seasonId: currentSeason.id,
+    });
   }
 }

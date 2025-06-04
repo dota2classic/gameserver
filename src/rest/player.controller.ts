@@ -15,6 +15,7 @@ import {
   PlayerTeammatePage,
   ReportPlayerDto,
   SmurfData,
+  StartRecalibrationDto,
 } from 'rest/dto/player.dto';
 import { CommandBus, EventBus } from '@nestjs/cqrs';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
@@ -41,6 +42,7 @@ import { PlayerFeedbackService } from 'gameserver/service/player-feedback.servic
 import { PlayerQualityService } from 'gameserver/service/player-quality.service';
 import { LeaveGameSessionCommand } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.command';
 import { DodgeService } from 'rest/service/dodge.service';
+import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
 
 @Controller("player")
 @ApiTags("player")
@@ -58,6 +60,7 @@ export class PlayerController {
     private readonly playerBanRepository: Repository<PlayerBanEntity>,
     private readonly gsService: GameServerService,
     private readonly playerService: PlayerService,
+    private readonly playerServiceV2: PlayerServiceV2,
     private readonly ebus: EventBus,
     private readonly connection: Connection,
     @InjectRepository(LeaderboardView)
@@ -312,6 +315,11 @@ offset $2 limit $3`,
     return this.dodge
       .unDodgePlayer(dto.steamId, dto.toDodgeSteamId)
       .then((all) => all.map(this.mapper.mapDodgeEntry));
+  }
+
+  @Post("/start_recalibration")
+  async startRecalibration(@Body() dto: StartRecalibrationDto) {
+    await this.playerServiceV2.startRecalibration(dto.steamId);
   }
 
   @Post("/abandon")

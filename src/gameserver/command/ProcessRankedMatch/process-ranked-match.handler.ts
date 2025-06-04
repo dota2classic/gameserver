@@ -237,7 +237,7 @@ export class ProcessRankedMatchHandler
     playerMap: Map<string, VersionPlayerEntity>,
     didAbandon: boolean,
   ) {
-    const cb = await this.plrService.getGamesPlayed(
+    const cb = await this.plrService.getCalibrationGame(
       season,
       steamId,
       [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],

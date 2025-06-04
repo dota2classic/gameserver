@@ -14,6 +14,7 @@ export class LeaderboardEntryDto {
   games: number;
   wins: number;
   abandons: number;
+  recalibrationAttempted: boolean;
 
   kills: number;
   deaths: number;
@@ -116,4 +117,9 @@ export class DodgePlayerDto {
 export class DodgeListEntryDto {
   steamId: string;
   createdAt: string;
+}
+
+
+export class StartRecalibrationDto {
+  steamId: string;
 }

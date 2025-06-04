@@ -135,8 +135,8 @@ async function bootstrap() {
   //
   // console.log(await r1());
 
-  // for(let i = 0; i < 100; i++){
-  //   await app.get(GameServerService).generateFakeMatch()
+  // for (let i = 0; i < 1; i++) {
+  //   await app.get(GameServerService).generateFakeMatch("116514945");
   // }
 
   // await app.get(PlayerQualityService).onPlayerIpUpdated('1852498426')

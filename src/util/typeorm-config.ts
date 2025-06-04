@@ -19,6 +19,7 @@ import { PlayerIpEntity } from 'gameserver/model/player-ip.entity';
 import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
 import { MmrBucketView } from 'gameserver/model/mmr-bucket.view';
 import { DodgeListEntity } from 'gameserver/model/dodge-list.entity';
+import { RecalibrationEntity } from 'gameserver/model/recalibration.entity';
 
 export const Entities: Function[] = [
   GameSeasonEntity,
@@ -50,5 +51,6 @@ export const Entities: Function[] = [
   ItemView,
   ItemHeroView,
   PlayerIpEntity,
-  DodgeListEntity
+  DodgeListEntity,
+  RecalibrationEntity
 ];

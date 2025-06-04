@@ -134,7 +134,7 @@ export class GameServerService implements OnApplicationBootstrap {
     );
   }
 
-  public async generateFakeMatch() {
+  public async generateFakeMatch(forceSteamId: string) {
     let m = new MatchEntity();
     m.server = "fdf";
     m.finished = true;
@@ -160,6 +160,13 @@ export class GameServerService implements OnApplicationBootstrap {
     }
     shuffle(SteamIds);
 
+    const slice = SteamIds.slice(0, 10);
+    if (slice.findIndex((t) => t.steam_id === forceSteamId) === -1) {
+      slice[0] = {
+        steam_id: forceSteamId,
+      };
+    }
+
     const g: GameResultsEvent = {
       matchId: m.id,
       winner: Math.random() > 0.5 ? DotaTeam.RADIANT : DotaTeam.DIRE,
@@ -168,11 +175,8 @@ export class GameServerService implements OnApplicationBootstrap {
       type: MatchmakingMode.UNRANKED,
       timestamp: new Date().getTime() / 1000,
       server: "fdf",
-      players: Array.from({ length: 10 }, (_, idx) =>
-        this.mockPim(
-          SteamIds[idx].steam_id,
-          idx < 5 ? DotaTeam.RADIANT : DotaTeam.DIRE,
-        ),
+      players: slice.map(({ steam_id }, idx) =>
+        this.mockPim(steam_id, idx < 5 ? DotaTeam.RADIANT : DotaTeam.DIRE),
       ),
     };
 
