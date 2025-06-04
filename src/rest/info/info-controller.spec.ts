@@ -19,6 +19,7 @@ import { Dota_Map } from 'gateway/shared-types/dota-map';
 import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
+import { RecalibrationEntity } from 'gameserver/model/recalibration.entity';
 
 describe("InfoController", () => {
   jest.setTimeout(60000);
@@ -42,7 +43,8 @@ describe("InfoController", () => {
       GameSessionPlayerEntity,
       GameServerEntity,
       GameSeasonEntity,
-      VersionPlayerEntity
+      VersionPlayerEntity,
+      RecalibrationEntity
     ];
 
     module = await Test.createTestingModule({
