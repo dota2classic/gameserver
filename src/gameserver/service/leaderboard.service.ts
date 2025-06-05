@@ -42,25 +42,37 @@ export class LeaderboardService {
   public async getPlayerSummary(
     steamId: string,
   ): Promise<Omit<PlayerSummaryDto, "reports">> {
-    const [season, overall, matchAccessLevel] = await Promise.combine([
-      this.getPlayerLeaderboardEntry(steamId),
-      this.getPlayerLeaderboardEntryOverall(steamId),
-      this.playerService.getMatchAccessLevel(steamId),
-    ]);
+    const [season, overall, matchAccessLevel, recalibration] =
+      await Promise.combine([
+        this.getPlayerLeaderboardEntry(steamId),
+        this.getPlayerLeaderboardEntryOverall(steamId),
+        this.playerService.getMatchAccessLevel(steamId),
+        this.playerService.getRecalibration(steamId),
+      ]);
 
     return {
       steamId,
       season,
       overall,
+      recalibration: recalibration
+        ? {
+            createdAt: recalibration.createdAt.toISOString(),
+            id: recalibration.id,
+            seasonId: recalibration.seasonId,
+          }
+        : undefined,
       accessLevel: matchAccessLevel,
       calibrationGamesLeft: Math.max(
-        ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES - season.calibrationGames,
+        ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES -
+          season.calibrationGames,
         0,
       ),
     };
   }
 
-  private async getPlayerLeaderboardEntryOverall(steamId: string): Promise<LeaderboardEntryDto> {
+  private async getPlayerLeaderboardEntryOverall(
+    steamId: string,
+  ): Promise<LeaderboardEntryDto> {
     const lb = await this.leaderboardViewRepository.find({
       where: { steamId },
     });
@@ -91,7 +103,7 @@ export class LeaderboardService {
 
   private async getPlayerLeaderboardEntry(
     steamId: string,
-  ): Promise<LeaderboardEntryDto & { calibrationGames: number; }> {
+  ): Promise<LeaderboardEntryDto & { calibrationGames: number }> {
     const season = await this.gameSeasonService.getCurrentSeason();
     const lb = await this.leaderboardViewRepository.findOne({
       where: { steamId, seasonId: season.id },
@@ -126,7 +138,12 @@ export class LeaderboardService {
   private async approximatePlayerLeaderboardEntry(
     steamId: string,
     seasonal: boolean = true,
-  ): Promise<LeaderboardEntryDto & { calibrationGames: number; recalibrationAttempted: boolean; }> {
+  ): Promise<
+    LeaderboardEntryDto & {
+      calibrationGames: number;
+      recalibrationAttempted: boolean;
+    }
+  > {
     const stats: CalcPlayerStats = await this.playerInMatchEntityRepository
       .query(
         `with current_season as (

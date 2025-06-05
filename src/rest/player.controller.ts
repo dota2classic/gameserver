@@ -184,7 +184,6 @@ offset $2 limit $3`,
     };
   }
 
-  @CacheTTL(120)
   @Get("/summary/:id")
   async playerSummary(@Param("id") steamId: string): Promise<PlayerSummaryDto> {
     await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steamId)));

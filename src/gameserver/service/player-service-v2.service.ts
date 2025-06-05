@@ -81,4 +81,23 @@ where pa.steam_id = $1
       seasonId: currentSeason.id,
     });
   }
+
+  public async getRecalibration(steamId: string) {
+    return this.recalibrationEntityRepository
+      .createQueryBuilder("rc")
+      .addCommonTableExpression(
+        `
+select
+    *
+from
+    game_season gs
+order by
+    gs.start_timestamp DESC
+limit 1`,
+        "current_season",
+      )
+      .innerJoin("current_season", "cs", "cs.id = rc.season_id")
+      .where("rc.steam_id = :steamId", { steamId })
+      .getOne();
+  }
 }

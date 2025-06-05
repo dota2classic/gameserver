@@ -41,10 +41,18 @@ export class PlayerReportsDto {
   playerAspects: PlayerAspectCountDto[];
 }
 
+export class RecalibrationDto {
+  id: number;
+  createdAt: string;
+  seasonId: number;
+}
+
 export class PlayerSummaryDto {
   steamId: string;
   season: LeaderboardEntryDto;
   overall: LeaderboardEntryDto;
+
+  recalibration?: RecalibrationDto;
 
   calibrationGamesLeft: number;
   @ApiProperty({ enum: MatchAccessLevel, enumName: "MatchAccessLevel" })
@@ -107,18 +115,15 @@ export class PlayerTeammatePage extends Page<PlayerTeammateDto> {
   pages: number;
 }
 
-
 export class DodgePlayerDto {
   steamId: string;
   toDodgeSteamId: string;
 }
 
-
 export class DodgeListEntryDto {
   steamId: string;
   createdAt: string;
 }
-
 
 export class StartRecalibrationDto {
   steamId: string;
