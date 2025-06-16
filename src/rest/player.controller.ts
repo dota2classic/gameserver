@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, Logger, Param, Post, Query } from '@nestjs/common';
-import { CacheTTL } from '@nestjs/cache-manager';
+import { Body, Controller, Delete, Get, Logger, Param, Post, Query, UseInterceptors } from '@nestjs/common';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Mapper } from 'rest/mapper';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -184,6 +184,8 @@ offset $2 limit $3`,
     };
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(10_000)
   @Get("/summary/:id")
   async playerSummary(@Param("id") steamId: string): Promise<PlayerSummaryDto> {
     await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steamId)));
