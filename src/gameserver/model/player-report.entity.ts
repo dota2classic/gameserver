@@ -11,7 +11,9 @@ export class PlayerReportEntity {
   @PrimaryGeneratedColumn("increment")
   id: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({
+    name: "created_at"
+  })
   createdAt: Date;
 
   @Column({
@@ -29,7 +31,4 @@ export class PlayerReportEntity {
 
   @Column({ name: "match_id" })
   matchId: number;
-
-  @Column({ name: "commentary", default: "" })
-  commentary: string;
 }

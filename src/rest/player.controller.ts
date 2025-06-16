@@ -286,7 +286,6 @@ offset $2 limit $3`,
       dto.reporterSteamId,
       dto.reportedSteamId,
       dto.aspect,
-      dto.text,
       dto.matchId,
     );
   }

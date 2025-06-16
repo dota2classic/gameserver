@@ -77,7 +77,6 @@ export class BanStatusDto {
 export class ReportPlayerDto {
   public readonly reportedSteamId: string;
   public readonly reporterSteamId: string;
-  public readonly text: string;
   public readonly matchId: number;
 
   @ApiProperty({ enum: PlayerAspect, enumName: "PlayerAspect" })

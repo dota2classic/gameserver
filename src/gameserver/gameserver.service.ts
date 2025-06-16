@@ -201,7 +201,6 @@ export class GameServerService implements OnApplicationBootstrap {
           player.steam_id,
           reported,
           aspect,
-          "",
           m.id,
         );
       } catch (e) {

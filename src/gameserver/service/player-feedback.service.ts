@@ -54,7 +54,6 @@ export class PlayerFeedbackService {
     reporter: string,
     reported: string,
     aspect: PlayerAspect,
-    commentary: string,
     matchId: number,
   ) {
     const prs = await this.playerReportStatusEntityRepository.findOneOrFail({
@@ -71,7 +70,6 @@ export class PlayerFeedbackService {
       await tx.save(PlayerReportEntity, {
         reporterSteamId: reporter,
         reportedSteamId: reported,
-        commentary: commentary,
         aspect: aspect,
         matchId,
       });
@@ -121,110 +119,4 @@ AND pr.reported_steam_id = pim."playerId" GROUP
     );
   }
 
-  // TODO: make mutes of this
-  //   @Cron(CronExpression.EVERY_MINUTE)
-  //   public async getPlayersAspectPerformance() {
-  //     const minGamesToBeReportable = 10;
-  //     const ruinThreshold = 0.25;
-  //     const toxicThreshold = 0.2;
-  //
-  //     const q = await this.ds.query<
-  //       {
-  //         steam_id: string;
-  //         ruin_degree: number;
-  //         toxic_degree: number;
-  //         game_count: number;
-  //       }[]
-  //     >(
-  //       `
-  //     WITH timeframe AS
-  //   (SELECT now() - $7::interval AS window_start_date),
-  //      base AS
-  //   (SELECT pe.reported_steam_id AS steam_id,
-  //           count(DISTINCT pa.match_id) AS game_count,
-  //           count(distinct(pe.reporter_steam_id, pe.match_id)) filter (WHERE pe.chosen_aspect = $3) AS ruiner,
-  //           count(distinct(pe.reporter_steam_id, pe.match_id)) filter (WHERE pe.chosen_aspect IN ($2, $4)) AS good,
-  //           count(distinct(pe.reporter_steam_id, pe.match_id)) filter (WHERE pe.chosen_aspect = $1) AS toxic,
-  //           count(distinct(pe.reporter_steam_id, pe.match_id)) filter (WHERE pe.chosen_aspect = $5) AS friendly
-  //    FROM player_report pe
-  //    LEFT JOIN player_report_status prs ON prs.steam_id = pe.reported_steam_id
-  //    LEFT JOIN timeframe tf ON TRUE
-  //    LEFT JOIN player_activity pa ON pa.steam_id = pe.reported_steam_id
-  //    AND pa.datetime >= greatest(tf.window_start_date, prs.report_summary_timestamp)
-  //    WHERE pe."createdAt" >= greatest(tf.window_start_date, prs.report_summary_timestamp)
-  //    GROUP BY 1
-  //    ORDER BY 1 ASC,
-  //             2 DESC)
-  // SELECT p.steam_id as steam_id,
-  //        (p.ruiner::float - p.good) / greatest (1, p.game_count) AS ruin_degree,
-  //        (p.toxic::float - p.friendly) / greatest (1, p.game_count) AS toxic_degree,
-  //        p.game_count::int AS game_count
-  // FROM base p
-  // WHERE p.game_count >= $6
-  // ORDER BY 2 DESC,
-  //          3 DESC;
-  //     `,
-  //       [
-  //         PlayerAspect.TOXIC,
-  //         PlayerAspect.WINNER,
-  //         PlayerAspect.RUINER,
-  //         PlayerAspect.GOOD,
-  //         PlayerAspect.FRIENDLY,
-  //         minGamesToBeReportable,
-  //         "30 days",
-  //       ],
-  //     );
-  //
-  //     const ruiners = q.filter((t) => t.ruin_degree >= ruinThreshold);
-  //     const toxic = q.filter((t) => t.toxic_degree >= toxicThreshold);
-  //
-  //     this.logger.log("Applying crimes to ruiners:" + ruiners.length);
-  //     this.logger.log("Applying crimes to toxics:" + toxic.length);
-  //
-  //     await this.ds.transaction(async (tx) => {
-  //       // Update cutoff timestamp
-  //       await tx.update(
-  //         PlayerReportStatusEntity,
-  //         {
-  //           steam_id: In(ruiners.concat(toxic).map((it) => it.steam_id)),
-  //         },
-  //         {
-  //           reportSummaryTimestamp: new Date(),
-  //         },
-  //       );
-  //
-  //       // Create crime logs
-  //       await tx.save(
-  //         ruiners.map(
-  //           (r) =>
-  //             new PlayerCrimeLogEntity(
-  //               r.steam_id,
-  //               BanReason.REPORTS,
-  //               MatchmakingMode.UNRANKED,
-  //               null,
-  //             ),
-  //         ),
-  //       );
-  //
-  //
-  //       // FIXME: make this happen when it actually does bans
-  //       // this.ebus.publishAll(
-  //       //   ruiners.map(
-  //       //     (ruiner) => new PlayerReportBanCreatedEvent(ruiner.steam_id),
-  //       //   ),
-  //       // );
-  //
-  //       await tx.save(
-  //         toxic.map(
-  //           (r) =>
-  //             new PlayerCrimeLogEntity(
-  //               r.steam_id,
-  //               BanReason.COMMUNICATION_REPORTS,
-  //               MatchmakingMode.UNRANKED,
-  //               null,
-  //             ),
-  //         ),
-  //       );
-  //     });
-  //   }
 }
