@@ -1,7 +1,7 @@
 name: Test + Docker
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "k8s" ]
   pull_request:
     branches: [ "master" ]
 jobs:
@@ -48,5 +48,5 @@ jobs:
         uses: docker/build-push-action@v6.7.0
         with:
           push: true
-          tags: dota2classic/matchmaking:gameserver
+          tags: dota2classic/gameserver:k8s
 

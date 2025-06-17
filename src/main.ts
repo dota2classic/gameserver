@@ -17,7 +17,6 @@ import configuration from 'config/configuration';
 import { ConfigService } from '@nestjs/config';
 
 import { types } from 'pg';
-import { WinstonWrapper } from '@dota2classic/nest_logger';
 
 types.setTypeParser(types.builtins.NUMERIC, (value: string): number =>
   parseFloat(value),
@@ -34,12 +33,12 @@ async function bootstrap() {
   const config = new ConfigService(parsedConfig);
 
   const app = await NestFactory.create(AppModule, {
-    logger: new WinstonWrapper(
-      config.get("fluentbit.host"),
-      config.get<number>("fluentbit.port"),
-      config.get<string>("fluentbit.application"),
-      config.get<boolean>("fluentbit.disabled"),
-    ),
+    // logger: new WinstonWrapper(
+    //   config.get("fluentbit.host"),
+    //   config.get<number>("fluentbit.port"),
+    //   config.get<string>("fluentbit.application"),
+    //   config.get<boolean>("fluentbit.disabled"),
+    // ),
   });
 
   app.connectMicroservice({
