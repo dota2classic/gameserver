@@ -34,6 +34,7 @@ import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import { MetricsService } from 'metrics/metrics.service';
 import { WinstonWrapper } from '@dota2classic/nest_logger';
 import { DodgeService } from 'rest/service/dodge.service';
+import { CacheModule } from '@nestjs/cache-manager';
 import SpyInstance = jest.SpyInstance;
 
 export interface TestEnvironment {
