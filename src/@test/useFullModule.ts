@@ -107,6 +107,9 @@ export function useFullModule(): TestEnvironment {
         await ConfigModule.forRoot({
           isGlobal: true,
         }),
+        CacheModule.register({
+          isGlobal: true
+        }),
         CqrsModule.forRoot(),
         TypeOrmModule.forRoot({
           host: te.containers.pg.getHost(),
