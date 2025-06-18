@@ -3,6 +3,7 @@ import { Page } from 'gateway/shared-types/page';
 import { ApiProperty } from '@nestjs/swagger';
 import { PlayerAspect } from 'gateway/shared-types/player-aspect';
 import { MatchAccessLevel } from 'gateway/shared-types/match-access-level';
+import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 export class LeaderboardEntryDto {
   rank: number | null;
@@ -47,6 +48,13 @@ export class RecalibrationDto {
   seasonId: number;
 }
 
+export class PlayerGameSessionDto {
+  matchId: number;
+  serverUrl: string;
+  @ApiProperty({ enum: MatchmakingMode, enumName: "MatchmakingMode" })
+  lobbyType: MatchmakingMode;
+}
+
 export class PlayerSummaryDto {
   steamId: string;
   season: LeaderboardEntryDto;
@@ -54,10 +62,16 @@ export class PlayerSummaryDto {
 
   recalibration?: RecalibrationDto;
 
+  session?: PlayerGameSessionDto;
+
   calibrationGamesLeft: number;
   @ApiProperty({ enum: MatchAccessLevel, enumName: "MatchAccessLevel" })
   accessLevel: MatchAccessLevel;
   reports: PlayerAspectCountDto[];
+}
+
+export class ReportsAvailableDto {
+  count: number;
 }
 
 export class SmurfData {

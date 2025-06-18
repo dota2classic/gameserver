@@ -14,10 +14,11 @@ import {
   PlayerTeammateDto,
   PlayerTeammatePage,
   ReportPlayerDto,
+  ReportsAvailableDto,
   SmurfData,
   StartRecalibrationDto,
 } from 'rest/dto/player.dto';
-import { CommandBus, EventBus } from '@nestjs/cqrs';
+import { CommandBus, EventBus, QueryBus } from '@nestjs/cqrs';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { GameServerService } from 'gameserver/gameserver.service';
@@ -43,6 +44,8 @@ import { PlayerQualityService } from 'gameserver/service/player-quality.service'
 import { LeaveGameSessionCommand } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.command';
 import { DodgeService } from 'rest/service/dodge.service';
 import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
+import { GetReportsAvailableQuery } from 'gateway/queries/GetReportsAvailable/get-reports-available.query';
+import { GetReportsAvailableQueryResult } from 'gateway/queries/GetReportsAvailable/get-reports-available-query.result';
 
 @Controller("player")
 @ApiTags("player")
@@ -73,6 +76,7 @@ export class PlayerController {
     private readonly report: PlayerFeedbackService,
     private readonly playerQuality: PlayerQualityService,
     private readonly dodge: DodgeService,
+    private readonly qbus: QueryBus,
   ) {}
 
   @Get("/:id/achievements")
@@ -198,6 +202,22 @@ offset $2 limit $3`,
       ...summary,
       reports: reports.playerAspects,
     };
+  }
+
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(10_000)
+  @Get("/reports/:id")
+  async reportsAvailable(
+    @Param("id") steamId: string,
+  ): Promise<ReportsAvailableDto> {
+    const r = await this.qbus.execute<
+      GetReportsAvailableQuery,
+      GetReportsAvailableQueryResult
+    >(new GetReportsAvailableQuery(new PlayerId(steamId)));
+
+   return {
+     count: r.available
+   }
   }
 
   @Get("/leaderboard")

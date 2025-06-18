@@ -8,6 +8,9 @@ import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { MatchAccessLevel } from 'gateway/shared-types/match-access-level';
 import { RecalibrationEntity } from 'gameserver/model/recalibration.entity';
 import { GameSeasonService } from 'gameserver/service/game-season.service';
+import { Dota_GameRulesState } from 'gateway/shared-types/dota-game-rules-state';
+import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
+import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
 
 function getMatchAccessLevel(anyGames: number, anyWins: number) {
   if (anyWins) return MatchAccessLevel.HUMAN_GAMES;
@@ -24,6 +27,10 @@ export class PlayerServiceV2 {
     private readonly playerInMatchRepository: Repository<PlayerInMatchEntity>,
     @InjectRepository(RecalibrationEntity)
     private readonly recalibrationEntityRepository: Repository<RecalibrationEntity>,
+    @InjectRepository(GameServerSessionEntity)
+    private readonly sessionRepo: Repository<GameServerSessionEntity>,
+    @InjectRepository(GameSessionPlayerEntity)
+    private readonly sessionPlayerRepo: Repository<GameSessionPlayerEntity>,
     private readonly gameSeasonService: GameSeasonService,
   ) {}
 
@@ -99,5 +106,24 @@ limit 1`,
       .innerJoin("current_season", "cs", "cs.id = rc.season_id")
       .where("rc.steam_id = :steamId", { steamId })
       .getOne();
+  }
+
+  public async getSession(steamId: string) {
+    const sp = await this.sessionPlayerRepo
+      .createQueryBuilder("gssp")
+      .innerJoinAndMapOne(
+        "session",
+        GameServerSessionEntity,
+        "gss",
+        "gss.match_id = gssp.match_id",
+      )
+      .where("gssp.steam_id = :steamId", { steamId })
+      .andWhere("gssp.abandoned = false")
+      .andWhere("gss.game_state != :postGame", {
+        postGame: Dota_GameRulesState.POST_GAME,
+      })
+      .getOne();
+
+    return sp?.session;
   }
 }
