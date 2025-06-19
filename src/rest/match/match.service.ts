@@ -97,7 +97,7 @@ export class MatchService {
 
     const pims = query
       .take(perPage)
-      .skip(perPage * page)
+      .skip(Math.max(0, perPage * page))
       .orderBy({ "fm.timestamp": "DESC" })
       .getMany();
 

@@ -76,8 +76,8 @@ export class MatchController {
     @Query("mode") mode?: MatchmakingMode,
   ): Promise<MatchPageDto> {
     const [matches, cnt] = await this.matchService.getMatchPage(
-      page,
-      perPage,
+      Math.max(0, page),
+      perPage <= 0 ? 25 : perPage,
       mode,
     );
     return makePage(matches, cnt, page, perPage, this.mapper.mapMatch);
@@ -139,8 +139,8 @@ export class MatchController {
   ): Promise<MatchPageDto> {
     const [matches, total] = await this.matchService.getPlayerMatches(
       steam_id,
-      page,
-      perPage,
+      Math.max(0, page),
+      perPage <= 0 ? 25 : perPage,
       mode,
       hero,
     );
