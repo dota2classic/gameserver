@@ -278,7 +278,7 @@ export class ProcessRankedMatchHandler
     try {
       let mmrBefore: number;
       mmrBefore = plr.mmr;
-      plr.mmr = plr.mmr + mmrChange;
+      plr.mmr = Math.max(1, plr.mmr + mmrChange);
 
       const change = new MmrChangeLogEntity();
       change.playerId = steamId;
