@@ -75,6 +75,27 @@ async function bootstrap() {
     },
   });
 
+  app.connectMicroservice<RmqOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [
+        {
+          hostname: config.get<string>("rabbitmq.host"),
+          port: config.get<number>("rabbitmq.port"),
+          protocol: "amqp",
+          username: config.get<string>("rabbitmq.user"),
+          password: config.get<string>("rabbitmq.password"),
+        },
+      ],
+      queue: config.get<string>("rabbitmq.matchmaker_events"),
+      prefetchCount: 5,
+      noAck: false,
+      queueOptions: {
+        durable: true,
+      },
+    },
+  });
+
   const options = new DocumentBuilder()
     .setTitle("GameServer api")
     .setDescription("Matches, players, mmrs")

@@ -1,6 +1,5 @@
 import { EventPattern } from '@nestjs/microservices';
 import { Controller, Logger } from '@nestjs/common';
-import { RoomReadyEvent } from 'gateway/events/room-ready.event';
 import { Constructor, EventBus } from '@nestjs/cqrs';
 import { GameServerNotStartedEvent, GameServerStartedEvent } from 'gateway/events/game-server-started.event';
 import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
@@ -34,11 +33,6 @@ export class CoreController {
   @EventPattern(SrcdsServerStartedEvent.name)
   async SrcdsServerStartedEvent(data: SrcdsServerStartedEvent) {
     this.event(SrcdsServerStartedEvent, data);
-  }
-
-  @EventPattern(RoomReadyEvent.name)
-  async RoomReadyEvent(data: RoomReadyEvent) {
-    this.event(RoomReadyEvent, data);
   }
 
   @EventPattern(LobbyReadyEvent.name)

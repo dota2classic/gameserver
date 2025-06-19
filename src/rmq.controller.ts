@@ -10,6 +10,8 @@ import { SaveMatchFailedCommand } from 'gameserver/command/SaveMatchFailed/save-
 import { SavePlayerAbandonCommand } from 'gameserver/command/SavePlayerAbandon/save-player-abandon.command';
 import { SrcdsServerStartedEvent } from 'gateway/events/srcds-server-started.event';
 import { AssignStartedServerCommand } from 'gameserver/command/AssignStartedServer/assign-started-server.command';
+import { RoomReadyEvent } from 'gateway/events/room-ready.event';
+import { PrepareGameCommand } from 'gameserver/command/PrepareGame/prepare-game.command';
 
 @Controller()
 export class RmqController {
@@ -20,13 +22,15 @@ export class RmqController {
     private readonly config: ConfigService,
   ) {}
 
-
   @MessagePattern(SrcdsServerStartedEvent.name)
   async SrcdsServerStartedEvent(
     @Payload() data: SrcdsServerStartedEvent,
     @Ctx() context: RmqContext,
   ) {
-    await this.processMessage(new AssignStartedServerCommand(data.server, data.info), context);
+    await this.processMessage(
+      new AssignStartedServerCommand(data.server, data.info),
+      context,
+    );
   }
 
   @MessagePattern(GameResultsEvent.name)
@@ -53,6 +57,23 @@ export class RmqController {
     await this.processMessage(new SavePlayerAbandonCommand(data), context);
   }
 
+  @MessagePattern(RoomReadyEvent.name)
+  async RoomReadyEvent(
+    @Payload() data: RoomReadyEvent,
+    @Ctx() context: RmqContext,
+  ) {
+    console.log("Room ready received!")
+    await this.processMessage(
+      new PrepareGameCommand(
+        data.mode,
+        data.roomId,
+        data.players,
+        data.version,
+      ),
+      context,
+    );
+  }
+
   private async construct<T>(
     constructor: Constructor<T>,
     data: any,
@@ -70,10 +91,7 @@ export class RmqController {
       .then((cmd) => this.cbus.execute(cmd))
       .then(() => channel.ack(originalMsg))
       .catch((e) => {
-        this.logger.error(
-          `Error while processing message`,
-          e,
-        );
+        this.logger.error(`Error while processing message`, e);
         channel.nack(originalMsg);
       });
   }
