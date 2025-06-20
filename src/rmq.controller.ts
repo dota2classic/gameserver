@@ -57,12 +57,12 @@ export class RmqController {
     await this.processMessage(new SavePlayerAbandonCommand(data), context);
   }
 
-  @MessagePattern(RoomReadyEvent.name)
+  @MessagePattern("RMQ" + RoomReadyEvent.name)
   async RoomReadyEvent(
     @Payload() data: RoomReadyEvent,
     @Ctx() context: RmqContext,
   ) {
-    console.log("Room ready received!")
+    console.log("Room ready received!", data, context);
     await this.processMessage(
       new PrepareGameCommand(
         data.mode,
