@@ -62,7 +62,6 @@ export class RmqController {
     @Payload() data: RoomReadyEvent,
     @Ctx() context: RmqContext,
   ) {
-    console.log("Room ready received!", data, context);
     await this.processMessage(
       new PrepareGameCommand(
         data.mode,
