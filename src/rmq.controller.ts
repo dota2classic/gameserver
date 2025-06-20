@@ -12,6 +12,9 @@ import { SrcdsServerStartedEvent } from 'gateway/events/srcds-server-started.eve
 import { AssignStartedServerCommand } from 'gameserver/command/AssignStartedServer/assign-started-server.command';
 import { RoomReadyEvent } from 'gateway/events/room-ready.event';
 import { PrepareGameCommand } from 'gameserver/command/PrepareGame/prepare-game.command';
+import { PlayerDeclinedGameEvent } from 'gateway/events/mm/player-declined-game.event';
+import { CreateCrimeLogCommand } from 'gameserver/command/CreateCrimeLog/create-crime-log.command';
+import { BanReason } from 'gateway/shared-types/ban';
 
 @Controller()
 export class RmqController {
@@ -68,6 +71,21 @@ export class RmqController {
         data.roomId,
         data.players,
         data.version,
+      ),
+      context,
+    );
+  }
+
+  @MessagePattern("RMQ" + PlayerDeclinedGameEvent.name)
+  async PlayerDeclinedGameEvent(
+    @Payload() data: PlayerDeclinedGameEvent,
+    @Ctx() context: RmqContext,
+  ) {
+    await this.processMessage(
+      new CreateCrimeLogCommand(
+        data.steamId,
+        BanReason.GAME_DECLINE,
+        data.mode,
       ),
       context,
     );
