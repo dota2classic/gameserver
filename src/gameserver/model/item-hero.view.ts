@@ -5,17 +5,23 @@ import { ItemView } from 'gameserver/model/item.view';
   name: "item_hero_view",
   dependsOn: [ItemView],
   expression: `
-select i.item_id as item_id, pim.hero as hero, count(pim)::int as played, sum((pim.team = fm.winner)::int)::int as wins
-from item_view i
-         left join player_in_match pim
-                   on pim.item0 = i.item_id
-                       or pim.item1 = i.item_id
-                       or pim.item2 = i.item_id
-                       or pim.item3 = i.item_id
-                       or pim.item4 = i.item_id
-                       or pim.item5 = i.item_id
-         inner join finished_match fm on fm.id = pim."matchId"
-group by pim.hero, i.item_id
+SELECT i.item_id,
+       pim_items.hero,
+       COUNT(*)::integer AS played,
+       SUM((pim_items.team = fm.winner)::int)::integer AS wins
+FROM
+  (SELECT DISTINCT pim."matchId",
+                   pim.hero,
+                   pim.team,
+                   item_id
+   FROM player_in_match pim,
+        LATERAL
+     (SELECT DISTINCT unnest_item AS item_id
+      FROM unnest(array[item0, item1, item2, item3, item4, item5]) AS unnest_item) AS item_unnested) pim_items
+JOIN item_view i ON i.item_id = pim_items.item_id
+JOIN finished_match fm ON fm.id = pim_items."matchId"
+GROUP BY pim_items.hero,
+         i.item_id
 `,
   materialized: true,
 })
