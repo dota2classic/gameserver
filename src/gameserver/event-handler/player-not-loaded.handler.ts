@@ -7,6 +7,7 @@ import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
 import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
 import { LeaveGameSessionCommand } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.command';
+import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 @EventsHandler(PlayerNotLoadedEvent)
 export class PlayerNotLoadedHandler
@@ -36,8 +37,11 @@ export class PlayerNotLoadedHandler
     this.ebus.publish(new CrimeLogCreatedEvent(crime.id));
 
 
-    await this.cbus.execute(
-      new LeaveGameSessionCommand(event.playerId.value, event.matchId),
-    );
+    if(event.mode == MatchmakingMode.BOTS) {
+      // Only forcefully abandon bot lobbies
+      await this.cbus.execute(
+        new LeaveGameSessionCommand(event.playerId.value, event.matchId),
+      );
+    }
   }
 }
