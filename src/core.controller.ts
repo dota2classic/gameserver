@@ -9,7 +9,6 @@ import { TournamentGameReadyEvent } from 'gateway/events/tournament/tournament-g
 import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event';
 import { StartFakeMatchEvent } from 'gateway/events/start-fake-match.event';
 import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
-import { LobbyReadyEvent } from 'gateway/events/lobby-ready.event';
 import { ConfigService } from '@nestjs/config';
 import { PlayerConnectedEvent } from 'gateway/events/srcds/player-connected.event';
 
@@ -31,11 +30,6 @@ export class CoreController {
   // async SrcdsServerStartedEvent(data: SrcdsServerStartedEvent) {
   //   this.event(SrcdsServerStartedEvent, data);
   // }
-
-  @EventPattern(LobbyReadyEvent.name)
-  async LobbyReadyEvent(data: LobbyReadyEvent) {
-    this.event(LobbyReadyEvent, data);
-  }
 
   @EventPattern(TournamentGameReadyEvent.name)
   async TournamentGameReadyEvent(data: TournamentGameReadyEvent) {
@@ -76,8 +70,6 @@ export class CoreController {
   // async PlayerDeclinedGameEvent(data: PlayerDeclinedGameEvent) {
   //   this.event(PlayerDeclinedGameEvent, data);
   // }
-
-
 
   @EventPattern(LiveMatchUpdateEvent.name)
   async LiveMatchUpdateEvent(data: LiveMatchUpdateEvent) {

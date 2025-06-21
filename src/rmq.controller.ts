@@ -15,6 +15,7 @@ import { PrepareGameCommand } from 'gameserver/command/PrepareGame/prepare-game.
 import { PlayerDeclinedGameEvent } from 'gateway/events/mm/player-declined-game.event';
 import { CreateCrimeLogCommand } from 'gameserver/command/CreateCrimeLog/create-crime-log.command';
 import { BanReason } from 'gateway/shared-types/ban';
+import { LobbyReadyEvent } from 'gateway/events/lobby-ready.event';
 
 @Controller()
 export class RmqController {
@@ -63,6 +64,22 @@ export class RmqController {
   @MessagePattern("RMQ" + RoomReadyEvent.name)
   async RoomReadyEvent(
     @Payload() data: RoomReadyEvent,
+    @Ctx() context: RmqContext,
+  ) {
+    await this.processMessage(
+      new PrepareGameCommand(
+        data.mode,
+        data.roomId,
+        data.players,
+        data.version,
+      ),
+      context,
+    );
+  }
+
+  @MessagePattern("RMQ" + LobbyReadyEvent.name)
+  async LobbyReadyEvent(
+    @Payload() data: LobbyReadyEvent,
     @Ctx() context: RmqContext,
   ) {
     await this.processMessage(
