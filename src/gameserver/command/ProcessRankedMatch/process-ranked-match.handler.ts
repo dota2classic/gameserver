@@ -259,7 +259,7 @@ export class ProcessRankedMatchHandler
     let mmrChange = Math.round(
       this.computeMMRChange(
         cb,
-        winner,
+        didAbandon ? false : winner,
         mmrDiff,
         ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES, // CB GAMES = 0 for now
         25,
