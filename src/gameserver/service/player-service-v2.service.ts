@@ -3,7 +3,7 @@ import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { MatchAccessLevel } from 'gateway/shared-types/match-access-level';
 import { RecalibrationEntity } from 'gameserver/model/recalibration.entity';
@@ -32,6 +32,7 @@ export class PlayerServiceV2 {
     @InjectRepository(GameSessionPlayerEntity)
     private readonly sessionPlayerRepo: Repository<GameSessionPlayerEntity>,
     private readonly gameSeasonService: GameSeasonService,
+    private readonly ds: DataSource,
   ) {}
 
   public async getCalibrationGame(
@@ -91,9 +92,17 @@ where
 
   async startRecalibration(steamId: string) {
     const currentSeason = await this.gameSeasonService.getCurrentSeason();
-    await this.recalibrationEntityRepository.save({
-      steamId,
-      seasonId: currentSeason.id,
+    await this.ds.transaction(async (tx) => {
+      await tx.save(RecalibrationEntity, {
+        steamId,
+        seasonId: currentSeason.id,
+      });
+
+      await tx.save(VersionPlayerEntity, {
+        steamId,
+        seasonId: currentSeason.id,
+        mmr: VersionPlayerEntity.STARTING_MMR,
+      } satisfies Partial<VersionPlayerEntity>);
     });
   }
 
