@@ -120,11 +120,12 @@ limit 1`,
     const sp = await this.sessionPlayerRepo
       .createQueryBuilder("gssp")
       .innerJoinAndMapOne(
-        "session",
+        "gssp.session",
         GameServerSessionEntity,
         "gss",
         "gss.match_id = gssp.match_id",
       )
+
       .where("gssp.steam_id = :steamId", { steamId })
       .andWhere("gssp.abandoned = false")
       .andWhere("gss.game_state != :postGame", {
