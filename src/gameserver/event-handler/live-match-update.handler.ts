@@ -28,7 +28,7 @@ export class LiveMatchUpdateHandler
     if (!session) return;
 
     await this.dataSource.transaction(async (em) => {
-      session.timestamp = new Date(event.timestamp);
+      session.timestamp = new Date(event.timestamp * 1000);
       session.gameState = event.game_state;
       session.gameMode = event.game_mode;
       session.matchmaking_mode = event.matchmaking_mode;
