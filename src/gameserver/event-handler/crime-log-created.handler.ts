@@ -3,7 +3,7 @@ import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { HARD_PUNISHMENT, LIGHT_PUNISHMENT, MEDIUM_PUNISHMENT } from 'gateway/shared-types/timings';
+import { FIVE_MINUTES, HARD_PUNISHMENT, LIGHT_PUNISHMENT } from 'gateway/shared-types/timings';
 import { BanReason } from 'gateway/shared-types/ban';
 import { Logger } from '@nestjs/common';
 import { BanSystemEntry, BanSystemEvent } from 'gateway/events/gs/ban-system.event';
@@ -27,7 +27,7 @@ export const getBasePunishment = (crime: BanReason) => {
     case BanReason.GAME_DECLINE:
       return LIGHT_PUNISHMENT;
     case BanReason.LOAD_FAILURE:
-      return MEDIUM_PUNISHMENT;
+      return FIVE_MINUTES;
     case BanReason.ABANDON:
       return HARD_PUNISHMENT;
     default:
@@ -42,7 +42,7 @@ export const getPunishmentCumulativeInterval = (crime: BanReason): string => {
     case BanReason.GAME_DECLINE:
       return "6h";
     case BanReason.LOAD_FAILURE:
-      return "7d";
+      return "3d";
     case BanReason.ABANDON:
       return "30d";
     default:
