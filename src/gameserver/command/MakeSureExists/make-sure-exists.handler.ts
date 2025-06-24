@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { inspect } from 'util';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { GameSeasonService } from 'gameserver/service/game-season.service';
+import { StartingMmrService } from 'gameserver/service/starting-mmr.service';
 
 @CommandHandler(MakeSureExistsCommand)
 export class MakeSureExistsHandler
@@ -17,6 +18,7 @@ export class MakeSureExistsHandler
     @InjectRepository(VersionPlayerEntity)
     private readonly versionPlayerRepository: Repository<VersionPlayerEntity>,
     private readonly gsService: GameSeasonService,
+    private readonly startingMmrService: StartingMmrService,
   ) {}
 
   async execute(command: MakeSureExistsCommand) {
@@ -39,11 +41,11 @@ export class MakeSureExistsHandler
       .values(
         new VersionPlayerEntity(
           steam_id,
-          VersionPlayerEntity.STARTING_MMR,
+          await this.startingMmrService.getStartingMMRForSteamId(steam_id),
           season.id,
         ),
       )
       .orIgnore()
-      .execute()
+      .execute();
   }
 }

@@ -36,6 +36,7 @@ import { PlayerQualityService } from 'gameserver/service/player-quality.service'
 import { AssignStartedServerHandler } from 'gameserver/command/AssignStartedServer/assign-started-server.handler';
 import { LeaveGameSessionHandler } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.handler';
 import { CreateCrimeLogHandler } from 'gameserver/command/CreateCrimeLog/create-crime-log.handler';
+import { StartingMmrService } from 'gameserver/service/starting-mmr.service';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -89,7 +90,8 @@ const Services = [
   PlayerServiceV2,
   LeaderboardService,
   PlayerFeedbackService,
-  PlayerQualityService
+  PlayerQualityService,
+  StartingMmrService
 ];
 const Sagas = [GameserverSaga];
 

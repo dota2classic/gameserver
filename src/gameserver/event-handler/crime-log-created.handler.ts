@@ -11,13 +11,14 @@ import { PlayerId } from 'gateway/shared-types/player-id';
 import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
-const ABANDON_PUNISHMENTS = [
-  1000 * 60 * 60 * 12, // 12 hours
-  1000 * 60 * 60 * 24, // 24 hours
-  1000 * 60 * 60 * 24 * 5, // 5 days
-  1000 * 60 * 60 * 24 * 14, // 2 weeks
-  1000 * 60 * 60 * 24 * 30, // 1 month
+const ABANDON_PUNISHMENTS_HOURS = [
+  1, // 12 hours
+  8, // 24 hours
+  3 * 24, // 5 days
+  7 * 24, // 2 weeks
+  14 * 24, // 1 month
 ];
+const hr = 1000 * 60 * 60;
 
 export const getBasePunishment = (crime: BanReason) => {
   switch (crime) {
@@ -143,9 +144,9 @@ export class CrimeLogCreatedHandler
       // Use predefined punishments
       const punishmentIdx = Math.min(
         totalPunishmentCount,
-        ABANDON_PUNISHMENTS.length - 1,
+        ABANDON_PUNISHMENTS_HOURS.length - 1,
       );
-      punishmentDuration = ABANDON_PUNISHMENTS[punishmentIdx];
+      punishmentDuration = ABANDON_PUNISHMENTS_HOURS[punishmentIdx] * hr;
     } else {
       const basePunishment = getBasePunishment(thisCrime.crime);
       punishmentDuration = basePunishment * totalPunishmentCount;

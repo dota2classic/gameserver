@@ -12,6 +12,7 @@ import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { MmrBucketService } from 'gameserver/mmr-bucket.service';
 import { GameSeasonService } from 'gameserver/service/game-season.service';
 import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
+import { StartingMmrService } from 'gameserver/service/starting-mmr.service';
 
 type GetMmr = (plr: VersionPlayerEntity) => number;
 
@@ -47,6 +48,7 @@ export class ProcessRankedMatchHandler
     private readonly datasource: DataSource,
     private readonly seasonService: GameSeasonService,
     private readonly plrService: PlayerServiceV2,
+    private readonly startingMmrService: StartingMmrService
   ) {}
 
   public static calculateMmrDeviation(
@@ -184,16 +186,17 @@ export class ProcessRankedMatchHandler
     plrs.forEach((plr) => map.set(plr.steamId, plr));
 
     // here we do some tricks
-    [...command.losers, ...command.winners].forEach((pid) => {
+    for (const pid of [...command.losers, ...command.winners]) {
       if (!map.has(pid.value)) {
         const vp = new VersionPlayerEntity(
           pid.value,
-          VersionPlayerEntity.STARTING_MMR,
+          await this.startingMmrService.getStartingMMRForSteamId(pid.value),
           currentSeason.id,
         );
+
         map.set(pid.value, vp);
       }
-    });
+    }
 
     return map;
   }
