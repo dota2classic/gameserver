@@ -46,6 +46,11 @@ import { PrometheusBasicAuthStrategy } from 'metrics/prometheus-basic-auth.strat
       help: "123",
       labelNames: ["mode"]
     }),
+    makeGaugeProvider({
+      name: "d2c_gameplay_satisfaction_metric",
+      help: "Gameplay satisfaction",
+      labelNames: []
+    }),
     makeCounterProvider({
       name: "d2c_not_loaded_count",
       help: "Counter of not player not loaded events",
