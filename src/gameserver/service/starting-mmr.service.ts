@@ -46,7 +46,11 @@ export class StartingMmrService {
       const profile: DotaPlayerProfile = await fetchWithRetry(
         `https://api.opendota.com/api/players/${steamId}`,
       ).then((t) => t.json());
-      return Math.round(this.mapRankTierToMmr(profile.rank_tier));
+      const mmr = Math.round(this.mapRankTierToMmr(profile.rank_tier));
+      if (Number.isNaN(mmr)) {
+        throw "Invalid mmr";
+      }
+      return mmr;
     } catch (e) {
       this.logger.error(
         `Error getting starting mmr for player ${steamId}! Falling back to static constant`,
