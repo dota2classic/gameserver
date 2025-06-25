@@ -137,7 +137,7 @@ export class CrimeLogCreatedHandler
     const countedCrimes = countCrimes(frequentCrimesCount);
 
     // We do `+1` because it doesn't count current crime, but we want to
-    let totalPunishmentCount = (countedCrimes.get(thisCrime.crime) || 0) + 1;
+    let totalPunishmentCount = (countedCrimes.get(thisCrime.crime) || 0);
 
     let punishmentDuration: number;
     if (thisCrime.crime === BanReason.ABANDON) {
