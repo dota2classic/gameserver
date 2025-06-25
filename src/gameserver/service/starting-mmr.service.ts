@@ -48,6 +48,7 @@ export class StartingMmrService {
       ).then((t) => t.json());
       const mmr = Math.round(this.mapRankTierToMmr(profile.rank_tier));
       if (Number.isNaN(mmr)) {
+        this.logger.warn(profile)
         throw "Invalid mmr";
       }
       return mmr;

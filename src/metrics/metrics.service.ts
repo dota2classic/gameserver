@@ -124,4 +124,9 @@ FROM stats2;`,
 
     this.recordSatisfactionMetric(satisfactions[0].satisfaction_metric);
   }
+
+
+  private async recordGameSatisfaction(satisfactionValue: number, version: string){
+
+  }
 }

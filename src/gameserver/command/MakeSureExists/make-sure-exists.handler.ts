@@ -32,16 +32,26 @@ export class MakeSureExistsHandler
     }
   }
 
-  private async makeSureExists(steam_id: string) {
+  private async makeSureExists(steamId: string) {
     const season = await this.gsService.getCurrentSeason();
+    const existing = await this.versionPlayerRepository.findOne({
+      where: {
+        steamId,
+        seasonId: season.id,
+      },
+    });
+
+    if (existing) {
+      return;
+    }
 
     await this.versionPlayerRepository
       .createQueryBuilder()
       .insert()
       .values(
         new VersionPlayerEntity(
-          steam_id,
-          await this.startingMmrService.getStartingMMRForSteamId(steam_id),
+          steamId,
+          await this.startingMmrService.getStartingMMRForSteamId(steamId),
           season.id,
         ),
       )
