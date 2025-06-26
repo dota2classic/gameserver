@@ -170,6 +170,32 @@ export function useFullModule(): TestEnvironment {
             inject: [],
             imports: [],
           },
+          {
+            name: "GSEvents",
+            useFactory(): RmqOptions {
+              return {
+                transport: Transport.RMQ,
+                options: {
+                  urls: [
+                    {
+                      hostname: te.containers.rabbit.getHost(),
+                      port: te.containers.rabbit.getFirstMappedPort(),
+                      protocol: "amqp",
+                      // username: te.containers.rabbit.getName(),
+                      // password: te.containers.rabbit.get(),
+                    },
+                  ],
+                  queue: "gameserver_events",
+                  queueOptions: {
+                    durable: true,
+                  },
+                  prefetchCount: 5,
+                },
+              };
+            },
+            inject: [],
+            imports: [],
+          }
         ]),
       ],
       providers: [
