@@ -11,6 +11,7 @@ import { GameSeasonService } from 'gameserver/service/game-season.service';
 import { Dota_GameRulesState } from 'gateway/shared-types/dota-game-rules-state';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
+import { StartingMmrService } from 'gameserver/service/starting-mmr.service';
 
 function getMatchAccessLevel(anyGames: number, anyWins: number) {
   if (anyWins) return MatchAccessLevel.HUMAN_GAMES;
@@ -33,6 +34,7 @@ export class PlayerServiceV2 {
     private readonly sessionPlayerRepo: Repository<GameSessionPlayerEntity>,
     private readonly gameSeasonService: GameSeasonService,
     private readonly ds: DataSource,
+    private readonly startingMmr: StartingMmrService
   ) {}
 
   public async getCalibrationGame(
@@ -101,7 +103,7 @@ where
       await tx.save(VersionPlayerEntity, {
         steamId,
         seasonId: currentSeason.id,
-        mmr: VersionPlayerEntity.STARTING_MMR,
+        mmr: await this.startingMmr.getStartingMMRForSteamId(steamId),
       } satisfies Partial<VersionPlayerEntity>);
     });
   }
