@@ -122,11 +122,13 @@ FROM stats2;`,
       [],
     );
 
-    this.recordSatisfactionMetric(satisfactions[0].satisfaction_metric);
+    if (satisfactions[0].satisfaction_metric != null) {
+      this.recordSatisfactionMetric(satisfactions[0].satisfaction_metric);
+    }
   }
 
-
-  private async recordGameSatisfaction(satisfactionValue: number, version: string){
-
-  }
+  private async recordGameSatisfaction(
+    satisfactionValue: number,
+    version: string,
+  ) {}
 }

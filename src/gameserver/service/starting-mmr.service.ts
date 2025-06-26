@@ -48,9 +48,12 @@ export class StartingMmrService {
       ).then((t) => t.json());
       const mmr = Math.round(this.mapRankTierToMmr(profile.rank_tier));
       if (Number.isNaN(mmr)) {
-        this.logger.warn(profile)
+        this.logger.warn(profile);
         throw "Invalid mmr";
       }
+      this.logger.log(
+        `Resolved starting mmr for player ${steamId}: MMR=${mmr}`,
+      );
       return mmr;
     } catch (e) {
       this.logger.error(
