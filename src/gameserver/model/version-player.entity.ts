@@ -19,7 +19,7 @@ export class VersionPlayerEntity {
   @PrimaryColumn({ name: "season_id", default: 1 })
   seasonId: number;
 
-  public static STARTING_MMR = 1000;
+  public static STARTING_MMR = 1500;
 
 
   constructor(steamId: string, mmr: number, seasonId: number) {
