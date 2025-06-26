@@ -37,6 +37,7 @@ import { DodgeService } from 'rest/service/dodge.service';
 import { CacheModule } from '@nestjs/cache-manager';
 import { StartingMmrService } from 'gameserver/service/starting-mmr.service';
 import { MockStartingMmrService } from '@test/MockStartingMmrService';
+import { ForumApi } from 'generated-api/forum';
 import SpyInstance = jest.SpyInstance;
 
 export interface TestEnvironment {
@@ -211,6 +212,10 @@ export function useFullModule(): TestEnvironment {
         DodgeService,
         Mapper,
         ...GameServerDomain,
+        {
+          provide: ForumApi,
+          useValue: jest.fn()
+        },
         {
           provide: StartingMmrService,
           useClass: MockStartingMmrService,
