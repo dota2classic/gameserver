@@ -24,7 +24,7 @@ export class PlayerFeedbackService {
     private readonly ds: DataSource,
     @InjectRepository(PlayerCrimeLogEntity)
     private readonly playerCrimeLogEntityRepository: Repository<PlayerCrimeLogEntity>,
-    @Inject("RMQ") private readonly rmq: ClientProxy,
+    @Inject("GSEvents") private readonly rmq: ClientProxy,
   ) {}
 
   public async getPlayerReportState(

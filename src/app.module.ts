@@ -63,7 +63,7 @@ import { DodgeService } from 'rest/service/dodge.service';
     TypeOrmModule.forFeature(Entities),
     ClientsModule.registerAsync([
       {
-        name: "RMQ",
+        name: "GSCommands",
         useFactory(config: ConfigService): RmqOptions {
           return {
             transport: Transport.RMQ,
@@ -88,6 +88,32 @@ import { DodgeService } from 'rest/service/dodge.service';
         inject: [ConfigService],
         imports: [],
       },
+      {
+        name: "GSEvents",
+        useFactory(config: ConfigService): RmqOptions {
+          return {
+            transport: Transport.RMQ,
+            options: {
+              urls: [
+                {
+                  hostname: config.get<string>("rabbitmq.host"),
+                  port: config.get<number>("rabbitmq.port"),
+                  protocol: "amqp",
+                  username: config.get<string>("rabbitmq.user"),
+                  password: config.get<string>("rabbitmq.password"),
+                },
+              ],
+              queue: config.get<string>("rabbitmq.gameserver_events"),
+              queueOptions: {
+                durable: true,
+              },
+              prefetchCount: 5,
+            },
+          };
+        },
+        inject: [ConfigService],
+        imports: [],
+      }
     ]),
     ClientsModule.registerAsync([
       {

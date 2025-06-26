@@ -27,7 +27,7 @@ export class FindGameServerHandler
     private readonly matchEntityRepository: Repository<MatchEntity>,
     private readonly qbus: QueryBus,
     @Inject("QueryCore") private readonly redisEventQueue: ClientProxy,
-    @Inject("RMQ") private readonly rmq: ClientProxy,
+    @Inject("GSCommands") private readonly rmq: ClientProxy,
     @InjectRepository(MatchmakingModeMappingEntity)
     private readonly matchmakingModeMappingEntityRepository: Repository<MatchmakingModeMappingEntity>,
   ) {}

@@ -145,7 +145,7 @@ export function useFullModule(): TestEnvironment {
             imports: [],
           },
           {
-            name: "RMQ",
+            name: "GSCommands",
             useFactory(): RmqOptions {
               return {
                 transport: Transport.RMQ,
