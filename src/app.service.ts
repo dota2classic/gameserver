@@ -19,7 +19,6 @@ import { GameServerSessionEntity } from 'gameserver/model/game-server-session.en
 import { PlayerSmurfDetectedEvent } from 'gateway/events/bans/player-smurf-detected.event';
 import { MatchRecordedEvent } from 'gateway/events/gs/match-recorded.event';
 import { PlayerReportBanCreatedEvent } from 'gateway/events/bans/player-report-ban-created.event';
-import { PlayerFeedbackCreatedEvent } from 'gateway/events/player-feedback-created.event';
 
 @Injectable()
 export class AppService {
@@ -70,8 +69,7 @@ export class AppService {
       PlayerReportBanCreatedEvent,
       AchievementCompleteEvent,
       PlayerSmurfDetectedEvent,
-      MatchRecordedEvent,
-      PlayerFeedbackCreatedEvent
+      MatchRecordedEvent
     ];
 
     this.ebus
