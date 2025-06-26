@@ -14,6 +14,7 @@ import { MatchEntity } from 'gameserver/model/match.entity';
 import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
 import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
 import { Role } from 'gateway/shared-types/roles';
+import { ForumApi } from 'generated-api/forum';
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
@@ -30,6 +31,7 @@ export class FindGameServerHandler
     @Inject("GSCommands") private readonly rmq: ClientProxy,
     @InjectRepository(MatchmakingModeMappingEntity)
     private readonly matchmakingModeMappingEntityRepository: Repository<MatchmakingModeMappingEntity>,
+    private readonly forum: ForumApi,
   ) {}
 
   async execute(command: FindGameServerCommand) {
@@ -47,7 +49,10 @@ export class FindGameServerHandler
     m = await this.matchEntityRepository.save(m);
     launchGameServerCommand.matchId = m.id;
 
-    this.logger.log("Created match stub", { match_id: m.id, lobby_type: m.mode });
+    this.logger.log("Created match stub", {
+      match_id: m.id,
+      lobby_type: m.mode,
+    });
 
     await this.submitQueueTask(launchGameServerCommand);
   }
@@ -64,13 +69,23 @@ export class FindGameServerHandler
         GetUserInfoQueryResult
       >(new GetUserInfoQuery(t.playerId));
 
-      // FIXME: add server mutes
+      let isMuted: boolean = false;
+      try {
+        const r = await this.forum.forumControllerGetUser(t.playerId.value);
+        isMuted = new Date(r.muteUntil).getTime() > Date.now();
+      } catch (e) {
+        this.logger.error(
+          `Couldn't get mute status of player ${t.playerId.value}`,
+          e,
+        );
+      }
+
       players.push(
         new FullMatchPlayer(
           t.playerId.value,
           res.name,
           res.roles.includes(Role.OLD),
-          false,
+          isMuted,
           t.partyId,
           t.team,
         ),

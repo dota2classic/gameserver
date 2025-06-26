@@ -34,6 +34,7 @@ import { RecordController } from 'rest/record.controller';
 import { RecordService } from 'rest/service/record.service';
 import { MetricsModule } from 'metrics/metrics.module';
 import { DodgeService } from 'rest/service/dodge.service';
+import { Configuration, ForumApi } from 'generated-api/forum';
 
 @Module({
   imports: [
@@ -43,7 +44,7 @@ import { DodgeService } from 'rest/service/dodge.service';
       load: [configuration],
     }),
     CacheModule.register({
-      isGlobal: true
+      isGlobal: true,
     }),
     ScheduleModule.forRoot(),
     CqrsModule,
@@ -113,7 +114,7 @@ import { DodgeService } from 'rest/service/dodge.service';
         },
         inject: [ConfigService],
         imports: [],
-      }
+      },
     ]),
     ClientsModule.registerAsync([
       {
@@ -157,6 +158,15 @@ import { DodgeService } from 'rest/service/dodge.service';
     Mapper,
     RecordService,
     ...GameServerDomain,
+    {
+      provide: ForumApi,
+      useFactory: (config) => {
+        return new ForumApi(
+          new Configuration({ basePath: config.get("api.forumApiUrl") }),
+        );
+      },
+      inject: [ConfigService],
+    },
     outerQuery(GetUserInfoQuery, "QueryCore"),
   ],
 })
