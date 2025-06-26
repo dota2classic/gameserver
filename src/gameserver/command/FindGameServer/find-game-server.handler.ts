@@ -74,6 +74,7 @@ export class FindGameServerHandler
         const r = await this.forum.forumControllerGetUser(t.playerId.value);
         isMuted = new Date(r.muteUntil).getTime() > Date.now();
       } catch (e) {
+        console.error(e);
         this.logger.error(
           `Couldn't get mute status of player ${t.playerId.value}`,
           e,
