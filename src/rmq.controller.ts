@@ -16,6 +16,8 @@ import { PlayerDeclinedGameEvent } from 'gateway/events/mm/player-declined-game.
 import { CreateCrimeLogCommand } from 'gameserver/command/CreateCrimeLog/create-crime-log.command';
 import { BanReason } from 'gateway/shared-types/ban';
 import { LobbyReadyEvent } from 'gateway/events/lobby-ready.event';
+import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
+import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
 
 @Controller()
 export class RmqController {
@@ -83,11 +85,17 @@ export class RmqController {
     @Ctx() context: RmqContext,
   ) {
     await this.processMessage(
-      new PrepareGameCommand(
-        data.mode,
-        data.roomId,
-        data.players,
-        data.version,
+      new FindGameServerCommand(
+        new GamePreparedEvent(
+          data.mode,
+          data.gameMode,
+          data.map,
+          data.version,
+          data.roomId,
+          data.players,
+          data.enableCheats,
+          data.fillBots,
+        ),
       ),
       context,
     );
