@@ -100,7 +100,8 @@ export class ProcessRankedMatchHandler
   async execute(command: ProcessRankedMatchCommand) {
     if (
       command.mode !== MatchmakingMode.UNRANKED &&
-      command.mode !== MatchmakingMode.RANKED
+      command.mode !== MatchmakingMode.RANKED &&
+      command.mode !== MatchmakingMode.HIGHROOM
     )
       return;
 
@@ -243,7 +244,7 @@ export class ProcessRankedMatchHandler
     const cb = await this.plrService.getCalibrationGame(
       season,
       steamId,
-      [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],
+      [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED, MatchmakingMode.HIGHROOM],
       matchTimestamp,
     );
     const plr = playerMap.get(steamId);
