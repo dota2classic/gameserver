@@ -151,6 +151,12 @@ export class CrimeLogCreatedHandler
       const basePunishment = getBasePunishment(thisCrime.crime);
       punishmentDuration = basePunishment * totalPunishmentCount;
     }
+
+
+    if(thisCrime.lobby_type === MatchmakingMode.HIGHROOM) {
+      punishmentDuration *= 3;
+    }
+
     this.logger.log(
       `Punishment: ${punishmentDuration / 1000 / 60} minutes for ${
         thisCrime.steam_id
