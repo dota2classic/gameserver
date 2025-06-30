@@ -137,13 +137,13 @@ export class CrimeLogCreatedHandler
     const countedCrimes = countCrimes(frequentCrimesCount);
 
     // We do `+1` because it doesn't count current crime, but we want to
-    let totalPunishmentCount = (countedCrimes.get(thisCrime.crime) || 0);
+    let totalPunishmentCount = (countedCrimes.get(thisCrime.crime) || 0) + 1;
 
     let punishmentDuration: number;
     if (thisCrime.crime === BanReason.ABANDON) {
       // Use predefined punishments
       const punishmentIdx = Math.min(
-        totalPunishmentCount,
+        Math.max(0, totalPunishmentCount - 1),
         ABANDON_PUNISHMENTS_HOURS.length - 1,
       );
       punishmentDuration = ABANDON_PUNISHMENTS_HOURS[punishmentIdx] * hr;
