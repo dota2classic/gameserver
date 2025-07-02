@@ -60,7 +60,7 @@ export class RmqController {
     @Payload() data: PlayerAbandonedEvent,
     @Ctx() context: RmqContext,
   ) {
-    await this.processMessage(new SavePlayerAbandonCommand(data, false), context);
+    await this.processMessage(new SavePlayerAbandonCommand(data), context);
   }
 
   @MessagePattern("RMQ" + RoomReadyEvent.name)
