@@ -348,14 +348,13 @@ offset $2 limit $3`,
   async abandonSession(@Body() dto: AbandonSessionDto) {
     const sesh = await this.playerServiceV2.getSession(dto.steamId);
 
+    this.logger.log("Session to abandon: ", dto);
     if (sesh) {
       await this.redisEventQueue.send(
         RunRconCommand.name,
         new RunRconCommand(`d2c_abandon ${sesh.steamId}`, sesh.session.url),
       );
-      // await this.cbus.execute(
-      //   new LeaveGameSessionCommand(dto.steamId, sesh.matchId, true),
-      // );
+      this.logger.log("Received abandon response");
     }
   }
 }
