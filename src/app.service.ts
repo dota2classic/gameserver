@@ -19,6 +19,7 @@ import { GameServerSessionEntity } from 'gameserver/model/game-server-session.en
 import { PlayerSmurfDetectedEvent } from 'gateway/events/bans/player-smurf-detected.event';
 import { MatchRecordedEvent } from 'gateway/events/gs/match-recorded.event';
 import { PlayerReportBanCreatedEvent } from 'gateway/events/bans/player-report-ban-created.event';
+import { RunRconCommand } from 'gateway/commands/RunRcon/run-rcon.command';
 
 @Injectable()
 export class AppService {
@@ -69,7 +70,8 @@ export class AppService {
       PlayerReportBanCreatedEvent,
       AchievementCompleteEvent,
       PlayerSmurfDetectedEvent,
-      MatchRecordedEvent
+      MatchRecordedEvent,
+      RunRconCommand
     ];
 
     this.ebus
