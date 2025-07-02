@@ -47,6 +47,7 @@ import { GetReportsAvailableQuery } from 'gateway/queries/GetReportsAvailable/ge
 import { GetReportsAvailableQueryResult } from 'gateway/queries/GetReportsAvailable/get-reports-available-query.result';
 import { ClientProxy } from '@nestjs/microservices';
 import { RunRconCommand } from 'gateway/commands/RunRcon/run-rcon.command';
+import { RunRconResponse } from 'gateway/commands/RunRcon/run-rcon.response';
 
 @Controller("player")
 @ApiTags("player")
@@ -350,11 +351,11 @@ offset $2 limit $3`,
 
     this.logger.log("Session to abandon: ", dto);
     if (sesh) {
-      await this.redisEventQueue.send(
+      const res = await this.redisEventQueue.send<RunRconResponse, RunRconCommand>(
         RunRconCommand.name,
         new RunRconCommand(`d2c_abandon ${sesh.steamId}`, sesh.session.url),
       );
-      this.logger.log("Received abandon response");
+      this.logger.log("Received abandon response", res);
     }
   }
 }
