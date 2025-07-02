@@ -47,6 +47,7 @@ import { GetReportsAvailableQuery } from 'gateway/queries/GetReportsAvailable/ge
 import { GetReportsAvailableQueryResult } from 'gateway/queries/GetReportsAvailable/get-reports-available-query.result';
 import { ClientProxy } from '@nestjs/microservices';
 import { RunRconCommand } from 'gateway/commands/RunRcon/run-rcon.command';
+import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
 
 @Controller("player")
 @ApiTags("player")
@@ -79,6 +80,8 @@ export class PlayerController {
     private readonly dodge: DodgeService,
     private readonly qbus: QueryBus,
     @Inject("QueryCore") private readonly redisEventQueue: ClientProxy,
+    @InjectRepository(GameSessionPlayerEntity)
+    private readonly gameSessionPlayerEntityRepository: Repository<GameSessionPlayerEntity>,
   ) {}
 
   @Get("/:id/achievements")
@@ -353,7 +356,9 @@ offset $2 limit $3`,
       this.ebus.publish(
         new RunRconCommand(`d2c_abandon ${sesh.steamId}`, sesh.session.url),
       );
-      this.logger.log("Sent abandon event");
+      sesh.userAbandoned = true;
+      await this.gameSessionPlayerEntityRepository.save(sesh);
+      this.logger.log(`UserAbandon game ${sesh.steamId}`, sesh.matchId);
     }
   }
 }
