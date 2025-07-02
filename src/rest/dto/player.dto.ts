@@ -49,6 +49,7 @@ export class RecalibrationDto {
 }
 
 export class PlayerGameSessionDto {
+  abandoned: boolean;
   matchId: number;
   serverUrl: string;
   @ApiProperty({ enum: MatchmakingMode, enumName: "MatchmakingMode" })
@@ -98,7 +99,6 @@ export class ReportPlayerDto {
 }
 
 export class AbandonSessionDto {
-  public readonly matchId: number;
   public readonly steamId: string;
 }
 

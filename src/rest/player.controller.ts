@@ -215,9 +215,9 @@ offset $2 limit $3`,
       GetReportsAvailableQueryResult
     >(new GetReportsAvailableQuery(new PlayerId(steamId)));
 
-   return {
-     count: r.available
-   }
+    return {
+      count: r.available,
+    };
   }
 
   @Get("/leaderboard")
@@ -344,8 +344,11 @@ offset $2 limit $3`,
 
   @Post("/abandon")
   async abandonSession(@Body() dto: AbandonSessionDto) {
-    await this.cbus.execute(
-      new LeaveGameSessionCommand(dto.steamId, dto.matchId),
-    );
+    const sesh = await this.playerServiceV2.getSession(dto.steamId);
+    if (sesh) {
+      await this.cbus.execute(
+        new LeaveGameSessionCommand(dto.steamId, sesh.matchId, true),
+      );
+    }
   }
 }

@@ -70,9 +70,10 @@ export class LeaderboardService {
       ),
       session: session
         ? {
-            serverUrl: session.url,
-            matchId: session.matchId,
-            lobbyType: session.matchmaking_mode,
+            serverUrl: session.session.url,
+            matchId: session.session.matchId,
+            lobbyType: session.session.matchmaking_mode,
+            abandoned: session.abandoned,
           }
         : undefined,
     };

@@ -34,7 +34,7 @@ export class PlayerServiceV2 {
     private readonly sessionPlayerRepo: Repository<GameSessionPlayerEntity>,
     private readonly gameSeasonService: GameSeasonService,
     private readonly ds: DataSource,
-    private readonly startingMmr: StartingMmrService
+    private readonly startingMmr: StartingMmrService,
   ) {}
 
   public async getCalibrationGame(
@@ -127,8 +127,8 @@ limit 1`,
       .getOne();
   }
 
-  public async getSession(steamId: string) {
-    const sp = await this.sessionPlayerRepo
+  public async getSession(steamId: string): Promise<GameSessionPlayerEntity | undefined> {
+    return await this.sessionPlayerRepo
       .createQueryBuilder("gssp")
       .innerJoinAndMapOne(
         "gssp.session",
@@ -136,14 +136,11 @@ limit 1`,
         "gss",
         "gss.match_id = gssp.match_id",
       )
-
       .where("gssp.steam_id = :steamId", { steamId })
-      .andWhere("gssp.abandoned = false")
+      .andWhere("gssp.user_abandoned = false")
       .andWhere("gss.game_state != :postGame", {
         postGame: Dota_GameRulesState.POST_GAME,
       })
       .getOne();
-
-    return sp?.session;
   }
 }

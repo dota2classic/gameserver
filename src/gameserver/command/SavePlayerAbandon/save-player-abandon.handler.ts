@@ -29,7 +29,7 @@ export class SavePlayerAbandonHandler
 
 
     await this.cbus.execute(
-      new LeaveGameSessionCommand(event.playerId.value, event.matchId),
+      new LeaveGameSessionCommand(event.playerId.value, event.matchId, false),
     );
 
     if (event.abandonIndex > 0) {

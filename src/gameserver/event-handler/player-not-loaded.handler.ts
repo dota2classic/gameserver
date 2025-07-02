@@ -40,7 +40,7 @@ export class PlayerNotLoadedHandler
     if (event.mode == MatchmakingMode.BOTS) {
       // Only forcefully abandon bot lobbies
       await this.cbus.execute(
-        new LeaveGameSessionCommand(event.playerId.value, event.matchId),
+        new LeaveGameSessionCommand(event.playerId.value, event.matchId, true),
       );
     }
 

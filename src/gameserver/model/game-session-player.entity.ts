@@ -30,6 +30,9 @@ export class GameSessionPlayerEntity {
   @Column({ name: "abandoned", default: false })
   abandoned: boolean;
 
+  @Column({ name: "user_abandoned", default: false })
+  userAbandoned: boolean;
+
   constructor(steamId: string, matchId: number, partyId: string, team: DotaTeam, connection: DotaConnectionState, abandoned: boolean = false) {
     this.steamId = steamId;
     this.matchId = matchId;
