@@ -23,13 +23,13 @@ export class SavePlayerAbandonHandler
     private readonly cbus: CommandBus,
   ) {}
 
-  async execute({ event }: SavePlayerAbandonCommand) {
+  async execute({ event, manual }: SavePlayerAbandonCommand) {
     // Let them abandon ffs
     this.logger.log("PlayerAbandonEvent", { index: event.abandonIndex });
 
 
     await this.cbus.execute(
-      new LeaveGameSessionCommand(event.playerId.value, event.matchId, false),
+      new LeaveGameSessionCommand(event.playerId.value, event.matchId, manual),
     );
 
     if (event.abandonIndex > 0) {

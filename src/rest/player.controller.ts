@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Logger, Param, Post, Query, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Logger, Param, Post, Query, UseInterceptors } from '@nestjs/common';
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Mapper } from 'rest/mapper';
@@ -41,11 +41,12 @@ import { LeaderboardService } from 'gameserver/service/leaderboard.service';
 import { GameSeasonService } from 'gameserver/service/game-season.service';
 import { PlayerFeedbackService } from 'gameserver/service/player-feedback.service';
 import { PlayerQualityService } from 'gameserver/service/player-quality.service';
-import { LeaveGameSessionCommand } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.command';
 import { DodgeService } from 'rest/service/dodge.service';
 import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
 import { GetReportsAvailableQuery } from 'gateway/queries/GetReportsAvailable/get-reports-available.query';
 import { GetReportsAvailableQueryResult } from 'gateway/queries/GetReportsAvailable/get-reports-available-query.result';
+import { ClientProxy } from '@nestjs/microservices';
+import { RunRconCommand } from 'gateway/commands/RunRcon/run-rcon.command';
 
 @Controller("player")
 @ApiTags("player")
@@ -77,6 +78,7 @@ export class PlayerController {
     private readonly playerQuality: PlayerQualityService,
     private readonly dodge: DodgeService,
     private readonly qbus: QueryBus,
+    @Inject("QueryCore") private readonly redisEventQueue: ClientProxy,
   ) {}
 
   @Get("/:id/achievements")
@@ -345,10 +347,15 @@ offset $2 limit $3`,
   @Post("/abandon")
   async abandonSession(@Body() dto: AbandonSessionDto) {
     const sesh = await this.playerServiceV2.getSession(dto.steamId);
+
     if (sesh) {
-      await this.cbus.execute(
-        new LeaveGameSessionCommand(dto.steamId, sesh.matchId, true),
+      await this.redisEventQueue.send(
+        RunRconCommand.name,
+        new RunRconCommand(`d2c_abandon ${sesh.steamId}`, sesh.session.url),
       );
+      // await this.cbus.execute(
+      //   new LeaveGameSessionCommand(dto.steamId, sesh.matchId, true),
+      // );
     }
   }
 }
