@@ -35,6 +35,7 @@ import { RecordService } from 'rest/service/record.service';
 import { MetricsModule } from 'metrics/metrics.module';
 import { DodgeService } from 'rest/service/dodge.service';
 import { Configuration, ForumApi } from 'generated-api/forum';
+import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 
 @Module({
   imports: [
@@ -116,6 +117,21 @@ import { Configuration, ForumApi } from 'generated-api/forum';
         imports: [],
       },
     ]),
+    RabbitMQModule.forRootAsync({
+      useFactory(config: ConfigService): RabbitMQConfig {
+        return {
+          exchanges: [
+            {
+              name: 'gameserver_exchange',
+              type: 'topic',
+            },
+          ],
+          uri: `amqp://${config.get('rabbitmq.user')}:${config.get('rabbitmq.password')}@${config.get('rabbitmq.host')}:${config.get('rabbitmq.port')}`,
+        };
+      },
+      imports: [],
+      inject: [ConfigService],
+    }),
     ClientsModule.registerAsync([
       {
         name: "QueryCore",

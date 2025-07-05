@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { EventBus, ofType } from '@nestjs/cqrs';
 import { ClientProxy } from '@nestjs/microservices';
 import { GameSessionCreatedEvent } from 'gateway/events/game-session-created.event';
@@ -20,9 +20,10 @@ import { PlayerSmurfDetectedEvent } from 'gateway/events/bans/player-smurf-detec
 import { MatchRecordedEvent } from 'gateway/events/gs/match-recorded.event';
 import { PlayerReportBanCreatedEvent } from 'gateway/events/bans/player-report-ban-created.event';
 import { RunRconCommand } from 'gateway/commands/RunRcon/run-rcon.command';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 @Injectable()
-export class AppService {
+export class AppService implements OnApplicationBootstrap {
   constructor(
     private readonly ebus: EventBus,
     @InjectRepository(GameServerEntity)
@@ -30,6 +31,7 @@ export class AppService {
     @InjectRepository(GameServerSessionEntity)
     private readonly gameServerSessionEntityRepository: Repository<GameServerSessionEntity>,
     @Inject("QueryCore") private readonly redisEventQueue: ClientProxy,
+    private readonly amqpConnection: AmqpConnection,
   ) {}
 
   @Cron("*/30 * * * * *")
@@ -66,16 +68,25 @@ export class AppService {
       ServerActualizationRequestedEvent,
       KillServerRequestedEvent,
       BanSystemEvent,
-      PlayerNotLoadedEvent,
       PlayerReportBanCreatedEvent,
       AchievementCompleteEvent,
       PlayerSmurfDetectedEvent,
       MatchRecordedEvent,
-      RunRconCommand
+      RunRconCommand,
     ];
 
     this.ebus
       .pipe(ofType(...publicEvents))
       .subscribe((t) => this.redisEventQueue.emit(t.constructor.name, t));
+
+    this.ebus
+      .pipe(ofType(PlayerNotLoadedEvent))
+      .subscribe((msg) =>
+        this.amqpConnection.publish(
+          "gameserver_exchange",
+          msg.constructor.name,
+          msg,
+        ),
+      );
   }
 }
