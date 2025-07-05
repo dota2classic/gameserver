@@ -25,6 +25,7 @@ export class MmrChangeDto {
   is_hidden: boolean;
   change: number;
   calibration: boolean;
+  streak: number;
 }
 export class MatchMmrData {
   id: number;

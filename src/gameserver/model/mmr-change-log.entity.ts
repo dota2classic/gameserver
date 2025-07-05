@@ -36,6 +36,14 @@ export class MmrChangeLogEntity {
   @Column({ type: "float", default: 1.0, name: "player_performance_coefficient" })
   playerPerformanceCoefficient: number;
 
+
+  @Column({
+    type: "int",
+    default: 0,
+    name: "streak"
+  })
+  streak: number;
+
   @ManyToOne((type) => PlayerInMatchEntity)
   @JoinColumn([
     {

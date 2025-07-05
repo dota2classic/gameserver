@@ -104,6 +104,8 @@ export default class PlayerInMatchEntity {
     nullable: true
   })
   partyIndex?: number
+
+
 }
 
 /**

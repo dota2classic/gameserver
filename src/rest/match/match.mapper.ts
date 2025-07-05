@@ -61,6 +61,7 @@ export class MatchMapper {
     mmr_after: mmr.mmrAfter,
     change: mmr.change,
     is_hidden: mmr.hiddenMmr,
-    calibration: mmr.calibration
+    calibration: mmr.calibration,
+    streak: mmr.streak
   });
 }

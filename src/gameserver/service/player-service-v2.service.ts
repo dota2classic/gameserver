@@ -127,7 +127,9 @@ limit 1`,
       .getOne();
   }
 
-  public async getSession(steamId: string): Promise<GameSessionPlayerEntity | undefined> {
+  public async getSession(
+    steamId: string,
+  ): Promise<GameSessionPlayerEntity | undefined> {
     return await this.sessionPlayerRepo
       .createQueryBuilder("gssp")
       .innerJoinAndMapOne(
@@ -142,5 +144,54 @@ limit 1`,
         postGame: Dota_GameRulesState.POST_GAME,
       })
       .getOne();
+  }
+
+  async getStreak(
+    season: GameSeasonEntity,
+    steamId: string,
+    modes: MatchmakingMode[] | undefined,
+    beforeTimestamp: string,
+  ): Promise<number> {
+    const streak = await this.ds.query<
+      { signed_streak: number; is_win: boolean; last_match_time: string }[]
+    >(
+      `WITH ordered_matches AS (
+  SELECT
+    p."matchId",
+    p."playerId",
+    f."timestamp",
+    (p.team = f.winner) AS is_win
+  FROM player_in_match p
+  JOIN finished_match f ON f.id = p."matchId"
+  WHERE p."playerId" = $1
+    AND f."timestamp" < $2 AND f.matchmaking_mode in (0, 1) AND f.timestamp > $3
+), grouped_streaks AS (
+  SELECT
+    *,
+    ROW_NUMBER() OVER (ORDER BY "timestamp") -
+    ROW_NUMBER() OVER (PARTITION BY is_win ORDER BY "timestamp") AS streak_group
+  FROM ordered_matches
+), streaks AS (
+  SELECT
+    is_win,
+    COUNT(*) AS streak_length,
+    MAX("timestamp") AS last_match_time
+  FROM grouped_streaks
+  GROUP BY is_win, streak_group
+), latest_streak AS (
+  SELECT *
+  FROM streaks
+  ORDER BY last_match_time DESC
+  LIMIT 1
+)
+SELECT
+  CASE WHEN is_win THEN streak_length ELSE -streak_length END AS signed_streak,
+  is_win,
+  last_match_time
+FROM latest_streak;`,
+      [steamId, beforeTimestamp, season.startTimestamp],
+    );
+
+    return streak.length ? streak[0].signed_streak : 0;
   }
 }
