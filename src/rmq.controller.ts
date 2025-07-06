@@ -1,4 +1,4 @@
-import { Ctx, MessagePattern, Payload, RmqContext } from '@nestjs/microservices';
+import { Ctx, Payload, RmqContext } from '@nestjs/microservices';
 import { Controller, Logger } from '@nestjs/common';
 import { CommandBus, Constructor } from '@nestjs/cqrs';
 import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
@@ -33,10 +33,11 @@ export class RmqController {
   @RabbitSubscribe({
     exchange: "app.events",
     routingKey: SrcdsServerStartedEvent.name,
-    queue: "gameserver-queue",
+    queue: `gs-queue.${SrcdsServerStartedEvent.name}`,
     errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
   })
   async SrcdsServerStartedEvent(data: SrcdsServerStartedEvent) {
+    this.logger.log("SrcdsServerStarted", data)
     await this.processMessage(
       new AssignStartedServerCommand(data.server, data.info),
     );
@@ -45,7 +46,7 @@ export class RmqController {
   @RabbitSubscribe({
     exchange: "app.events",
     routingKey: GameResultsEvent.name,
-    queue: "gameserver-queue",
+    queue: `gs-queue.${GameResultsEvent.name}`,
     errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
   })
   async GameResultsEvent(
@@ -58,7 +59,7 @@ export class RmqController {
   @RabbitSubscribe({
     exchange: "app.events",
     routingKey: MatchFailedEvent.name,
-    queue: "gameserver-queue",
+    queue: `gs-queue.${MatchFailedEvent.name}`,
     errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
   })
   async MatchFailedEvent(data: MatchFailedEvent) {
@@ -68,7 +69,7 @@ export class RmqController {
   @RabbitSubscribe({
     exchange: "app.events",
     routingKey: PlayerAbandonedEvent.name,
-    queue: "gameserver-queue",
+    queue: `gs-queue.${PlayerAbandonedEvent.name}`,
     errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
   })
   async PlayerAbandonedEvent(data: PlayerAbandonedEvent) {
@@ -78,7 +79,7 @@ export class RmqController {
   @RabbitSubscribe({
     exchange: "app.events",
     routingKey: RoomReadyEvent.name,
-    queue: "gameserver-queue",
+    queue: `gs-queue.${RoomReadyEvent.name}`,
     errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
   })
   async RoomReadyEvent(
@@ -97,7 +98,7 @@ export class RmqController {
   @RabbitSubscribe({
     exchange: "app.events",
     routingKey: LobbyReadyEvent.name,
-    queue: "gameserver-queue",
+    queue: `gs-queue.${LobbyReadyEvent.name}`,
     errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
   })
   async LobbyReadyEvent(
@@ -119,10 +120,14 @@ export class RmqController {
     );
   }
 
-  @MessagePattern("RMQ" + PlayerDeclinedGameEvent.name)
+  @RabbitSubscribe({
+    exchange: "app.events",
+    routingKey: PlayerDeclinedGameEvent.name,
+    queue: `gs-queue.${PlayerDeclinedGameEvent.name}`,
+    errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
+  })
   async PlayerDeclinedGameEvent(
-    @Payload() data: PlayerDeclinedGameEvent,
-    @Ctx() context: RmqContext,
+    data: PlayerDeclinedGameEvent
   ) {
     await this.processMessage(
       new CreateCrimeLogCommand(
