@@ -72,6 +72,7 @@ import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
               type: 'topic',
             },
           ],
+          enableControllerDiscovery: true,
           uri: `amqp://${config.get('rabbitmq.user')}:${config.get('rabbitmq.password')}@${config.get('rabbitmq.host')}:${config.get('rabbitmq.port')}`,
         };
       },
