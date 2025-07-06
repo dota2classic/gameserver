@@ -2,7 +2,7 @@ import { otelSDK } from './tracer';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { CommandBus, EventBus, EventPublisher, ofType, QueryBus } from '@nestjs/cqrs';
-import { RmqOptions, Transport } from '@nestjs/microservices';
+import { Transport } from '@nestjs/microservices';
 import { inspect } from 'util';
 import { Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -51,48 +51,6 @@ async function bootstrap() {
       retryAttempts: Infinity,
       retryDelay: 5000,
       password: config.get("redis.password"),
-    },
-  });
-
-  app.connectMicroservice<RmqOptions>({
-    transport: Transport.RMQ,
-    options: {
-      urls: [
-        {
-          hostname: config.get<string>("rabbitmq.host"),
-          port: config.get<number>("rabbitmq.port"),
-          protocol: "amqp",
-          username: config.get<string>("rabbitmq.user"),
-          password: config.get<string>("rabbitmq.password"),
-        },
-      ],
-      queue: config.get<string>("rabbitmq.srcds_events"),
-      prefetchCount: 5,
-      noAck: false,
-      queueOptions: {
-        durable: true,
-      },
-    },
-  });
-
-  app.connectMicroservice<RmqOptions>({
-    transport: Transport.RMQ,
-    options: {
-      urls: [
-        {
-          hostname: config.get<string>("rabbitmq.host"),
-          port: config.get<number>("rabbitmq.port"),
-          protocol: "amqp",
-          username: config.get<string>("rabbitmq.user"),
-          password: config.get<string>("rabbitmq.password"),
-        },
-      ],
-      queue: config.get<string>("rabbitmq.matchmaker_events"),
-      prefetchCount: 5,
-      noAck: false,
-      queueOptions: {
-        durable: true,
-      },
     },
   });
 

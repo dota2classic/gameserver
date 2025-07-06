@@ -15,6 +15,7 @@ import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-
 import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
 import { Role } from 'gateway/shared-types/roles';
 import { ForumApi } from 'generated-api/forum';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
@@ -28,10 +29,10 @@ export class FindGameServerHandler
     private readonly matchEntityRepository: Repository<MatchEntity>,
     private readonly qbus: QueryBus,
     @Inject("QueryCore") private readonly redisEventQueue: ClientProxy,
-    @Inject("GSCommands") private readonly rmq: ClientProxy,
     @InjectRepository(MatchmakingModeMappingEntity)
     private readonly matchmakingModeMappingEntityRepository: Repository<MatchmakingModeMappingEntity>,
     private readonly forum: ForumApi,
+    private readonly amqpConnection: AmqpConnection,
   ) {}
 
   async execute(command: FindGameServerCommand) {
@@ -108,7 +109,7 @@ export class FindGameServerHandler
   }
 
   private async submitQueueTask(cmd: LaunchGameServerCommand) {
-    this.rmq.emit(LaunchGameServerCommand.name, cmd);
+    this.ebus.publish(cmd);
     this.logger.log("Submitted start server command to queue");
   }
 }

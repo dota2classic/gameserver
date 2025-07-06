@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PlayerReportEntity } from 'gameserver/model/player-report.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
@@ -9,7 +9,7 @@ import { PlayerReportStatusEntity } from 'gameserver/model/player-report-status.
 import { PlayerReportsDto } from 'rest/dto/player.dto';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { PlayerFeedbackCreatedEvent } from 'gateway/events/player-feedback-created.event';
-import { ClientProxy } from '@nestjs/microservices';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 @Injectable()
 export class PlayerFeedbackService {
@@ -24,7 +24,7 @@ export class PlayerFeedbackService {
     private readonly ds: DataSource,
     @InjectRepository(PlayerCrimeLogEntity)
     private readonly playerCrimeLogEntityRepository: Repository<PlayerCrimeLogEntity>,
-    @Inject("GSEvents") private readonly rmq: ClientProxy,
+    private readonly amqpConnection: AmqpConnection,
   ) {}
 
   public async getPlayerReportState(
@@ -86,10 +86,10 @@ export class PlayerFeedbackService {
       );
     });
 
-    await this.rmq.emit(
-      "RMQ" + PlayerFeedbackCreatedEvent.name,
+    this.ebus.publish(
       new PlayerFeedbackCreatedEvent(reported, aspect, matchId),
     );
+
     this.ebus.publish(new PlayerReportStateUpdatedEvent(reported));
 
     return this.playerReportStatusEntityRepository.findOneOrFail({

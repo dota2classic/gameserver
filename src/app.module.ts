@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppService } from 'app.service';
 import { CqrsModule } from '@nestjs/cqrs';
-import { ClientsModule, RedisOptions, RmqOptions, Transport } from '@nestjs/microservices';
+import { ClientsModule, RedisOptions, Transport } from '@nestjs/microservices';
 import { GameServerDomain } from 'gameserver';
 import { CoreController } from 'core.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -63,66 +63,12 @@ import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
       inject: [ConfigService],
     }),
     TypeOrmModule.forFeature(Entities),
-    ClientsModule.registerAsync([
-      {
-        name: "GSCommands",
-        useFactory(config: ConfigService): RmqOptions {
-          return {
-            transport: Transport.RMQ,
-            options: {
-              urls: [
-                {
-                  hostname: config.get<string>("rabbitmq.host"),
-                  port: config.get<number>("rabbitmq.port"),
-                  protocol: "amqp",
-                  username: config.get<string>("rabbitmq.user"),
-                  password: config.get<string>("rabbitmq.password"),
-                },
-              ],
-              queue: config.get<string>("rabbitmq.gameserver_commands"),
-              queueOptions: {
-                durable: true,
-              },
-              prefetchCount: 5,
-            },
-          };
-        },
-        inject: [ConfigService],
-        imports: [],
-      },
-      {
-        name: "GSEvents",
-        useFactory(config: ConfigService): RmqOptions {
-          return {
-            transport: Transport.RMQ,
-            options: {
-              urls: [
-                {
-                  hostname: config.get<string>("rabbitmq.host"),
-                  port: config.get<number>("rabbitmq.port"),
-                  protocol: "amqp",
-                  username: config.get<string>("rabbitmq.user"),
-                  password: config.get<string>("rabbitmq.password"),
-                },
-              ],
-              queue: config.get<string>("rabbitmq.gameserver_events"),
-              queueOptions: {
-                durable: true,
-              },
-              prefetchCount: 5,
-            },
-          };
-        },
-        inject: [ConfigService],
-        imports: [],
-      },
-    ]),
     RabbitMQModule.forRootAsync({
       useFactory(config: ConfigService): RabbitMQConfig {
         return {
           exchanges: [
             {
-              name: 'gameserver_exchange',
+              name: 'app.events',
               type: 'topic',
             },
           ],
