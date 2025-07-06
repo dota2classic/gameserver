@@ -38,6 +38,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { StartingMmrService } from 'gameserver/service/starting-mmr.service';
 import { MockStartingMmrService } from '@test/MockStartingMmrService';
 import { ForumApi } from 'generated-api/forum';
+import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import SpyInstance = jest.SpyInstance;
 
 export interface TestEnvironment {
@@ -100,7 +101,12 @@ export function useFullModule(): TestEnvironment {
       .withPassword("redispass")
       .start();
 
-    te.containers.rabbit = await new RabbitMQContainer().start();
+    te.containers.rabbit = await new RabbitMQContainer('rabbitmq:management')
+      .withEnvironment({
+        RABBITMQ_USER: "guest",
+        RABBITMQ_PASSWORD: "guest"
+      })
+      .start();
 
     te.queryMocks = {};
 
@@ -129,6 +135,21 @@ export function useFullModule(): TestEnvironment {
           ssl: false,
         }),
         TypeOrmModule.forFeature(Entities),
+        RabbitMQModule.forRootAsync({
+          useFactory(): RabbitMQConfig {
+            return {
+              exchanges: [
+                {
+                  name: "gameserver_exchange",
+                  type: "topic",
+                },
+              ],
+              uri: te.containers.rabbit.getAmqpUrl()
+            };
+          },
+          imports: [],
+          inject: [],
+        }),
         ClientsModule.registerAsync([
           {
             name: "QueryCore",
@@ -157,7 +178,7 @@ export function useFullModule(): TestEnvironment {
                       port: te.containers.rabbit.getFirstMappedPort(),
                       protocol: "amqp",
                       // username: te.containers.rabbit.getName(),
-                      // password: te.containers.rabbit.get(),
+                      // password: te.containers.rabbit.pas(),
                     },
                   ],
                   queue: "gameserver_commands",
@@ -196,7 +217,7 @@ export function useFullModule(): TestEnvironment {
             },
             inject: [],
             imports: [],
-          }
+          },
         ]),
       ],
       providers: [
@@ -214,7 +235,7 @@ export function useFullModule(): TestEnvironment {
         ...GameServerDomain,
         {
           provide: ForumApi,
-          useValue: jest.fn()
+          useValue: jest.fn(),
         },
         {
           provide: StartingMmrService,
