@@ -74,7 +74,6 @@ export class AppService implements OnApplicationBootstrap {
       BanSystemEvent,
       PlayerReportBanCreatedEvent,
       AchievementCompleteEvent,
-      PlayerSmurfDetectedEvent,
       MatchRecordedEvent,
       RunRconCommand,
     ];
@@ -89,6 +88,7 @@ export class AppService implements OnApplicationBootstrap {
           PlayerNotLoadedEvent,
           PlayerFeedbackCreatedEvent,
           LaunchGameServerCommand,
+          PlayerSmurfDetectedEvent,
         ),
       )
       .subscribe((msg) =>
