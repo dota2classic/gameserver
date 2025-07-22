@@ -7,7 +7,6 @@ import { PlayerBanHammeredEvent } from 'gateway/events/bans/player-ban-hammered.
 import { ServerSessionSyncEvent } from 'gateway/events/gs/server-session-sync.event';
 import { TournamentGameReadyEvent } from 'gateway/events/tournament/tournament-game-ready.event';
 import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event';
-import { StartFakeMatchEvent } from 'gateway/events/start-fake-match.event';
 import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
 import { ConfigService } from '@nestjs/config';
 import { PlayerConnectedEvent } from 'gateway/events/srcds/player-connected.event';
@@ -26,25 +25,10 @@ export class CoreController {
     if (this.config.get("prod")) this.ebus.publish(buff);
   }
 
-  // @EventPattern(SrcdsServerStartedEvent.name)
-  // async SrcdsServerStartedEvent(data: SrcdsServerStartedEvent) {
-  //   this.event(SrcdsServerStartedEvent, data);
-  // }
-
   @EventPattern(TournamentGameReadyEvent.name)
   async TournamentGameReadyEvent(data: TournamentGameReadyEvent) {
     this.event(TournamentGameReadyEvent, data);
   }
-
-  // @EventPattern(GameServerStartedEvent.name)
-  // async GameServerStartedEvent(data: GameServerStartedEvent) {
-  //   this.event(GameServerStartedEvent, data);
-  // }
-
-  // @EventPattern(GameServerNotStartedEvent.name)
-  // async GameServerNotStartedEvent(data: GameServerNotStartedEvent) {
-  //   this.event(GameServerNotStartedEvent, data);
-  // }
 
   @EventPattern(GameServerStoppedEvent.name)
   async GameServerStoppedEvent(data: GameServerStoppedEvent) {
@@ -61,24 +45,15 @@ export class CoreController {
     this.event(GameServerDiscoveredEvent, data);
   }
 
+  // TODO: convert to endpoint
   @EventPattern(PlayerBanHammeredEvent.name)
   async PlayerBanHammeredEvent(data: PlayerBanHammeredEvent) {
     this.event(PlayerBanHammeredEvent, data);
   }
 
-  // @EventPattern(PlayerDeclinedGameEvent.name)
-  // async PlayerDeclinedGameEvent(data: PlayerDeclinedGameEvent) {
-  //   this.event(PlayerDeclinedGameEvent, data);
-  // }
-
   @EventPattern(LiveMatchUpdateEvent.name)
   async LiveMatchUpdateEvent(data: LiveMatchUpdateEvent) {
     this.event(LiveMatchUpdateEvent, data);
-  }
-
-  @EventPattern(StartFakeMatchEvent.name)
-  async StartFakeMatchEvent(data: StartFakeMatchEvent) {
-    this.event(StartFakeMatchEvent, data);
   }
 
   @EventPattern(ServerStatusEvent.name)
