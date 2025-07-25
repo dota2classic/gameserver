@@ -113,7 +113,7 @@ export class MetricsService {
    FROM prom),
      stats2 AS
   (SELECT 1 - abandon_ratio AS anti_abandon_ratio,
-          1 - abs(median_game_duration - 2400) / (max_game_duration - min_game_duration) AS duration_factor,
+          1 - abs(median_game_duration - 2400) / greatest(1, max_game_duration - min_game_duration) AS duration_factor,
           1 - stomp_ratio AS stomp_factor
    FROM stats
    INNER JOIN stomps ON TRUE)

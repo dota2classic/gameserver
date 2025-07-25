@@ -61,7 +61,7 @@ GROUP BY "pim"."hero", s.cnt`,
                       (pim.team = m.winner)::int as win
                from player_in_match pim
                         inner join finished_match m on m.id = pim."matchId"
-               where pim.hero = $1 and fm.matchmaking_mode in (0, 1)),
+               where pim.hero = $1 and fm.matchmaking_mode in (0, 1)
      winrates as (
          select i.item_id as item, sum(g.win) as wins , avg(g.win) as winrate, count(g) as game_count
          from item_view i,
