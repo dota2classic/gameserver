@@ -18,7 +18,6 @@ import { ConfigService } from '@nestjs/config';
 import { GameResultsEvent, PlayerInMatchDTO } from 'gateway/events/gs/game-results.event';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { HeroMap } from 'util/items';
-import { SaveGameResultsCommand } from 'gameserver/command/SaveGameResults/save-game-results.command';
 import { SteamIds } from 'gameserver/steamids';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { MetricsService } from 'metrics/metrics.service';
@@ -26,6 +25,7 @@ import { MmrBucketView } from 'gameserver/model/mmr-bucket.view';
 import { wait } from 'util/wait';
 import { PlayerFeedbackService } from 'gameserver/service/player-feedback.service';
 import { PlayerAspect } from 'gateway/shared-types/player-aspect';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 export interface Player {
   steam64: string;
@@ -80,6 +80,7 @@ export class GameServerService implements OnApplicationBootstrap {
     private readonly metrics: MetricsService,
     private readonly config: ConfigService,
     private readonly reportService: PlayerFeedbackService,
+    private readonly amqpConnection: AmqpConnection
   ) {}
 
   @Cron(CronExpression.EVERY_5_MINUTES)
@@ -180,9 +181,14 @@ export class GameServerService implements OnApplicationBootstrap {
       ),
     };
 
-    await this.cbus.execute(new SaveGameResultsCommand(g));
+    await this.amqpConnection.publish(
+      'app.events',
+      GameResultsEvent.name,
+      g
+    );
 
-    await wait(1000);
+
+    await wait(2000);
     // Do some reports
     for (let player of g.players) {
       const reported = shuffle(
