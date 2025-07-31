@@ -63,6 +63,7 @@ export class FindGameServerHandler
   ): Promise<LaunchGameServerCommand> {
     const players: FullMatchPlayer[] = [];
 
+
     // TODO: i dont like it and want to move username resolving into operator
     const resolves = matchInfo.players.map(async (t) => {
       const res = await this.qbus.execute<
