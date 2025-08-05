@@ -3,6 +3,9 @@ import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 
 @Entity("version_player")
 export class VersionPlayerEntity {
+
+  public static STARTING_MMR = 1500;
+
   @PrimaryColumn({ name: "steam_id" })
   steamId: string;
 
@@ -19,7 +22,6 @@ export class VersionPlayerEntity {
   @PrimaryColumn({ name: "season_id", default: 1 })
   seasonId: number;
 
-  public static STARTING_MMR = 1500;
 
 
   constructor(steamId: string, mmr: number, seasonId: number) {
