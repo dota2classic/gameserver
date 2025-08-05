@@ -20,6 +20,7 @@ FROM
       FROM unnest(array[item0, item1, item2, item3, item4, item5]) AS unnest_item) AS item_unnested) pim_items
 JOIN item_view i ON i.item_id = pim_items.item_id
 JOIN finished_match fm ON fm.id = pim_items."matchId"
+WHERE fm.matchmaking_mode in (0, 1)
 GROUP BY pim_items.hero,
          i.item_id
 `,
