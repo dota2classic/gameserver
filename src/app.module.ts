@@ -15,7 +15,6 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { MetaController } from 'rest/meta/meta.controller';
 import { MetaService } from 'rest/meta/meta.service';
 import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
-import { outerQuery } from 'gateway/util/outerQuery';
 import { CacheModule } from '@nestjs/cache-manager';
 import { MatchService } from 'rest/match/match.service';
 import { MatchMapper } from 'rest/match/match.mapper';
@@ -36,6 +35,7 @@ import { MetricsModule } from 'metrics/metrics.module';
 import { DodgeService } from 'rest/service/dodge.service';
 import { Configuration, ForumApi } from 'generated-api/forum';
 import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
+import { outerQuery } from 'util/outerQuery';
 
 @Module({
   imports: [
