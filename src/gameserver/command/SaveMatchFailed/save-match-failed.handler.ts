@@ -6,6 +6,7 @@ import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { Repository } from 'typeorm';
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
+import { PlayerId } from 'gateway/shared-types/player-id';
 
 @CommandHandler(SaveMatchFailedCommand)
 export class SaveMatchFailedHandler
@@ -34,13 +35,12 @@ export class SaveMatchFailedHandler
     //
     this.logger.log(
       `Players failed to load into match ${match.id}: ${event.failedPlayers
-        .map(it => it.value)
         .join(',')}`,
     );
 
     this.ebus.publishAll(
       event.failedPlayers.map(
-        pl => new PlayerNotLoadedEvent(pl, event.matchId, match.matchInfoJson.lobbyType),
+        pl => new PlayerNotLoadedEvent(new PlayerId(pl), event.matchId, match.matchInfoJson.lobbyType),
       ),
     );
   }
