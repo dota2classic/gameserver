@@ -8,6 +8,7 @@ import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-
 import { Repository } from 'typeorm';
 import { NestApplicationContext } from '@nestjs/core/nest-application-context';
 import { Dota_Map } from 'gateway/shared-types/dota-map';
+import { DotaPatch } from 'gateway/constants/patch';
 import Mock = jest.Mock;
 
 export const randomUser = () => {
@@ -44,6 +45,7 @@ export function createGameMode(
     dotaMap: map,
     enabled,
     fillBots: false,
-    enableCheats: false
+    enableCheats: false,
+    patch: DotaPatch.DOTA_684
   } satisfies MatchmakingModeMappingEntity);
 }

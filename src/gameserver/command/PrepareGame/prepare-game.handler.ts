@@ -9,6 +9,7 @@ import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Dota2Version } from 'gateway/shared-types/dota2version';
+import { DotaPatch } from 'gateway/constants/patch';
 
 @CommandHandler(PrepareGameCommand)
 export class PrepareGameHandler implements ICommandHandler<PrepareGameCommand> {
@@ -33,7 +34,8 @@ export class PrepareGameHandler implements ICommandHandler<PrepareGameCommand> {
         command.roomId,
         command.players,
         mapping?.enableCheats || false,
-        mapping?.fillBots || false
+        mapping?.fillBots || false,
+        mapping?.patch || DotaPatch.DOTA_684,
       ),
     );
   }

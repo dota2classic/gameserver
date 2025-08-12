@@ -3,6 +3,7 @@ import { Dota2Version } from 'gateway/shared-types/dota2version';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { Dota_Map } from 'gateway/shared-types/dota-map';
 import { MatchPlayer } from 'gateway/events/room-ready.event';
+import { DotaPatch } from 'gateway/constants/patch';
 
 export class GamePreparedEvent {
   constructor(
@@ -13,6 +14,7 @@ export class GamePreparedEvent {
     public readonly roomId: string,
     public readonly players: MatchPlayer[],
     public readonly enableCheats: boolean,
-    public readonly fillBots: boolean
+    public readonly fillBots: boolean,
+    public readonly patch: DotaPatch
   ) {}
 }

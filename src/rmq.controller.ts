@@ -115,6 +115,7 @@ export class RmqController {
           data.players,
           data.enableCheats,
           data.fillBots,
+          data.patch
         ),
       ),
     );

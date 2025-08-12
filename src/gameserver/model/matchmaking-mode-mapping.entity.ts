@@ -2,6 +2,7 @@ import { Column, Entity, PrimaryColumn } from 'typeorm';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { Dota_Map } from 'gateway/shared-types/dota-map';
+import { DotaPatch } from 'gateway/constants/patch';
 
 @Entity("matchmaking_mode_mapping_entity")
 export class MatchmakingModeMappingEntity {
@@ -19,6 +20,14 @@ export class MatchmakingModeMappingEntity {
 
   @Column({ name: "fill_bots", default: false })
   public fillBots: boolean;
+
+  @Column({
+    name: "patch",
+    default: DotaPatch.DOTA_684,
+    enum: DotaPatch,
+    type: "enum",
+  })
+  public patch: DotaPatch;
 
   @Column({ name: "enable_cheats", default: false })
   public enableCheats: boolean;
