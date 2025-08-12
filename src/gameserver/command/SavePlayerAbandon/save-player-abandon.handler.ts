@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 import { MetricsService } from 'metrics/metrics.service';
 import { LeaveGameSessionCommand } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.command';
+import { Dota_GameRulesState } from 'gateway/shared-types/dota-game-rules-state';
 
 @CommandHandler(SavePlayerAbandonCommand)
 export class SavePlayerAbandonHandler
@@ -27,7 +28,6 @@ export class SavePlayerAbandonHandler
     // Let them abandon ffs
     this.logger.log("PlayerAbandonEvent", { index: event.abandonIndex });
 
-
     await this.cbus.execute(
       new LeaveGameSessionCommand(event.playerId.value, event.matchId, false),
     );
@@ -37,9 +37,24 @@ export class SavePlayerAbandonHandler
       return;
     }
 
+    if (event.gameState === Dota_GameRulesState.POST_GAME) {
+      this.logger.log(
+        "Player abandoned after game finished, not creating a crime",
+      );
+      return;
+    }
+
+    let banReason: BanReason;
+
+    if (event.gameState === Dota_GameRulesState.WAIT_FOR_PLAYERS_TO_LOAD) {
+      banReason = BanReason.LOAD_FAILURE;
+    } else {
+      banReason = BanReason.ABANDON;
+    }
+
     const crime = new PlayerCrimeLogEntity(
       event.playerId.value,
-      BanReason.ABANDON,
+      banReason,
       event.mode,
       event.matchId,
     );
