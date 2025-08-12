@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { Dota_Map } from 'gateway/shared-types/dota-map';
+import { DotaPatch } from 'gateway/constants/patch';
 
 @Injectable()
 export class InfoService {
@@ -20,6 +21,7 @@ export class InfoService {
     enabled: boolean,
     enableCheats: boolean,
     fillBots: boolean,
+    patch: DotaPatch
   ) {
     await this.matchmakingModeMappingEntityRepository.upsert(
       {
@@ -29,6 +31,7 @@ export class InfoService {
         enabled,
         enableCheats,
         fillBots,
+        patch
       },
       ["lobbyType"],
     );

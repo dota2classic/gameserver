@@ -80,7 +80,8 @@ export class InfoController {
       dto.dota_map,
       dto.enabled,
       dto.enableCheats,
-      dto.fillBots
+      dto.fillBots,
+      dto.patch
     );
   }
 

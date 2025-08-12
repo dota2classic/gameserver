@@ -3,6 +3,7 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { ApiProperty } from '@nestjs/swagger';
 import { Dota_Map } from 'gateway/shared-types/dota-map';
+import { DotaPatch } from 'gateway/constants/patch';
 
 export class GameServerDto {
   url: string;
@@ -35,6 +36,9 @@ export class MatchmakingModeInfoDto {
   @ApiProperty({ enum: Dota_Map, enumName: "Dota_Map" })
   dota_map: Dota_Map;
 
+  @ApiProperty({ enum: DotaPatch, enumName: "DotaPatch" })
+  patch: DotaPatch;
+
   enabled: boolean;
   fillBots: boolean;
   enableCheats: boolean;
@@ -50,6 +54,10 @@ export class UpdateGamemodeDto {
 
   @ApiProperty({ enum: Dota_Map, enumName: "Dota_Map" })
   dota_map: Dota_Map;
+
+  @ApiProperty({ enum: DotaPatch, enumName: "DotaPatch" })
+  patch: DotaPatch;
+
 }
 
 export class GameSeasonDto {
