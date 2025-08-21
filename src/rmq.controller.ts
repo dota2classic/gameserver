@@ -20,6 +20,7 @@ import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-ga
 import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
 import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 import { MessageHandlerErrorBehavior } from '@golevelup/nestjs-rabbitmq/lib/amqp/errorBehaviors';
+import { Region } from 'gateway/shared-types/region';
 
 @Controller()
 export class RmqController {
@@ -91,6 +92,7 @@ export class RmqController {
         data.roomId,
         data.players,
         data.version,
+        Region.RU_MOSCOW // FIXME MAKE COME FROM MATCHMAKER
       ),
     );
   }
@@ -115,7 +117,8 @@ export class RmqController {
           data.players,
           data.enableCheats,
           data.fillBots,
-          data.patch
+          data.patch,
+          Region.RU_MOSCOW // TODO MAKE COME FROM LOBBY DATA
         ),
       ),
     );

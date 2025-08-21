@@ -106,7 +106,8 @@ export class FindGameServerHandler
       matchInfo.fillBots,
       matchInfo.enableCheats,
       players,
-      matchInfo.patch
+      matchInfo.patch,
+      matchInfo.region
     );
   }
 

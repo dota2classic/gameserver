@@ -23,7 +23,6 @@ import { ServerStatusHandler } from 'gameserver/event-handler/server-status.hand
 import { ProcessAchievementsHandler } from 'gameserver/command/ProcessAchievements/process-achievements.handler';
 import { AchievementService } from 'gameserver/achievement.service';
 import { PrepareGameHandler } from 'gameserver/command/PrepareGame/prepare-game.handler';
-import { LobbyReadyHandler } from 'gameserver/event-handler/lobby-ready.handler';
 import { PlayerConnectedHandler } from 'gameserver/event-handler/player-connected.handler';
 import { SaveGameResultsHandler } from 'gameserver/command/SaveGameResults/save-game-results.handler';
 import { SaveMatchFailedHandler } from 'gameserver/command/SaveMatchFailed/save-match-failed.handler';
@@ -66,7 +65,6 @@ const EventHandlers = [
   MatchFinishedHandler,
 
   PlayerBanHammeredHandler,
-  LobbyReadyHandler,
 
   ServerStatusHandler,
   PlayerNotLoadedHandler,

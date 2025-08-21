@@ -36,6 +36,7 @@ export class PrepareGameHandler implements ICommandHandler<PrepareGameCommand> {
         mapping?.enableCheats || false,
         mapping?.fillBots || false,
         mapping?.patch || DotaPatch.DOTA_684,
+        command.region
       ),
     );
   }
