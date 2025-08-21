@@ -87,13 +87,23 @@ export class AppService implements OnApplicationBootstrap {
         ofType<any, any>(
           PlayerNotLoadedEvent,
           PlayerFeedbackCreatedEvent,
-          LaunchGameServerCommand,
           PlayerSmurfDetectedEvent,
         ),
       )
       .subscribe((msg) =>
         this.amqpConnection
           .publish("app.events", msg.constructor.name, msg)
+          .then(() =>
+            this.logger.log(`Published RMQ event ${msg.constructor.name}`),
+          ),
+      );
+
+
+    this.ebus
+      .pipe(ofType(LaunchGameServerCommand))
+      .subscribe((msg: LaunchGameServerCommand) =>
+        this.amqpConnection
+          .publish("app.events", `${LaunchGameServerCommand.name}.${msg.region}`, msg)
           .then(() =>
             this.logger.log(`Published RMQ event ${msg.constructor.name}`),
           ),
