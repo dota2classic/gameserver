@@ -114,7 +114,7 @@ async function bootstrap() {
   //
   // console.log(await r1());
 
-  // for (let i = 0; i < 1; i++) {
+  // for (let i = 0; i < 5; i++) {
   //   await app.get(GameServerService).generateFakeMatch("116514945");
   // }
 
