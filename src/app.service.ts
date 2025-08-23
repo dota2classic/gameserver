@@ -23,6 +23,7 @@ import { RunRconCommand } from 'gateway/commands/RunRcon/run-rcon.command';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { PlayerFeedbackCreatedEvent } from 'gateway/events/player-feedback-created.event';
 import { LaunchGameServerCommand } from 'gateway/commands/LaunchGameServer/launch-game-server.command';
+import { PlayerFinishedMatchEvent } from 'gateway/events/gs/player-finished-match.event';
 
 @Injectable()
 export class AppService implements OnApplicationBootstrap {
@@ -88,6 +89,7 @@ export class AppService implements OnApplicationBootstrap {
           PlayerNotLoadedEvent,
           PlayerFeedbackCreatedEvent,
           PlayerSmurfDetectedEvent,
+          PlayerFinishedMatchEvent
         ),
       )
       .subscribe((msg) =>

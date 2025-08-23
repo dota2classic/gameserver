@@ -9,6 +9,7 @@ import { ProcessAchievementsCommand } from 'gameserver/command/ProcessAchievemen
 import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
 import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
 import { MatchRecordedEvent } from 'gateway/events/gs/match-recorded.event';
+import { CheckFirstGameCommand } from 'gameserver/command/CheckFirstGame/check-first-game.command';
 
 @Injectable()
 export class GameserverSaga {
@@ -56,6 +57,18 @@ export class GameserverSaga {
       }),
     );
   };
+
+
+  @Saga()
+  checkFirstGame = (events$: Observable<any>): Observable<ICommand> => {
+    return events$.pipe(
+      ofType(MatchRecordedEvent),
+      map((e: MatchRecordedEvent) => {
+        return new CheckFirstGameCommand(e.matchId, e.type, e.players.map(t => t.steam_id));
+      }),
+    );
+  };
+
 
   //
   // @Saga()

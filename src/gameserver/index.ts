@@ -36,6 +36,7 @@ import { AssignStartedServerHandler } from 'gameserver/command/AssignStartedServ
 import { LeaveGameSessionHandler } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.handler';
 import { CreateCrimeLogHandler } from 'gameserver/command/CreateCrimeLog/create-crime-log.handler';
 import { StartingMmrService } from 'gameserver/service/starting-mmr.service';
+import { CheckFirstGameHandler } from 'gameserver/command/CheckFirstGame/check-first-game.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -49,7 +50,8 @@ const CommandHandlers = [
   SavePlayerAbandonHandler,
   AssignStartedServerHandler,
   LeaveGameSessionHandler,
-  CreateCrimeLogHandler
+  CreateCrimeLogHandler,
+  CheckFirstGameHandler
 ];
 const EventHandlers = [
   PlayerConnectedHandler,

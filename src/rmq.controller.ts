@@ -1,4 +1,3 @@
-import { Ctx, Payload, RmqContext } from '@nestjs/microservices';
 import { Controller, Logger } from '@nestjs/common';
 import { CommandBus, Constructor } from '@nestjs/cqrs';
 import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
@@ -50,10 +49,7 @@ export class RmqController {
     queue: `gs-queue.${GameResultsEvent.name}`,
     errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
   })
-  async GameResultsEvent(
-    @Payload() data: GameResultsEvent,
-    @Ctx() context: RmqContext,
-  ) {
+  async GameResultsEvent(data: GameResultsEvent) {
     await this.processMessage(new SaveGameResultsCommand(data));
   }
 
