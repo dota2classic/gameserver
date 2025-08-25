@@ -8,6 +8,7 @@ import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { TestEnvironment } from '@test/useFullModule';
 import { LessThanOrEqual } from 'typeorm';
 import { DotaPatch } from 'gateway/constants/patch';
+import { Region } from 'gateway/shared-types/region';
 
 export async function createSeason(te: TestEnvironment) {
   const seasonRep = te.repo(GameSeasonEntity);

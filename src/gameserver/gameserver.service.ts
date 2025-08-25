@@ -26,6 +26,8 @@ import { wait } from 'util/wait';
 import { PlayerFeedbackService } from 'gameserver/service/player-feedback.service';
 import { PlayerAspect } from 'gateway/shared-types/player-aspect';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
+import { Region } from 'gateway/shared-types/region';
+import { DotaPatch } from 'gateway/constants/patch';
 
 export interface Player {
   steam64: string;
@@ -179,6 +181,8 @@ export class GameServerService implements OnApplicationBootstrap {
       players: slice.map(({ steam_id }, idx) =>
         this.mockPim(steam_id, idx < 5 ? DotaTeam.RADIANT : DotaTeam.DIRE),
       ),
+      region: Region.RU_MOSCOW,
+      patch: DotaPatch.DOTA_684
     };
 
     await this.amqpConnection.publish(
