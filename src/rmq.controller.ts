@@ -114,7 +114,7 @@ export class RmqController {
           data.enableCheats,
           data.fillBots,
           data.patch,
-          Region.RU_MOSCOW // TODO MAKE COME FROM LOBBY DATA
+          data.region
         ),
       ),
     );
