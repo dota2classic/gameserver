@@ -63,7 +63,9 @@ export class SaveGameResultsHandler
           modeOverride,
           event.duration,
           event.server,
-          season.id
+          season.id,
+          event.patch,
+          event.region
         );
 
         m.externalMatchId = event.externalMatchId;
