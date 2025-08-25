@@ -65,7 +65,7 @@ export default class FinishedMatchEntity {
   @Column({
     name: "region",
     default: Region.RU_MOSCOW,
-    enum: DotaPatch,
+    enum: Region,
     type: "enum",
   })
   public region: Region;

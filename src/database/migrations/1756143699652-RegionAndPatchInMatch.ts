@@ -1,12 +1,12 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class MatchRegion1756137342648 implements MigrationInterface {
-    name = 'MatchRegion1756137342648'
+export class RegionAndPatchInMatch1756143699652 implements MigrationInterface {
+    name = 'RegionAndPatchInMatch1756143699652'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TYPE "public"."finished_match_patch_enum" AS ENUM('DOTA_684', 'DOTA_684_TURBO')`);
         await queryRunner.query(`ALTER TABLE "finished_match" ADD "patch" "public"."finished_match_patch_enum" NOT NULL DEFAULT 'DOTA_684'`);
-        await queryRunner.query(`CREATE TYPE "public"."finished_match_region_enum" AS ENUM('DOTA_684', 'DOTA_684_TURBO')`);
+        await queryRunner.query(`CREATE TYPE "public"."finished_match_region_enum" AS ENUM('ru_moscow', 'ru_novosibirsk', 'eu_czech')`);
         await queryRunner.query(`ALTER TABLE "finished_match" ADD "region" "public"."finished_match_region_enum" NOT NULL DEFAULT 'ru_moscow'`);
     }
 
