@@ -20,6 +20,8 @@ export class MatchMapper {
     winner: match.winner,
     duration: match.duration,
     timestamp: match.timestamp,
+    towerStatus: match.towerStatus,
+    barrackStatus: match.barrackStatus,
   });
 
   public mapPlayerInMatch = (it: PlayerInMatchEntity): PlayerInMatchDto => ({
@@ -54,6 +56,7 @@ export class MatchMapper {
 
     mmr: it.mmrChange?.length > 0 ? this.mapMmr(it.mmrChange[0]) : null,
     abandoned: it.abandoned,
+    bear: it.bear
   });
 
   public mapMmr = (mmr: MmrChangeLogEntity): MmrChangeDto => ({

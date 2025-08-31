@@ -82,7 +82,7 @@ export class GameServerService implements OnApplicationBootstrap {
     private readonly metrics: MetricsService,
     private readonly config: ConfigService,
     private readonly reportService: PlayerFeedbackService,
-    private readonly amqpConnection: AmqpConnection
+    private readonly amqpConnection: AmqpConnection,
   ) {}
 
   @Cron(CronExpression.EVERY_5_MINUTES)
@@ -182,15 +182,12 @@ export class GameServerService implements OnApplicationBootstrap {
         this.mockPim(steam_id, idx < 5 ? DotaTeam.RADIANT : DotaTeam.DIRE),
       ),
       region: Region.RU_MOSCOW,
-      patch: DotaPatch.DOTA_684
+      patch: DotaPatch.DOTA_684,
+      barracksStatus: [12, 15],
+      towerStatus: [22, 15],
     };
 
-    await this.amqpConnection.publish(
-      'app.events',
-      GameResultsEvent.name,
-      g
-    );
-
+    await this.amqpConnection.publish("app.events", GameResultsEvent.name, g);
 
     await wait(2000);
     // Do some reports
@@ -256,6 +253,9 @@ export class GameServerService implements OnApplicationBootstrap {
       towerDamage: randint(10_000),
       heroHealing: randint(10_000),
       abandoned: Math.random() > 0.98,
+      supportGold: randint(1000),
+      supportAbilityValue: randint(1000),
+      misses: randint(3),
       hero:
         "npc_dota_hero_" +
         HeroMap[Math.floor(Math.random() * HeroMap.length)].name,

@@ -73,6 +73,23 @@ export default class FinishedMatchEntity {
   @Column({ name: "season_id", default: 1 })
   seasonId: number;
 
+
+  @Column({
+    name: "tower_status",
+    array: true,
+    type: "int",
+    default: [0, 0]
+  })
+  towerStatus: number[]
+
+  @Column({
+    name: "barrack_status",
+    array: true,
+    type: "int",
+    default: [0, 0]
+  })
+  barrackStatus: number[]
+
   constructor(
     id: number | undefined,
     winner: number,
@@ -84,6 +101,8 @@ export default class FinishedMatchEntity {
     seasonId: number,
     patch: DotaPatch,
     region: Region,
+    barrackStatus: number[] = [0, 0],
+    towerStatus: number[] = [0, 0]
   ) {
     this.id = id;
     this.winner = winner;
@@ -95,5 +114,7 @@ export default class FinishedMatchEntity {
     this.seasonId = seasonId;
     this.patch = patch;
     this.region = region;
+    this.barrackStatus = barrackStatus;
+    this.towerStatus = towerStatus;
   }
 }

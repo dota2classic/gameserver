@@ -17,6 +17,8 @@ export class MatchDto {
   winner: number;
   duration: number;
   timestamp: string;
+  towerStatus: number[]
+  barrackStatus: number[]
 }
 
 export class MmrChangeDto {
@@ -67,6 +69,8 @@ export class PlayerInMatchDto {
   item5: number;
 
   abandoned: boolean;
+
+  bear?: number[]
 }
 
 export class MatchPageDto extends Page<MatchDto> {

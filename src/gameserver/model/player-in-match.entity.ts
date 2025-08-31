@@ -2,110 +2,138 @@ import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryColumn,
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 
-@Entity('player_in_match')
-@Index('player_match_index', ['matchId'])
+@Entity("player_in_match")
+@Index("player_match_index", ["matchId"])
 export default class PlayerInMatchEntity {
   /**
    * PlayerId
    */
   @PrimaryColumn({
-    name: 'playerId',
-    primaryKeyConstraintName: 'PK_pim_player_match_idx',
-    primary: true
+    name: "playerId",
+    primaryKeyConstraintName: "PK_pim_player_match_idx",
+    primary: true,
   })
   playerId!: string;
 
   @PrimaryColumn({
-    name: 'matchId',
-    primaryKeyConstraintName: 'PK_pim_player_match_idx',
-    primary: true
+    name: "matchId",
+    primaryKeyConstraintName: "PK_pim_player_match_idx",
+    primary: true,
   })
   matchId: number;
 
-  @ManyToOne(
-    type => FinishedMatchEntity,
-    match => match.players,
-  )
+  @ManyToOne((type) => FinishedMatchEntity, (match) => match.players)
   @JoinColumn({
-    foreignKeyConstraintName: 'FK_match_player',
-    name: 'matchId',
+    foreignKeyConstraintName: "FK_match_player",
+    name: "matchId",
   })
   match!: Relation<FinishedMatchEntity>;
 
-  @Column('int')
+  @Column("int")
   team!: number;
 
-  @Column('int')
+  @Column("int")
   kills!: number;
 
-  @Column('int')
+  @Column("int")
   deaths!: number;
 
-  @Column('int')
+  @Column("int")
   assists!: number;
 
-  @Column('int')
+  @Column("int")
   level!: number;
 
-  @Column('int', { default: 0 })
+  @Column("int", { default: 0 })
   gpm: number = 0;
 
-  @Column('int', { default: 0 })
+  @Column("int", { default: 0 })
   xpm: number = 0;
 
-  @Column('int', { default: 0 })
+  @Column("int", { default: 0 })
   hero_damage: number = 0;
 
-  @Column('int', { default: 0 })
+  @Column("int", { default: 0 })
   tower_damage: number = 0;
 
-  @Column('int', { default: 0 })
+  @Column("int", { default: 0 })
   hero_healing: number = 0;
 
   @Column({ default: false })
   abandoned: boolean;
 
-  @Column('int', { default: 0 })
+  @Column("int", { default: 0 })
   last_hits: number = 0;
 
-  @Column('int', { default: 0 })
+  @Column("int", { default: 0 })
   denies: number = 0;
 
-  @Column('int', { default: 0 })
+  @Column("int", { default: 0 })
   gold: number = 0;
 
-  @Column('varchar')
-  @Index('player_in_match_hero_hash_index', { synchronize: false })
+  @Column("varchar")
+  @Index("player_in_match_hero_hash_index", { synchronize: false })
   hero!: string;
 
-  @Column('smallint', { default: 0 })
+  @Column("smallint", { default: 0 })
   item0: number;
 
-  @Column('smallint', { default: 0 })
+  @Column("smallint", { default: 0 })
   item1: number;
 
-  @Column('smallint', { default: 0 })
+  @Column("smallint", { default: 0 })
   item2: number;
 
-  @Column('smallint', { default: 0 })
+  @Column("smallint", { default: 0 })
   item3: number;
 
-  @Column('smallint', { default: 0 })
+  @Column("smallint", { default: 0 })
   item4: number;
 
-  @Column('smallint', { default: 0 })
+  @Column("smallint", { default: 0 })
   item5: number;
 
-  @OneToMany(type => MmrChangeLogEntity, t => t.pim, { eager: true })
-  mmrChange: MmrChangeLogEntity[]
+  @Column({
+    name: "bear",
+    type: "int",
+    array: true,
+    default: null,
+    nullable: true,
+  })
+  bear?: number[];
+
+  @Column({
+    name: "support_gold",
+    type: "int",
+    default: 0
+  })
+  supportGold: number = 0;
+
+  @Column({
+    name: "support_ability_value",
+    type: "int",
+    default: 0
+  })
+  supportAbilityValue: number = 0;
+
+  @Column({
+    name: "misses",
+    type: "int",
+    default: 0
+  })
+  misses: number = 0;
+
+
+
+
+  @OneToMany((type) => MmrChangeLogEntity, (t) => t.pim, { eager: true })
+  mmrChange: MmrChangeLogEntity[];
 
   @Column({
     name: "party_index",
-    nullable: true
+    nullable: true,
   })
-  partyIndex?: number
-
-
+  partyIndex?: number;
 }
 
 /**
