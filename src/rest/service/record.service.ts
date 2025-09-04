@@ -4,7 +4,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 import { PlayerDailyRecord } from 'rest/dto/record.dto';
 
 export enum PlayerRecordType {
@@ -122,16 +121,16 @@ export class RecordService {
   }
 
   public async dailyPlayerRecords() {
-    return this.datasource
-      .createQueryBuilder()
-      .select('"playerId"', "steam_id")
-      .addSelect("sum(mcle.change)", "mmr_change")
-      .addSelect("count(*)", "games")
-      .addSelect("count(*) filter (where mcle.winner)", "wins")
-      .addSelect("count(*) filter (where not mcle.winner)", "loss")
-      .from<PlayerDailyRecord>(MmrChangeLogEntity, "mcle")
-      .groupBy("steam_id")
-      .getMany();
+    return this.datasource.query<PlayerDailyRecord[]>(`
+SELECT "playerId" AS steam_id,
+       sum(mcle."change") AS mmr_change,
+       count(*) AS games,
+       count(*) filter (WHERE mcle.winner) AS wins,
+       count(*) filter (WHERE NOT mcle.winner) AS loss
+FROM mmr_change_log_entity mcle
+INNER JOIN finished_match fm ON fm.id = mcle."matchId"
+WHERE fm."timestamp"::date = now()::date
+GROUP BY steam_id;`)
   }
 
   private async getMostFactory(
