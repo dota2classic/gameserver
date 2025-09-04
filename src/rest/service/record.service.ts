@@ -123,10 +123,10 @@ export class RecordService {
   public async dailyPlayerRecords() {
     return this.datasource.query<PlayerDailyRecord[]>(`
 SELECT "playerId" AS steam_id,
-       sum(mcle."change") AS mmr_change,
-       count(*) AS games,
-       count(*) filter (WHERE mcle.winner) AS wins,
-       count(*) filter (WHERE NOT mcle.winner) AS loss
+       sum(mcle."change")::float AS mmr_change,
+       count(*)::int AS games,
+       count(*)::int filter (WHERE mcle.winner) AS wins,
+       count(*)::int filter (WHERE NOT mcle.winner) AS loss
 FROM mmr_change_log_entity mcle
 INNER JOIN finished_match fm ON fm.id = mcle."matchId"
 WHERE fm."timestamp"::date = now()::date
