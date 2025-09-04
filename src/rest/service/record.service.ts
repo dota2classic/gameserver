@@ -125,12 +125,15 @@ export class RecordService {
 SELECT "playerId" AS steam_id,
        sum(mcle."change")::float AS mmr_change,
        count(*)::int AS games,
-       count(*)::int filter (WHERE mcle.winner) AS wins,
-       count(*)::int filter (WHERE NOT mcle.winner) AS loss
+       (count(*) filter (
+                         WHERE mcle.winner))::int AS wins,
+       (count(*) filter (
+                         WHERE NOT mcle.winner))::int AS loss
 FROM mmr_change_log_entity mcle
 INNER JOIN finished_match fm ON fm.id = mcle."matchId"
 WHERE fm."timestamp"::date = now()::date
-GROUP BY steam_id;`)
+GROUP BY steam_id;
+`)
   }
 
   private async getMostFactory(
