@@ -36,6 +36,7 @@ import { DodgeService } from 'rest/service/dodge.service';
 import { Configuration, ForumApi } from 'generated-api/forum';
 import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { outerQuery } from 'util/outerQuery';
+import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
 
 @Module({
   imports: [
@@ -120,6 +121,7 @@ import { outerQuery } from 'util/outerQuery';
     MmrBucketService,
     Mapper,
     RecordService,
+    ReqLoggingInterceptor,
     ...GameServerDomain,
     {
       provide: ForumApi,

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseFilters } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseFilters, UseInterceptors } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { MatchDto, MatchPageDto } from 'rest/dto/match.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,6 +14,7 @@ import { MatchMapper } from 'rest/match/match.mapper';
 import { EntityNotFoundFilter } from 'rest/exception/entity-not-found.filter';
 import { PlayerFeedbackService } from 'gameserver/service/player-feedback.service';
 import { MatchReportMatrixDto } from 'rest/dto/player.dto';
+import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
 
 @Controller("match")
 @ApiTags("match")
@@ -83,8 +84,16 @@ export class MatchController {
     return makePage(matches, cnt, page, perPage, this.mapper.mapMatch);
   }
 
+
+  @Get("/fake")
+  async fake(
+  ): Promise<number> {
+    return Math.random() * 100;
+  }
+
   @Get("/:id")
   @UseFilters(new EntityNotFoundFilter())
+  @UseInterceptors(ReqLoggingInterceptor)
   async getMatch(@Param("id", NullableIntPipe) id: number): Promise<MatchDto> {
     const match = await this.matchRepository.findOneOrFail({
       where: { id },
@@ -92,6 +101,17 @@ export class MatchController {
     });
 
     return this.mapper.mapMatch(match);
+  }
+
+  @Get("/fake/:id")
+  @UseFilters(new EntityNotFoundFilter())
+  @UseInterceptors(ReqLoggingInterceptor)
+  async getFakeRequest(@Param("id", NullableIntPipe) id: number) {
+    const match = await this.matchRepository.findOneOrFail({
+      where: { id },
+      relations: ["players", "players.mmrChange"],
+    });
+
   }
 
   @Get("/:id/reportMatrix")
