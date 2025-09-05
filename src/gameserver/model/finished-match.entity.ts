@@ -17,6 +17,7 @@ import { DotaPatch } from 'gateway/constants/patch';
 import { Region } from 'gateway/shared-types/region';
 
 @Entity("finished_match")
+@Index('idx_finished_match_id_winner', ['id', 'winner'])
 export default class FinishedMatchEntity {
   @Column("smallint")
   winner!: number;
