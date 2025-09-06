@@ -1,9 +1,10 @@
 // Import required modules
 import { CallHandler, ExecutionContext, Injectable, Logger, NestInterceptor } from '@nestjs/common';
-import { finalize, Observable, tap } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { PATH_METADATA } from '@nestjs/common/constants';
 import * as path from 'path';
 import { Request, Response } from 'express';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class ReqLoggingInterceptor implements NestInterceptor {
@@ -37,15 +38,22 @@ export class ReqLoggingInterceptor implements NestInterceptor {
 
 
     return next.handle().pipe(
-      tap(() => {
-        const handlerDone = performance.now();
-        this.logger.debug(`Handler took ${handlerDone - start} ms`);
+      map((data) => {
+        const beforeJson = performance.now();
+        JSON.stringify(data); // measure serialization cost
+        const afterJson = performance.now();
+        this.logger.log(`Handler compute: ${(beforeJson - start).toFixed(2)} ms`);
+        this.logger.log(
+          `Serialization: ${(afterJson - beforeJson).toFixed(2)} ms`,
+        );
+        return data;
       }),
-      finalize(() => {
-        res.on('finish', () => {
-          const finish = performance.now();
-          this.logger.debug(`Total until res.finish: ${finish - start} ms`);
-        });
+      tap(() => {
+        this.logger.log(
+          `Total (until response is flushed): ${(performance.now() - start).toFixed(
+            2,
+          )} ms`,
+        );
       }),
     );
   }
