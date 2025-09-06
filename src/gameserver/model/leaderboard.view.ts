@@ -1,13 +1,11 @@
 import { Index, ViewColumn, ViewEntity } from 'typeorm';
 
 @ViewEntity({
-  expression: `
-WITH pm_agg AS
+  expression: `WITH pm_agg AS
   (SELECT pim."playerId" AS steam_id,
           fm.season_id,
           count(*) AS games,
-          count(*) FILTER (
-                           WHERE fm.timestamp >= gs.start_timestamp) AS calibration_games,
+          count(*) FILTER ( WHERE fm.timestamp >= gs.start_timestamp) AS calibration_games,
           count(*) FILTER (
                            WHERE pim.team = fm.winner) AS wins,
           count(*) FILTER (
@@ -19,24 +17,23 @@ WITH pm_agg AS
    FROM player_in_match pim
    JOIN finished_match fm ON fm.id = pim."matchId"
    JOIN game_season gs ON gs.id = fm.season_id
-   WHERE fm.matchmaking_mode IN (0,
-                                 1)
+   WHERE fm.matchmaking_mode IN (0, 1)
    GROUP BY pim."playerId",
             fm.season_id)
 SELECT vp.steam_id,
        vp.season_id AS season_id,
-       vp.mmr,
-       games,
-       calibration_games,
-       wins,
-       abandons,
-       kills,
-       assists,
-       deaths,
-       play_time,
-       ROW_NUMBER() OVER (PARTITION BY vp.season_id
-                          ORDER BY vp.mmr DESC) AS RANK,
-       recalibration_attempted
+       vp.mmr::int,
+       games::int,
+       calibration_games::int,
+       wins::int,
+       abandons::int,
+       kills::float,
+       assists::float,
+       deaths::float,
+       play_time::int,
+       (ROW_NUMBER() OVER (PARTITION BY vp.season_id
+                          ORDER BY vp.mmr DESC))::int AS RANK,
+       (rc is not null and recalibration_attempted = 1)::boolean as recalibration_attempted
 FROM version_player vp
 JOIN pm_agg pa ON pa.steam_id = vp.steam_id
 AND pa.season_id = vp.season_id
@@ -45,7 +42,7 @@ LEFT JOIN LATERAL
    FROM recalibration rc
    WHERE rc.steam_id = vp.steam_id
      AND rc.season_id = vp.season_id
-   LIMIT 1) rc ON TRUE
+   LIMIT 1) rc ON true
 `,
   materialized: true,
 })
