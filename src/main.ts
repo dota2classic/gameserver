@@ -4,7 +4,7 @@ import { AppModule } from './app.module';
 import { CommandBus, EventBus, EventPublisher, ofType, QueryBus } from '@nestjs/cqrs';
 import { Transport } from '@nestjs/microservices';
 import { inspect } from 'util';
-import { Logger } from '@nestjs/common';
+import { INestApplication, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ServerActualizationRequestedEvent } from 'gateway/events/gs/server-actualization-requested.event';
 import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
@@ -15,10 +15,11 @@ import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
 import './util/promise';
 import configuration from 'config/configuration';
 import { ConfigService } from '@nestjs/config';
+import fastify from 'fastify';
 
 import { types } from 'pg';
 import { WinstonWrapper } from '@dota2classic/nest_logger';
-import * as compression from 'compression';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 
 types.setTypeParser(types.builtins.NUMERIC, (value: string): number =>
   parseFloat(value),
@@ -34,14 +35,23 @@ async function bootstrap() {
   const parsedConfig = configuration();
   const config = new ConfigService(parsedConfig);
 
-  const app = await NestFactory.create(AppModule, {
-    logger: new WinstonWrapper(
-      config.get("fluentbit.host"),
-      config.get<number>("fluentbit.port"),
-      config.get<string>("fluentbit.application"),
-      config.get<boolean>("fluentbit.disabled"),
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(
+      fastify({
+        trustProxy: true,
+        bodyLimit: 1024 * 1024 * 20, // 20 MB
+      }),
     ),
-  });
+    {
+      logger: new WinstonWrapper(
+        config.get("fluentbit.host"),
+        config.get<number>("fluentbit.port"),
+        config.get<string>("fluentbit.application"),
+        config.get<boolean>("fluentbit.disabled"),
+      ),
+    },
+  ) as INestApplication<AppModule>;
 
   app.connectMicroservice({
     transport: Transport.REDIS,
@@ -55,7 +65,7 @@ async function bootstrap() {
     },
   });
 
-  app.use(compression());
+  // app.use(compression());
 
   const options = new DocumentBuilder()
     .setTitle("GameServer api")

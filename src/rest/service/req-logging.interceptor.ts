@@ -3,7 +3,7 @@ import { CallHandler, ExecutionContext, Injectable, Logger, NestInterceptor } fr
 import { Observable, tap } from 'rxjs';
 import { PATH_METADATA } from '@nestjs/common/constants';
 import * as path from 'path';
-import { Request, Response } from 'express';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
 @Injectable()
 export class ReqLoggingInterceptor implements NestInterceptor {
@@ -13,8 +13,8 @@ export class ReqLoggingInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     // Extract request and response objects
-    const req: Request = context.switchToHttp().getRequest();
-    const res: Response = context.switchToHttp().getResponse();
+    const req: FastifyRequest = context.switchToHttp().getRequest();
+    const res: FastifyReply = context.switchToHttp().getResponse();
 
     const handler = context.getHandler();
     const controller = Reflect.getMetadata(PATH_METADATA, context.getClass());

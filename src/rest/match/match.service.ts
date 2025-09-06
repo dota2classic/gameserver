@@ -28,7 +28,7 @@ export class MatchService {
   ) {}
 
   @optimized(true)
-  @measure("getMatchPage")
+  // @measure("getMatchPage")
   public async getMatchPage(
     page: number,
     perPage: number,
