@@ -71,6 +71,7 @@ export class MatchController {
     required: false,
   })
   @Get("/all")
+  @UseInterceptors(ReqLoggingInterceptor)
   async matches(
     @Query("page", NullableIntPipe) page: number,
     @Query("per_page", NullableIntPipe) perPage: number = 25,
