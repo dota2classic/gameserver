@@ -18,6 +18,7 @@ import { ConfigService } from '@nestjs/config';
 
 import { types } from 'pg';
 import { WinstonWrapper } from '@dota2classic/nest_logger';
+import * as compression from 'compression';
 
 types.setTypeParser(types.builtins.NUMERIC, (value: string): number =>
   parseFloat(value),
@@ -53,6 +54,8 @@ async function bootstrap() {
       password: config.get("redis.password"),
     },
   });
+
+  app.use(compression());
 
   const options = new DocumentBuilder()
     .setTitle("GameServer api")
