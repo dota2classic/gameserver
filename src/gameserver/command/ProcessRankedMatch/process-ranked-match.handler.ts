@@ -96,11 +96,12 @@ export class ProcessRankedMatchHandler
       Math.sign(streak) === Math.sign(mmrChange) &&
       Math.abs(streak) > 1
     ) {
-
       // streak of 2: 1.4
       // streak of 8: 2.3
       const multiplier = 1 + Math.min(10, Math.abs(streak)) / 5;
-      this.logger.log(`Player streak is ${streak}. MMR change multiplier is ${multiplier}`);
+      this.logger.log(
+        `Player streak is ${streak}. MMR change multiplier is ${multiplier}`,
+      );
       mmrChange *= multiplier;
     }
 
@@ -147,7 +148,7 @@ export class ProcessRankedMatchHandler
       [...command.winners, ...command.losers].map(async (playerId, idx) =>
         this.changeMMR(
           currentSeason,
-          playerId.value,
+          playerId,
           idx < command.winners.length,
           diffDeviationFactor,
           winnerAverage,
@@ -155,8 +156,7 @@ export class ProcessRankedMatchHandler
           command.matchId,
           m.timestamp,
           playerMap,
-          m.players.find((it) => it.playerId === playerId.value)?.abandoned ||
-            false,
+          m.players.find((it) => it.playerId === playerId)?.abandoned || false,
         ),
       ),
     );
@@ -191,9 +191,7 @@ export class ProcessRankedMatchHandler
     const map = new Map<string, VersionPlayerEntity>();
     const plrs = await this.versionPlayerRepository.find({
       where: {
-        steamId: In(
-          [...command.losers, ...command.winners].map((t) => t.value),
-        ),
+        steamId: In([...command.losers, ...command.winners]),
         seasonId: currentSeason.id,
       },
     });
@@ -202,14 +200,14 @@ export class ProcessRankedMatchHandler
 
     // here we do some tricks
     for (const pid of [...command.losers, ...command.winners]) {
-      if (!map.has(pid.value)) {
+      if (!map.has(pid)) {
         const vp = new VersionPlayerEntity(
-          pid.value,
-          await this.startingMmrService.getStartingMMRForSteamId(pid.value),
+          pid,
+          await this.startingMmrService.getStartingMMRForSteamId(pid),
           currentSeason.id,
         );
 
-        map.set(pid.value, vp);
+        map.set(pid, vp);
       }
     }
 
@@ -223,11 +221,11 @@ export class ProcessRankedMatchHandler
     const getMmr: GetMmr = (plr: VersionPlayerEntity): number => plr.mmr;
 
     const winnerMMR = command.winners
-      .map((t) => playerMap.get(t.value))
+      .map((t) => playerMap.get(t))
       .reduce((a, b) => a + getMmr(b), 0);
 
     const loserMMR = command.losers
-      .map((t) => playerMap.get(t.value))
+      .map((t) => playerMap.get(t))
       .reduce((a, b) => a + getMmr(b), 0);
 
     const winnerAverage = winnerMMR / command.winners.length;

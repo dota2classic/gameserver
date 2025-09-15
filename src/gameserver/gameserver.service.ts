@@ -1,7 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
-import { PlayerId } from 'gateway/shared-types/player-id';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { LeaderboardView } from 'gameserver/model/leaderboard.view';
@@ -128,10 +127,10 @@ export class GameServerService implements OnApplicationBootstrap {
         match.id,
         match.players
           .filter((t) => t.team === match.winner)
-          .map((t) => new PlayerId(t.playerId)),
+          .map((t) => t.playerId),
         match.players
           .filter((t) => t.team !== match.winner)
-          .map((t) => new PlayerId(t.playerId)),
+          .map((t) => t.playerId),
         match.matchmaking_mode,
       ),
     );

@@ -4,7 +4,6 @@ import { Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
-import { PlayerId } from 'gateway/shared-types/player-id';
 import { ProcessAchievementsCommand } from 'gameserver/command/ProcessAchievements/process-achievements.command';
 import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
 import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
@@ -33,10 +32,10 @@ export class GameserverSaga {
       map((e: MatchRecordedEvent) => {
         const losers = e.players
           .filter((p) => p.team !== e.winner)
-          .map((t) => new PlayerId(t.steam_id));
+          .map((t) => t.steam_id);
         const winners = e.players
           .filter((p) => p.team === e.winner)
-          .map((t) => new PlayerId(t.steam_id));
+          .map((t) => t.steam_id);
 
         return new ProcessRankedMatchCommand(
           e.matchId,

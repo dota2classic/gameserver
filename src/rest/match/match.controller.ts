@@ -15,6 +15,8 @@ import { EntityNotFoundFilter } from 'rest/exception/entity-not-found.filter';
 import { PlayerFeedbackService } from 'gameserver/service/player-feedback.service';
 import { MatchReportMatrixDto } from 'rest/dto/player.dto';
 import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
+import { CommandBus } from '@nestjs/cqrs';
+import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
 
 @Controller("match")
 @ApiTags("match")
@@ -30,6 +32,7 @@ export class MatchController {
     // private readonly metaService: MetaService,
     private readonly matchService: MatchService,
     private readonly playerReportService: PlayerFeedbackService,
+    private readonly cbus: CommandBus,
   ) {}
 
   // remove meta service from here
@@ -85,11 +88,31 @@ export class MatchController {
     return makePage(matches, cnt, page, perPage, this.mapper.mapMatch);
   }
 
+  @Get("/:id/ranked_process")
+  async fake(@Param("id", NullableIntPipe) id: number): Promise<number> {
+    const match = await this.matchRepository.findOne({
+      where: { id },
+      relations: ["players"],
+    });
+    if (
+      match.matchmaking_mode !== MatchmakingMode.UNRANKED &&
+      match.matchmaking_mode !== MatchmakingMode.RANKED
+    ) {
+      return;
+    }
 
-  @Get("/fake")
-  async fake(
-  ): Promise<number> {
-    return Math.random() * 100;
+    await this.cbus.execute(
+      new ProcessRankedMatchCommand(
+        match.id,
+        match.players
+          .filter((t) => t.team === match.winner)
+          .map((plr) => plr.playerId),
+        match.players
+          .filter((t) => t.team !== match.winner)
+          .map((plr) => plr.playerId),
+        match.matchmaking_mode,
+      ),
+    );
   }
 
   @Get("/:id")
@@ -102,17 +125,6 @@ export class MatchController {
     });
 
     return this.mapper.mapMatch(match);
-  }
-
-  @Get("/fake/:id")
-  @UseFilters(new EntityNotFoundFilter())
-  @UseInterceptors(ReqLoggingInterceptor)
-  async getFakeRequest(@Param("id", NullableIntPipe) id: number) {
-    const match = await this.matchRepository.findOneOrFail({
-      where: { id },
-      relations: ["players", "players.mmrChange"],
-    });
-
   }
 
   @Get("/:id/reportMatrix")
