@@ -74,7 +74,6 @@ export class AppService implements OnApplicationBootstrap {
       KillServerRequestedEvent,
       BanSystemEvent,
       PlayerReportBanCreatedEvent,
-      AchievementCompleteEvent,
       MatchRecordedEvent,
       RunRconCommand,
     ];
@@ -89,7 +88,8 @@ export class AppService implements OnApplicationBootstrap {
           PlayerNotLoadedEvent,
           PlayerFeedbackCreatedEvent,
           PlayerSmurfDetectedEvent,
-          PlayerFinishedMatchEvent
+          PlayerFinishedMatchEvent,
+          AchievementCompleteEvent,
         ),
       )
       .subscribe((msg) =>
@@ -100,12 +100,15 @@ export class AppService implements OnApplicationBootstrap {
           ),
       );
 
-
     this.ebus
       .pipe(ofType(LaunchGameServerCommand))
       .subscribe((msg: LaunchGameServerCommand) =>
         this.amqpConnection
-          .publish("app.events", `${LaunchGameServerCommand.name}.${msg.region}`, msg)
+          .publish(
+            "app.events",
+            `${LaunchGameServerCommand.name}.${msg.region}`,
+            msg,
+          )
           .then(() =>
             this.logger.log(`Published RMQ event ${msg.constructor.name}`),
           ),
