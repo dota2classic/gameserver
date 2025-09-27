@@ -1,31 +1,18 @@
-import { AchievementProgress, BaseAchievement } from 'gameserver/achievements/base.achievement';
+import { BaseAchievement } from 'gameserver/achievements/base.achievement';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
-import { Repository } from 'typeorm';
 import { AchievementKey } from 'gateway/shared-types/achievemen-key';
-import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
+import { Achievement } from 'gameserver/decorator/achievement';
 
+@Achievement()
 export class WinstreakAchievement extends BaseAchievement {
   key: AchievementKey = AchievementKey.WINSTREAK_10;
-  maxProgress: number = 10;
+  checkpoints: number[] = [5, 10, 15, 20, 25, 30];
 
-  constructor(
-    finishedMatchEntityRepository: Repository<FinishedMatchEntity>,
-    playerInMatchEntityRepository: Repository<PlayerInMatchEntity>,
-    maxProgress: number,
-  ) {
-    super(finishedMatchEntityRepository, playerInMatchEntityRepository);
-    this.maxProgress = maxProgress;
-  }
-
-  supportsLobbyType(type: MatchmakingMode): boolean {
-    return BaseAchievement.REAL_LOBBY_TYPES.includes(type);
-  }
-
-  async getProgress(
+  async progress(
     pim: PlayerInMatchEntity,
     match: FinishedMatchEntity,
-  ): Promise<AchievementProgress> {
+  ): Promise<number> {
     const raw: { win: boolean }[] =
       await this.playerInMatchEntityRepository.query(
         `select pim.team = f.winner as win, pim."playerId", f.id as matchId, pim.hero
@@ -34,16 +21,15 @@ from player_in_match pim
 where pim."playerId" = $1
   and f.timestamp < $2
 order by timestamp desc
-limit 9`,
-        [pim.playerId, match.timestamp],
+limit $3`,
+        [
+          pim.playerId,
+          match.timestamp,
+          this.checkpoints[this.checkpoints.length - 1] + 1,
+        ],
       );
 
-    if (pim.team !== match.winner)
-      return {
-        progress: 0,
-        matchId: match.id,
-        hero: pim.hero,
-      };
+    if (pim.team !== match.winner) return 0;
 
     let streak = 1;
     for (let rawElement of raw) {
@@ -51,10 +37,6 @@ limit 9`,
       streak += 1;
     }
 
-    return {
-      progress: streak,
-      matchId: match.id,
-      hero: pim.hero,
-    };
+    return streak;
   }
 }

@@ -21,9 +21,7 @@ import { SteamIds } from 'gameserver/steamids';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { MetricsService } from 'metrics/metrics.service';
 import { MmrBucketView } from 'gameserver/model/mmr-bucket.view';
-import { wait } from 'util/wait';
 import { PlayerFeedbackService } from 'gameserver/service/player-feedback.service';
-import { PlayerAspect } from 'gateway/shared-types/player-aspect';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { Region } from 'gateway/shared-types/region';
 import { DotaPatch } from 'gateway/constants/patch';
@@ -188,31 +186,31 @@ export class GameServerService implements OnApplicationBootstrap {
 
     await this.amqpConnection.publish("app.events", GameResultsEvent.name, g);
 
-    await wait(2000);
+    // await wait(2000);
     // Do some reports
-    for (let player of g.players) {
-      const reported = shuffle(
-        g.players
-          .filter((t) => t.steam_id !== player.steam_id)
-          .map((it) => it.steam_id),
-      )[0];
-      const aspect: PlayerAspect = shuffle(
-        Object.keys(PlayerAspect)
-          .filter((key) => isNaN(Number(key)))
-          .map((it) => PlayerAspect[it]),
-      )[0];
-
-      try {
-        await this.reportService.handlePlayerReport(
-          player.steam_id,
-          reported,
-          aspect,
-          m.id,
-        );
-      } catch (e) {
-        this.logger.warn("Error while generating fake report", e);
-      }
-    }
+    // for (let player of g.players) {
+    //   const reported = shuffle(
+    //     g.players
+    //       .filter((t) => t.steam_id !== player.steam_id)
+    //       .map((it) => it.steam_id),
+    //   )[0];
+    //   const aspect: PlayerAspect = shuffle(
+    //     Object.keys(PlayerAspect)
+    //       .filter((key) => isNaN(Number(key)))
+    //       .map((it) => PlayerAspect[it]),
+    //   )[0];
+    //
+    //   try {
+    //     await this.reportService.handlePlayerReport(
+    //       player.steam_id,
+    //       reported,
+    //       aspect,
+    //       m.id,
+    //     );
+    //   } catch (e) {
+    //     this.logger.warn("Error while generating fake report", e);
+    //   }
+    // }
   }
 
   @Cron(CronExpression.EVERY_10_SECONDS)

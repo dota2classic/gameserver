@@ -7,8 +7,8 @@ export class AchievementDto {
   key: AchievementKey;
 
   steamId: string;
-  maxProgress: number;
   progress: number;
+  checkpoints: number[];
   isComplete: boolean;
   match?: MatchDto;
 }

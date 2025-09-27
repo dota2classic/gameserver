@@ -24,8 +24,10 @@ export class Mapper {
     key: it.achievement_key,
     steamId: it.steam_id,
     progress: it.progress,
-    maxProgress: this.as.getMaxProgressForKey(it.achievement_key),
-    isComplete: this.as.achievementMap.get(it.achievement_key).isComplete(it),
+    checkpoints: this.as.achievementMap.get(it.achievement_key).checkpoints,
+    isComplete: this.as.achievementMap
+      .get(it.achievement_key)
+      .isFullyComplete(it),
     match: it.match ? this.matchMapper.mapMatch(it.match) : undefined,
   });
 

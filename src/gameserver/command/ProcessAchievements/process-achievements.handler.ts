@@ -48,19 +48,24 @@ export class ProcessAchievementsHandler
         ach.achievement_key = achievement.key;
         ach.progress = 0;
       }
-      const isUpdated = await achievement.handleMatch(player, fm, ach);
-      if (isUpdated) {
-        await this.achievementEntityRepository.save(ach);
-        if (achievement.isComplete(ach)) {
-          this.ebus.publish(
-            new AchievementCompleteEvent(
-              achievement.key,
-              player.playerId,
-              player.hero,
-              ach.matchId,
-            ),
-          );
-        }
+      const updateResult = await achievement.handleMatch(player, fm, ach);
+      if (updateResult === "none") {
+        return;
+      }
+
+      await this.achievementEntityRepository.save(ach);
+      if (updateResult === "checkpoint") {
+        this.ebus.publish(
+          new AchievementCompleteEvent(
+            achievement.key,
+            player.playerId,
+            player.hero,
+            ach.matchId,
+            ach.progress,
+            achievement.getCompleteCheckpoint(ach),
+            achievement.checkpoints,
+          ),
+        );
       }
     });
     await Promise.all(handles);
