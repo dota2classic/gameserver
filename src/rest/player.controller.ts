@@ -129,7 +129,6 @@ SELECT
   a.steam_id,
   a.achievement_key,
   a.progress,
-  a.hero,
   a."matchId",
   CASE
     WHEN a.progress > 0
