@@ -36,6 +36,13 @@ export abstract class BaseAchievement {
     match: FinishedMatchEntity,
   ): Promise<Progress>;
 
+  public async batchProgress(
+    pims: PlayerInMatchEntity[],
+    match: FinishedMatchEntity,
+  ): Promise<Progress[]> {
+    return Promise.all(pims.map((pim) => this.progress(pim, match)));
+  }
+
   async getProgress(
     pim: PlayerInMatchEntity,
     match: FinishedMatchEntity,
@@ -80,7 +87,6 @@ export abstract class BaseAchievement {
     if (progress.progress > playerAchievementStatus.progress) {
       playerAchievementStatus.progress = this.clampProgress(progress.progress);
       playerAchievementStatus.matchId = progress.matchId;
-      playerAchievementStatus.hero = progress.hero;
     }
 
     if (

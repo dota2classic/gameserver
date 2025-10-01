@@ -57,7 +57,7 @@ import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
           type: "postgres",
           migrations: ["dist/src/database/migrations/*.*"],
           migrationsRun: true,
-          // maxQueryExecutionTime: 150,
+          maxQueryExecutionTime: 50,
           logging: ["error"],
         };
       },

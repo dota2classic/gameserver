@@ -20,6 +20,7 @@ import fastify from 'fastify';
 import { types } from 'pg';
 import { WinstonWrapper } from '@dota2classic/nest_logger';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { GameServerService } from 'gameserver/gameserver.service';
 
 types.setTypeParser(types.builtins.NUMERIC, (value: string): number =>
   parseFloat(value),
@@ -35,7 +36,7 @@ async function bootstrap() {
   const parsedConfig = configuration();
   const config = new ConfigService(parsedConfig);
 
-  const app = await NestFactory.create<NestFastifyApplication>(
+  const app = (await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(
       fastify({
@@ -51,7 +52,7 @@ async function bootstrap() {
         config.get<boolean>("fluentbit.disabled"),
       ),
     },
-  ) as INestApplication<AppModule>;
+  )) as INestApplication<AppModule>;
 
   app.connectMicroservice({
     transport: Transport.REDIS,
@@ -90,7 +91,6 @@ async function bootstrap() {
 
   const clogger = new Logger("CommandLogger");
   const elogger = new Logger("EventLogger");
-  const qlogger = new Logger("EventLogger");
 
   ebus.subscribe((e) => {
     if (e.constructor.name === ServerActualizationRequestedEvent.name) return;
@@ -127,9 +127,9 @@ async function bootstrap() {
   //
   // console.log(await r1());
 
-  // for (let i = 0; i < 1; i++) {
-  //   await app.get(GameServerService).generateFakeMatch("116514945");
-  // }
+  for (let i = 0; i < 1; i++) {
+    await app.get(GameServerService).generateFakeMatch("116514945");
+  }
 
   // await app.get(PlayerQualityService).onPlayerIpUpdated('1852498426')
 }

@@ -38,9 +38,6 @@ export class AchievementEntity {
   @Column({ nullable: true, default: null })
   matchId?: number;
 
-  @Column({ nullable: true, default: null })
-  hero?: string;
-
   @VirtualColumn2("percentile", (t) => Number(t))
   percentile: number;
 }
