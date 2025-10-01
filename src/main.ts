@@ -20,7 +20,6 @@ import fastify from 'fastify';
 import { types } from 'pg';
 import { WinstonWrapper } from '@dota2classic/nest_logger';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { GameServerService } from 'gameserver/gameserver.service';
 
 types.setTypeParser(types.builtins.NUMERIC, (value: string): number =>
   parseFloat(value),
@@ -127,9 +126,9 @@ async function bootstrap() {
   //
   // console.log(await r1());
 
-  for (let i = 0; i < 1; i++) {
-    await app.get(GameServerService).generateFakeMatch("116514945");
-  }
+  // for (let i = 0; i < 1; i++) {
+  //   await app.get(GameServerService).generateFakeMatch("116514945");
+  // }
 
   // await app.get(PlayerQualityService).onPlayerIpUpdated('1852498426')
 }
