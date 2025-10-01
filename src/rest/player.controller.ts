@@ -3,7 +3,7 @@ import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Mapper } from 'rest/mapper';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, Repository } from 'typeorm';
+import { Connection, DataSource, Repository } from 'typeorm';
 import {
   AbandonSessionDto,
   BanStatusDto,
@@ -32,9 +32,7 @@ import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { NullableIntPipe } from 'util/pipes';
 import { AchievementService } from 'gameserver/achievement.service';
 import { AchievementEntity } from 'gameserver/model/achievement.entity';
-import { AchievementDto } from 'rest/dto/achievement.dto';
-import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
-import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
+import { AchievementDto, DBAchievementDto } from 'rest/dto/achievement.dto';
 import { makePage } from 'gateway/util/make-page';
 import { AchievementKey } from 'gateway/shared-types/achievemen-key';
 import { LeaderboardService } from 'gameserver/service/leaderboard.service';
@@ -68,6 +66,7 @@ export class PlayerController {
     private readonly playerServiceV2: PlayerServiceV2,
     private readonly ebus: EventBus,
     private readonly connection: Connection,
+    private readonly ds: DataSource,
     @InjectRepository(LeaderboardView)
     private readonly leaderboardViewRepository: Repository<LeaderboardView>,
     private readonly achievements: AchievementService,
@@ -90,23 +89,67 @@ export class PlayerController {
   ): Promise<AchievementDto[]> {
     const ach = Array.from(this.achievements.achievementMap.values());
 
-    const achievementsQ = this.achievementEntityRepository
-      .createQueryBuilder("a")
-      .leftJoinAndMapOne(
-        "a.match",
-        FinishedMatchEntity,
-        "fm",
-        'fm.id = a."matchId"',
-      )
-      .leftJoinAndMapOne(
-        "a.pim",
-        PlayerInMatchEntity,
-        "pim",
-        `pim."playerId" = a.steam_id and pim."matchId" = a."matchId"`,
-      )
-      .where({ steam_id: steamId });
+    // const achievementsQ = this.achievementEntityRepository
+    //   .createQueryBuilder("a")
+    //   .leftJoinAndMapOne(
+    //     "a.match",
+    //     FinishedMatchEntity,
+    //     "fm",
+    //     'fm.id = a."matchId"',
+    //   )
+    //   .leftJoinAndMapOne(
+    //     "a.pim",
+    //     PlayerInMatchEntity,
+    //     "pim",
+    //     `pim."playerId" = a.steam_id and pim."matchId" = a."matchId"`,
+    //   )
+    //   .addSelect(
+    //     (sub) =>
+    //       sub
+    //         .select(
+    //           "COUNT(1) filter (where a2.progress <= a.progress) / COUNT(1)::float",
+    //         )
+    //         .from(AchievementEntity, "a2")
+    //         .where("a2.achievement_key = a.achievement_key"),
+    //     "percentile",
+    //   )
+    //   .where({ steam_id: steamId });
 
-    const achievements = await achievementsQ.getMany();
+    const achievements = await this.ds.query<DBAchievementDto[]>(
+      `
+WITH achievement_totals AS (
+  SELECT
+    achievement_key,
+    COUNT(*) AS total_players,
+    COUNT(*) FILTER (WHERE progress > 0) AS unlocked_players
+  FROM achievement_entity
+  GROUP BY achievement_key
+)
+SELECT
+  a.steam_id,
+  a.achievement_key,
+  a.progress,
+  a.hero,
+  a."matchId",
+  CASE
+    WHEN a.progress > 0
+      THEN ( -- player unlocked → fraction with progress ≥ you
+        COUNT(*) FILTER (WHERE ae.progress >= a.progress)::float / t.total_players
+      )
+    ELSE ( -- player locked → fraction with progress > 0
+        t.unlocked_players::float / t.total_players
+      )
+  END AS percentile
+FROM achievement_entity a
+JOIN achievement_totals t USING (achievement_key)
+LEFT JOIN achievement_entity ae
+  ON ae.achievement_key = a.achievement_key
+-- only compute percentile for the target user
+WHERE a.steam_id = $1
+GROUP BY a.steam_id, a.achievement_key, a.progress, t.total_players, t.unlocked_players
+    `,
+      [steamId],
+    );
 
     const paddedAchievements = Object.keys(AchievementKey)
       .filter(
@@ -122,15 +165,13 @@ export class PlayerController {
             steam_id: steamId,
             progress: 0,
             achievement_key: AchievementKey[key],
-          }) as AchievementEntity,
+            percentile: 0,
+          }) as DBAchievementDto,
       );
 
-    return achievements.concat(paddedAchievements).map((t) => {
-      if (t.match) {
-        t.match.players = [];
-      }
-      return this.mapper.mapAchievement(t);
-    });
+    return achievements
+      .concat(paddedAchievements)
+      .map(this.mapper.mapAchievement);
   }
 
   @ApiQuery({

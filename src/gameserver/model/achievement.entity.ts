@@ -2,6 +2,7 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, Relation } from '
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { AchievementKey } from 'gateway/shared-types/achievemen-key';
+import { VirtualColumn2 } from 'virtual-column';
 
 @Entity('achievement_entity')
 export class AchievementEntity {
@@ -39,4 +40,7 @@ export class AchievementEntity {
 
   @Column({ nullable: true, default: null })
   hero?: string;
+
+  @VirtualColumn2("percentile", (t) => Number(t))
+  percentile: number;
 }

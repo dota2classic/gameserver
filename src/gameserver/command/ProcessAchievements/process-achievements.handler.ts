@@ -48,24 +48,33 @@ export class ProcessAchievementsHandler
         ach.achievement_key = achievement.key;
         ach.progress = 0;
       }
-      const updateResult = await achievement.handleMatch(player, fm, ach);
-      if (updateResult === "none") {
-        return;
-      }
 
-      await this.achievementEntityRepository.save(ach);
-      if (updateResult === "checkpoint") {
-        this.ebus.publish(
-          new AchievementCompleteEvent(
-            achievement.key,
-            player.playerId,
-            player.hero,
-            ach.matchId,
-            ach.progress,
-            achievement.getCompleteCheckpoint(ach),
-            achievement.checkpoints,
-          ),
-        );
+      try {
+        const updateResult = await achievement.handleMatch(player, fm, ach);
+
+        if (updateResult === "none") {
+          return;
+        }
+
+        await this.achievementEntityRepository.save(ach);
+        if (updateResult === "checkpoint") {
+          this.ebus.publish(
+            new AchievementCompleteEvent(
+              achievement.key,
+              player.playerId,
+              player.hero,
+              ach.matchId,
+              ach.progress,
+              achievement.getCompleteCheckpoint(ach),
+              achievement.checkpoints,
+            ),
+          );
+        }
+      } catch (e) {
+        console.error(typeof e);
+        console.error(e);
+
+        this.logger.error("There was an issue handling achievement", e);
       }
     });
     await Promise.all(handles);

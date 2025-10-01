@@ -6,7 +6,7 @@ import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 export class AllHeroChallengeAchievement extends BaseAchievement {
   key: AchievementKey = AchievementKey.ALL_HERO_CHALLENGE;
-  checkpoints: [110];
+  checkpoints = [110];
 
   supportsLobbyType(type: MatchmakingMode): boolean {
     return BaseAchievement.REAL_LOBBY_TYPES.includes(type);

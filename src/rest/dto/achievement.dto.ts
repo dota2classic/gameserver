@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { MatchDto } from 'rest/dto/match.dto';
 import { AchievementKey } from 'gateway/shared-types/achievemen-key';
 
 export class AchievementDto {
@@ -8,7 +7,21 @@ export class AchievementDto {
 
   steamId: string;
   progress: number;
+  percentile: number;
   checkpoints: number[];
   isComplete: boolean;
-  match?: MatchDto;
+  matchId?: number;
+}
+
+
+
+export class DBAchievementDto {
+  steam_id: string;
+  achievement_key: AchievementKey;
+  progress: number;
+
+  matchId?: number;
+  hero?: string;
+
+  percentile: number;
 }

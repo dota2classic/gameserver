@@ -13,6 +13,7 @@ export interface AchievementProgress {
 }
 
 export type AchievementUpdateResult = "none" | "progress" | "checkpoint";
+export type Progress = number | { progress: number; matchId: number | null };
 
 export abstract class BaseAchievement {
   public abstract key: AchievementKey;
@@ -23,17 +24,17 @@ export abstract class BaseAchievement {
     MatchmakingMode.UNRANKED,
   ];
 
-  private logger = new Logger("Achievement");
+  public logger = new Logger("Achievement");
 
   constructor(
-    protected readonly finishedMatchEntityRepository: Repository<FinishedMatchEntity>,
-    protected readonly playerInMatchEntityRepository: Repository<PlayerInMatchEntity>,
+    public readonly finishedMatchEntityRepository: Repository<FinishedMatchEntity>,
+    public readonly playerInMatchEntityRepository: Repository<PlayerInMatchEntity>,
   ) {}
 
   abstract progress(
     pim: PlayerInMatchEntity,
     match: FinishedMatchEntity,
-  ): Promise<number>;
+  ): Promise<Progress>;
 
   async getProgress(
     pim: PlayerInMatchEntity,
@@ -41,12 +42,17 @@ export abstract class BaseAchievement {
   ): Promise<AchievementProgress> {
     const p = await this.progress(pim, match);
 
-
-    return {
-      progress: p,
-      matchId: match.id,
-      hero: pim.hero,
-    };
+    return typeof p === "number"
+      ? {
+          progress: p,
+          matchId: match.id,
+          hero: pim.hero,
+        }
+      : {
+          progress: p.progress,
+          matchId: p.matchId,
+          hero: pim.hero,
+        };
   }
 
   public supportsLobbyType(type: MatchmakingMode): boolean {
@@ -56,7 +62,7 @@ export abstract class BaseAchievement {
   async handleMatch(
     pim: PlayerInMatchEntity,
     match: FinishedMatchEntity,
-    achievement: AchievementEntity,
+    playerAchievementStatus: AchievementEntity,
   ): Promise<AchievementUpdateResult> {
     if (!this.supportsLobbyType(match.matchmaking_mode)) {
       this.logger.log(`Achievement doesn't support lobby type`, {
@@ -64,23 +70,22 @@ export abstract class BaseAchievement {
       });
       return "none";
     }
-    if (this.isFullyComplete(achievement)) {
-      // We are already good, skip
-      this.logger.log(
-        `Achievement already fully complete for player ${pim.playerId} @ ${this.key}`,
-      );
+    if (this.isFullyComplete(playerAchievementStatus)) {
       return "none";
     }
     const progress = await this.getProgress(pim, match);
-    const currentCheckpoint = this.getCompleteCheckpoint(achievement);
-    if (progress.progress > achievement.progress) {
-      achievement.progress = progress.progress;
+    const currentCheckpoint = this.getCompleteCheckpoint(
+      playerAchievementStatus,
+    );
+    if (progress.progress > playerAchievementStatus.progress) {
+      playerAchievementStatus.progress = this.clampProgress(progress.progress);
+      playerAchievementStatus.matchId = progress.matchId;
+      playerAchievementStatus.hero = progress.hero;
     }
-    const newCheckpoint = this.getCompleteCheckpoint(achievement);
 
-    if (newCheckpoint > currentCheckpoint) {
-      achievement.matchId = progress.matchId;
-      achievement.hero = progress.hero;
+    if (
+      this.getCompleteCheckpoint(playerAchievementStatus) > currentCheckpoint
+    ) {
       return "checkpoint";
     }
 
@@ -92,6 +97,17 @@ export abstract class BaseAchievement {
   }
 
   public getCompleteCheckpoint(ach: AchievementEntity): number {
-    return this.checkpoints.findIndex((v) => ach.progress >= v);
+    for (let i = this.checkpoints.length; i >= 0; --i) {
+      if (ach.progress >= this.checkpoints[i]) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  public clampProgress(progress: number) {
+    const maxProgress = this.checkpoints[this.checkpoints.length - 1];
+
+    return Math.min(progress, maxProgress);
   }
 }
