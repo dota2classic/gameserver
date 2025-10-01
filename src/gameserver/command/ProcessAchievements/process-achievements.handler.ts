@@ -37,43 +37,76 @@ export class ProcessAchievementsHandler
 
     this.logger.log("Processing achievements");
 
+    // 1. Build all combos (player × achievement)
+    const playerAchievementPairs = combos(
+      fm.players,
+      Array.from(this.ach.achievementMap.values()),
+    ).map(([pim, ach]) => ({
+      pim,
+      steam_id: pim.playerId,
+      achievement_key: ach.key,
+    }));
+
+    // 2. Fetch existing achievements
+    const existing = await this.achievementEntityRepository.find({
+      where: playerAchievementPairs.map((p) => ({
+        steam_id: p.steam_id,
+        achievement_key: p.achievement_key,
+      })),
+    });
+
+    // 3. Index existing by (steam_id, achievement_key)
+    const existingMap = new Map(
+      existing.map((a) => [`${a.steam_id}:${a.achievement_key}`, a]),
+    );
+
+    // 4. Build final array
+    const results = playerAchievementPairs.map(
+      ({ pim, steam_id, achievement_key }) => {
+        const achievement =
+          existingMap.get(`${steam_id}:${achievement_key}`) ??
+          this.achievementEntityRepository.create({
+            steam_id,
+            achievement_key,
+            progress: 0,
+          });
+
+        return {
+          pim,
+          ach: achievement,
+          achievementHandler: this.ach.achievementMap.get(achievement_key),
+        };
+      },
+    );
+
+    this.logger.log(`Got a batch of player achievements: ${results.length}`)
+
+    // Handle pairs
     const handles: (
       | [AchievementUpdateResult, AchievementEntity, BaseAchievement]
       | null
     )[] = await Promise.all(
-      combos(fm.players, Array.from(this.ach.achievementMap.values())).map(
-        async ([player, achievement]) => {
-          let ach = await this.achievementEntityRepository.findOne({
-            where: {
-              steam_id: player.playerId,
-              achievement_key: achievement.key,
-            },
-          });
-          if (!ach) {
-            ach = new AchievementEntity();
-            ach.steam_id = player.playerId;
-            ach.achievement_key = achievement.key;
-            ach.progress = 0;
-          }
+      results.map(async ({ ach, pim, achievementHandler }) => {
+        try {
+          const updateResult = await achievementHandler.handleMatch(
+            pim,
+            fm,
+            ach,
+          );
 
-          try {
-            const updateResult = await achievement.handleMatch(player, fm, ach);
+          return [updateResult, ach, achievementHandler];
+        } catch (e) {
+          console.error(typeof e);
+          console.error(e);
 
-            return [updateResult, ach, achievement];
-          } catch (e) {
-            console.error(typeof e);
-            console.error(e);
-
-            this.logger.error("There was an issue handling achievement", e);
-            return null;
-          }
-        },
-      ),
+          this.logger.error("There was an issue handling achievement", e);
+          return null;
+        }
+      }),
     );
 
     const toSave = handles.filter(Boolean).filter((t) => t[0] !== "none");
     const toEmit = toSave.filter((t) => t[0] === "checkpoint");
-
 
     await measureN(
       () =>
@@ -81,7 +114,7 @@ export class ProcessAchievementsHandler
           await tx.upsert(
             AchievementEntity,
             toSave.map((c) => c[1]),
-            ['steam_id', 'achievement_key']
+            ["steam_id", "achievement_key"],
           );
         }),
       "Saving all achievements",
