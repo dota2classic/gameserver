@@ -20,6 +20,7 @@ import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch
 
 @Controller("match")
 @ApiTags("match")
+@UseInterceptors(ReqLoggingInterceptor)
 export class MatchController {
   constructor(
     private readonly mapper: MatchMapper,
@@ -74,7 +75,6 @@ export class MatchController {
     required: false,
   })
   @Get("/all")
-  @UseInterceptors(ReqLoggingInterceptor)
   async matches(
     @Query("page", NullableIntPipe) page: number,
     @Query("per_page", NullableIntPipe) perPage: number = 25,
@@ -117,7 +117,6 @@ export class MatchController {
 
   @Get("/:id")
   @UseFilters(new EntityNotFoundFilter())
-  @UseInterceptors(ReqLoggingInterceptor)
   async getMatch(@Param("id", NullableIntPipe) id: number): Promise<MatchDto> {
     const match = await this.matchRepository.findOneOrFail({
       where: { id },

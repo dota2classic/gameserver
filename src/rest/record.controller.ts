@@ -4,10 +4,12 @@ import { Cache, CACHE_MANAGER, CacheInterceptor } from '@nestjs/cache-manager';
 import { PlayerDailyRecord, PlayerRecordDto, PlayerRecordsResponse } from 'rest/dto/record.dto';
 import { RecordService, RecordTimespan } from 'rest/service/record.service';
 import { Mapper } from 'rest/mapper';
+import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
 
 @Controller("record")
 @ApiTags("record")
 @UseInterceptors(CacheInterceptor)
+@UseInterceptors(ReqLoggingInterceptor)
 export class RecordController {
   private readonly logger = new Logger(RecordController.name);
 

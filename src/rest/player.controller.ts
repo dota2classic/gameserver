@@ -46,9 +46,14 @@ import { GetReportsAvailableQueryResult } from 'gateway/queries/GetReportsAvaila
 import { ClientProxy } from '@nestjs/microservices';
 import { RunRconCommand } from 'gateway/commands/RunRcon/run-rcon.command';
 import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
+import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
+
+
+// Holy fucking shit refactor THIS ASAP
 
 @Controller("player")
 @ApiTags("player")
+@UseInterceptors(ReqLoggingInterceptor)
 export class PlayerController {
   private logger = new Logger(PlayerController.name);
 

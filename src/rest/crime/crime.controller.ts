@@ -1,13 +1,15 @@
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseInterceptors } from '@nestjs/common';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NullableIntPipe } from 'util/pipes';
 import { CrimeLogDto, CrimeLogPageDto } from 'rest/dto/crime.dto';
 import { makePage } from 'gateway/util/make-page';
+import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
 
 @Controller("crime")
+@UseInterceptors(ReqLoggingInterceptor)
 @ApiTags("crime")
 export class CrimeController {
   constructor(

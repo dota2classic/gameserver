@@ -1,12 +1,14 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, UseInterceptors } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { MetaService } from './meta.service';
 import { NullableIntPipe } from 'util/pipes';
 import { HeroItemDto, HeroSummaryDto, ItemDto, ItemHeroDto } from 'rest/dto/meta.dto';
 import { MetaMapper } from 'rest/meta/meta.mapper';
+import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
 
 @Controller("meta")
 @ApiTags("meta")
+@UseInterceptors(ReqLoggingInterceptor)
 export class MetaController {
   constructor(
     private readonly metaService: MetaService,
