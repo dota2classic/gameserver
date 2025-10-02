@@ -117,13 +117,35 @@ export class PlayerController {
 
     const achievements = await this.ds.query<DBAchievementDto[]>(
       `
-WITH achievement_totals AS (
+WITH totals AS (
   SELECT
     achievement_key,
     COUNT(*) AS total_players,
     COUNT(*) FILTER (WHERE progress > 0) AS unlocked_players
   FROM achievement_entity
   GROUP BY achievement_key
+),
+per_progress AS (
+  -- one row per (achievement_key, progress) with the count
+  SELECT
+    achievement_key,
+    progress,
+    COUNT(*) AS cnt
+  FROM achievement_entity
+  GROUP BY achievement_key, progress
+),
+cum AS (
+  -- cumulative count of players having progress >= this progress
+  SELECT
+    achievement_key,
+    progress,
+    cnt,
+    SUM(cnt) OVER (
+      PARTITION BY achievement_key
+      ORDER BY progress DESC
+      ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS num_ge_progress
+  FROM per_progress
 )
 SELECT
   a.steam_id,
@@ -132,21 +154,16 @@ SELECT
   a."matchId",
   CASE
     WHEN a.progress > 0
-      THEN ( -- player unlocked → fraction with progress ≥ you
-        COUNT(*) FILTER (WHERE ae.progress >= a.progress)::float / t.total_players
-      )
-    ELSE ( -- player locked → fraction with progress > 0
-        t.unlocked_players::float / t.total_players
-      )
+      THEN c.num_ge_progress::float / t.total_players
+    ELSE
+      t.unlocked_players::float / t.total_players
   END AS percentile
 FROM achievement_entity a
-JOIN achievement_totals t USING (achievement_key)
-LEFT JOIN achievement_entity ae
-  ON ae.achievement_key = a.achievement_key
--- only compute percentile for the target user
-WHERE a.steam_id = $1
-GROUP BY a.steam_id, a.achievement_key, a.progress, t.total_players, t.unlocked_players
-    `,
+JOIN totals t USING (achievement_key)
+JOIN cum    c ON c.achievement_key = a.achievement_key
+             AND c.progress = a.progress
+WHERE a.steam_id = $1;
+`,
       [steamId],
     );
 
