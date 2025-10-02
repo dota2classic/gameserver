@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { Connection, In, Repository } from 'typeorm';
-import { measure } from 'util/measure';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
@@ -75,7 +74,6 @@ export class MatchService {
   // http_req_waiting...............: avg=218.18ms min=46.31ms med=176.7ms  max=1.07s   p(90)=348.67ms p(95)=641.38ms
   // http_reqs......................: 1695   80.493324/s
   @optimized(true)
-  @measure("getPlayerMatches")
   public async getPlayerMatches(
     steam_id: string,
     page: number,
@@ -108,7 +106,6 @@ export class MatchService {
 
 
   @optimized(true, 'Added index on pim.hero')
-  @measure("heroMatches")
   public async heroMatches(
     page: number,
     perPage: number,
