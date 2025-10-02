@@ -16,13 +16,15 @@ export class CheckFirstGameHandler
   ) {}
 
   async execute(command: CheckFirstGameCommand) {
-    const res = await this.ds.query<{ steam_id: string; game_count: number }[]>(
+    const res = await this.ds.query<{ steam_id: string; game_count: number; unranked_game_count: number; }[]>(
       `
 select 
     "playerId" as steam_id,
-     count(*)::int as game_count
+     count(*)::int as game_count,
+     (count(*) FILTER(WHERE fm.matchmaking_mode IN (0, 1)))::int as unranked_game_count
 from 
     player_in_match pim
+   JOIN finished_match fm ON fm.id = pim."matchId"
 where "playerId" = ANY($1)
 group by "playerId"
     `,
@@ -37,6 +39,8 @@ group by "playerId"
             t.steam_id,
             command.lobbyType,
             t.game_count === 1,
+            t.unranked_game_count,
+            t.game_count
           ),
       ),
     );
