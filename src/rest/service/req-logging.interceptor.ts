@@ -31,7 +31,7 @@ export class ReqLoggingInterceptor implements NestInterceptor {
         this.logger.log({
           method: req.method,
           path: requestPath,
-          duration: performance.now() - start,
+          duration: (performance.now() - start) / 1000,
         });
       }),
     );
