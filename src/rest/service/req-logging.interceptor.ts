@@ -28,11 +28,11 @@ export class ReqLoggingInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap(() => {
-        this.logger.log(
-          `${req.method} ${requestPath} took ${(
-            performance.now() - start
-          ).toFixed(2)} ms`,
-        );
+        this.logger.log({
+          method: req.method,
+          path: requestPath,
+          duration: performance.now() - start,
+        });
       }),
     );
   }
