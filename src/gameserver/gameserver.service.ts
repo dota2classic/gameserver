@@ -85,7 +85,7 @@ export class GameServerService implements OnApplicationBootstrap {
   @Cron(CronExpression.EVERY_5_MINUTES)
   async refreshLeaderboard() {
     await this.leaderboardViewRepository.query(
-      `refresh materialized view leaderboard_view`,
+      `refresh materialized view concurrently leaderboard_view`,
     );
     this.logger.log("Refreshed leaderboard_view");
   }

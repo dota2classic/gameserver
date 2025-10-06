@@ -77,7 +77,7 @@ export class PlayerServiceV2 {
 select
   (count(*) filter(
 where
-  pim.team = fm.winner and fm.matchmaking_mode != 2))::int as any_wins,
+  pim.team = fm.winner and fm.matchmaking_mode in (0, 1, 7)))::int as any_wins,
   count(pim)::int as any_games
 from
   player_in_match pim
