@@ -41,6 +41,8 @@ export default (): ExpectedConfig => {
     },
     fluentbit: {
       application: process.env.APP_NAME,
+      host: process.env.FLUENTBIT_HOST,
+      port: process.env.FLUENTBIT_PORT,
     },
     rabbitmq: {
       host: process.env.RABBITMQ_HOST,
