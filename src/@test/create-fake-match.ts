@@ -7,6 +7,8 @@ import { DotaTeam } from 'gateway/shared-types/dota-team';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { TestEnvironment } from '@test/useFullModule';
 import { LessThanOrEqual } from 'typeorm';
+import { DotaPatch } from 'gateway/constants/patch';
+import { Region } from 'gateway/shared-types/region';
 
 export async function createSeason(te: TestEnvironment) {
   const seasonRep = te.repo(GameSeasonEntity);
@@ -31,9 +33,9 @@ export async function createFakeMatch(
       startTimestamp: LessThanOrEqual(new Date()),
     },
     order: {
-      startTimestamp: "DESC"
+      startTimestamp: "DESC",
     },
-  })
+  });
 
   const meRep = te.repo(MatchEntity);
 
@@ -54,7 +56,9 @@ export async function createFakeMatch(
     mode,
     duration,
     "",
-    season.id
+    season.id,
+    DotaPatch.DOTA_684,
+    Region.RU_MOSCOW,
   );
 
   await matchRep.save(match);

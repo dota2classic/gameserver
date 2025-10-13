@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Put, UseInterceptors } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -17,9 +17,11 @@ import { InfoService } from 'rest/info/info.service';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
+import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
 
 @Controller("info")
 @ApiTags("info")
+@UseInterceptors(ReqLoggingInterceptor)
 export class InfoController {
   constructor(
     private readonly mapper: InfoMapper,
@@ -80,7 +82,8 @@ export class InfoController {
       dto.dota_map,
       dto.enabled,
       dto.enableCheats,
-      dto.fillBots
+      dto.fillBots,
+      dto.patch
     );
   }
 

@@ -1,9 +1,9 @@
-import { Body, Controller, Delete, Get, Logger, Param, Post, Query, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Logger, Param, Post, Query, UseInterceptors } from '@nestjs/common';
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Mapper } from 'rest/mapper';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, Repository } from 'typeorm';
+import { Connection, DataSource, Repository } from 'typeorm';
 import {
   AbandonSessionDto,
   BanStatusDto,
@@ -14,10 +14,11 @@ import {
   PlayerTeammateDto,
   PlayerTeammatePage,
   ReportPlayerDto,
+  ReportsAvailableDto,
   SmurfData,
   StartRecalibrationDto,
 } from 'rest/dto/player.dto';
-import { CommandBus, EventBus } from '@nestjs/cqrs';
+import { CommandBus, EventBus, QueryBus } from '@nestjs/cqrs';
 import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
 import { PlayerId } from 'gateway/shared-types/player-id';
 import { GameServerService } from 'gameserver/gameserver.service';
@@ -31,21 +32,28 @@ import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { NullableIntPipe } from 'util/pipes';
 import { AchievementService } from 'gameserver/achievement.service';
 import { AchievementEntity } from 'gameserver/model/achievement.entity';
-import { AchievementDto } from 'rest/dto/achievement.dto';
-import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
-import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
+import { AchievementDto, DBAchievementDto } from 'rest/dto/achievement.dto';
 import { makePage } from 'gateway/util/make-page';
 import { AchievementKey } from 'gateway/shared-types/achievemen-key';
 import { LeaderboardService } from 'gameserver/service/leaderboard.service';
 import { GameSeasonService } from 'gameserver/service/game-season.service';
 import { PlayerFeedbackService } from 'gameserver/service/player-feedback.service';
 import { PlayerQualityService } from 'gameserver/service/player-quality.service';
-import { LeaveGameSessionCommand } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.command';
 import { DodgeService } from 'rest/service/dodge.service';
 import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
+import { GetReportsAvailableQuery } from 'gateway/queries/GetReportsAvailable/get-reports-available.query';
+import { GetReportsAvailableQueryResult } from 'gateway/queries/GetReportsAvailable/get-reports-available-query.result';
+import { ClientProxy } from '@nestjs/microservices';
+import { RunRconCommand } from 'gateway/commands/RunRcon/run-rcon.command';
+import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
+import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
+
+
+// Holy fucking shit refactor THIS ASAP
 
 @Controller("player")
 @ApiTags("player")
+@UseInterceptors(ReqLoggingInterceptor)
 export class PlayerController {
   private logger = new Logger(PlayerController.name);
 
@@ -63,6 +71,7 @@ export class PlayerController {
     private readonly playerServiceV2: PlayerServiceV2,
     private readonly ebus: EventBus,
     private readonly connection: Connection,
+    private readonly ds: DataSource,
     @InjectRepository(LeaderboardView)
     private readonly leaderboardViewRepository: Repository<LeaderboardView>,
     private readonly achievements: AchievementService,
@@ -73,6 +82,10 @@ export class PlayerController {
     private readonly report: PlayerFeedbackService,
     private readonly playerQuality: PlayerQualityService,
     private readonly dodge: DodgeService,
+    private readonly qbus: QueryBus,
+    @Inject("QueryCore") private readonly redisEventQueue: ClientProxy,
+    @InjectRepository(GameSessionPlayerEntity)
+    private readonly gameSessionPlayerEntityRepository: Repository<GameSessionPlayerEntity>,
   ) {}
 
   @Get("/:id/achievements")
@@ -81,23 +94,83 @@ export class PlayerController {
   ): Promise<AchievementDto[]> {
     const ach = Array.from(this.achievements.achievementMap.values());
 
-    const achievementsQ = this.achievementEntityRepository
-      .createQueryBuilder("a")
-      .leftJoinAndMapOne(
-        "a.match",
-        FinishedMatchEntity,
-        "fm",
-        'fm.id = a."matchId"',
-      )
-      .leftJoinAndMapOne(
-        "a.pim",
-        PlayerInMatchEntity,
-        "pim",
-        `pim."playerId" = a.steam_id and pim."matchId" = a."matchId"`,
-      )
-      .where({ steam_id: steamId });
+    // const achievementsQ = this.achievementEntityRepository
+    //   .createQueryBuilder("a")
+    //   .leftJoinAndMapOne(
+    //     "a.match",
+    //     FinishedMatchEntity,
+    //     "fm",
+    //     'fm.id = a."matchId"',
+    //   )
+    //   .leftJoinAndMapOne(
+    //     "a.pim",
+    //     PlayerInMatchEntity,
+    //     "pim",
+    //     `pim."playerId" = a.steam_id and pim."matchId" = a."matchId"`,
+    //   )
+    //   .addSelect(
+    //     (sub) =>
+    //       sub
+    //         .select(
+    //           "COUNT(1) filter (where a2.progress <= a.progress) / COUNT(1)::float",
+    //         )
+    //         .from(AchievementEntity, "a2")
+    //         .where("a2.achievement_key = a.achievement_key"),
+    //     "percentile",
+    //   )
+    //   .where({ steam_id: steamId });
 
-    const achievements = await achievementsQ.getMany();
+    const achievements = await this.ds.query<DBAchievementDto[]>(
+      `
+WITH totals AS (
+  SELECT
+    achievement_key,
+    COUNT(*) AS total_players,
+    COUNT(*) FILTER (WHERE progress > 0) AS unlocked_players
+  FROM achievement_entity
+  GROUP BY achievement_key
+),
+per_progress AS (
+  -- one row per (achievement_key, progress) with the count
+  SELECT
+    achievement_key,
+    progress,
+    COUNT(*) AS cnt
+  FROM achievement_entity
+  GROUP BY achievement_key, progress
+),
+cum AS (
+  -- cumulative count of players having progress >= this progress
+  SELECT
+    achievement_key,
+    progress,
+    cnt,
+    SUM(cnt) OVER (
+      PARTITION BY achievement_key
+      ORDER BY progress DESC
+      ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS num_ge_progress
+  FROM per_progress
+)
+SELECT
+  a.steam_id,
+  a.achievement_key,
+  a.progress,
+  a."matchId",
+  CASE
+    WHEN a.progress > 0
+      THEN c.num_ge_progress::float / t.total_players
+    ELSE
+      t.unlocked_players::float / t.total_players
+  END AS percentile
+FROM achievement_entity a
+JOIN totals t USING (achievement_key)
+JOIN cum    c ON c.achievement_key = a.achievement_key
+             AND c.progress = a.progress
+WHERE a.steam_id = $1;
+`,
+      [steamId],
+    );
 
     const paddedAchievements = Object.keys(AchievementKey)
       .filter(
@@ -113,15 +186,13 @@ export class PlayerController {
             steam_id: steamId,
             progress: 0,
             achievement_key: AchievementKey[key],
-          }) as AchievementEntity,
+            percentile: 0,
+          }) as DBAchievementDto,
       );
 
-    return achievements.concat(paddedAchievements).map((t) => {
-      if (t.match) {
-        t.match.players = [];
-      }
-      return this.mapper.mapAchievement(t);
-    });
+    return achievements
+      .concat(paddedAchievements)
+      .map(this.mapper.mapAchievement);
   }
 
   @ApiQuery({
@@ -184,8 +255,8 @@ offset $2 limit $3`,
     };
   }
 
-  @UseInterceptors(CacheInterceptor)
-  @CacheTTL(10_000)
+  // @UseInterceptors(CacheInterceptor)
+  // @CacheTTL(10_000)
   @Get("/summary/:id")
   async playerSummary(@Param("id") steamId: string): Promise<PlayerSummaryDto> {
     await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steamId)));
@@ -197,6 +268,22 @@ offset $2 limit $3`,
     return {
       ...summary,
       reports: reports.playerAspects,
+    };
+  }
+
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(10_000)
+  @Get("/reports/:id")
+  async reportsAvailable(
+    @Param("id") steamId: string,
+  ): Promise<ReportsAvailableDto> {
+    const r = await this.qbus.execute<
+      GetReportsAvailableQuery,
+      GetReportsAvailableQueryResult
+    >(new GetReportsAvailableQuery(new PlayerId(steamId)));
+
+    return {
+      count: r.available,
     };
   }
 
@@ -324,8 +411,16 @@ offset $2 limit $3`,
 
   @Post("/abandon")
   async abandonSession(@Body() dto: AbandonSessionDto) {
-    await this.cbus.execute(
-      new LeaveGameSessionCommand(dto.steamId, dto.matchId),
-    );
+    const sesh = await this.playerServiceV2.getSession(dto.steamId);
+
+    this.logger.log("Session to abandon: ", dto);
+    if (sesh) {
+      this.ebus.publish(
+        new RunRconCommand(`d2c_abandon ${sesh.steamId}`, sesh.session.url),
+      );
+      sesh.userAbandoned = true;
+      await this.gameSessionPlayerEntityRepository.save(sesh);
+      this.logger.log(`UserAbandon game ${sesh.steamId}`, sesh.matchId);
+    }
   }
 }

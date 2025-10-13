@@ -20,6 +20,7 @@ import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.en
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { RecalibrationEntity } from 'gameserver/model/recalibration.entity';
+import { DotaPatch } from 'gateway/constants/patch';
 
 describe("InfoController", () => {
   jest.setTimeout(60000);
@@ -116,7 +117,8 @@ describe("InfoController", () => {
           dota_map: Dota_Map.DOTA681,
           enabled: false,
           enableCheats: false,
-          fillBots: false
+          fillBots: false,
+          patch: DotaPatch.DOTA_684
         } satisfies UpdateGamemodeDto)
         .expect(200);
 
@@ -133,7 +135,8 @@ describe("InfoController", () => {
         dotaGameMode: Dota_GameMode.RANKED_AP,
         dotaMap: Dota_Map.DOTA681,
         enableCheats: false,
-        fillBots: false
+        fillBots: false,
+        patch: DotaPatch.DOTA_684
       } satisfies MatchmakingModeMappingEntity);
     });
   });

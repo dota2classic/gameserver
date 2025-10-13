@@ -25,8 +25,14 @@ export class LeaveGameSessionHandler
         matchId: command.matchId,
         steamId: command.steamId,
       },
-      { abandoned: true },
+      command.userAbandon
+        ? { userAbandoned: true, abandoned: true }
+        : { abandoned: true },
     );
+
+
+    // TODO: somehow we need to send command to the running game server
+
 
     if (!res.affected) {
       this.logger.warn("Tried to leave non existing session");

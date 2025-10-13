@@ -1,7 +1,8 @@
 # compiled output
 dist
 node_modules
-
+config.yaml
+prod.config.yaml
 .env
 # Logs
 logs

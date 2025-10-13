@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AchievementEntity } from 'gameserver/model/achievement.entity';
-import { AchievementDto } from 'rest/dto/achievement.dto';
+import { AchievementDto, DBAchievementDto } from 'rest/dto/achievement.dto';
 import { AchievementService } from 'gameserver/achievement.service';
 import { PlayerRecordDto } from 'rest/dto/record.dto';
 import { RecordEntry } from 'rest/service/record.service';
@@ -20,13 +19,18 @@ export class Mapper {
   //   mmr: it.mmr,
   // });
 
-  public mapAchievement = (it: AchievementEntity): AchievementDto => ({
+  public mapAchievement = (it: DBAchievementDto): AchievementDto => ({
     key: it.achievement_key,
     steamId: it.steam_id,
     progress: it.progress,
-    maxProgress: this.as.getMaxProgressForKey(it.achievement_key),
-    isComplete: this.as.achievementMap.get(it.achievement_key).isComplete(it),
-    match: it.match ? this.matchMapper.mapMatch(it.match) : undefined,
+    percentile: it.percentile || 0,
+
+    checkpoints:
+      this.as.achievementMap.get(it.achievement_key)?.checkpoints || [],
+    isComplete:
+      this.as.achievementMap.get(it.achievement_key)?.isFullyComplete(it) ||
+      false,
+    matchId: it.matchId,
   });
 
   public mapRecordDto = async (it: RecordEntry): Promise<PlayerRecordDto> => {

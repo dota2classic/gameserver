@@ -8,11 +8,12 @@ import { ProcessRankedMatchHandler } from 'gameserver/command/ProcessRankedMatch
 import { DotaTeam } from 'gateway/shared-types/dota-team';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
-import { PlayerId } from 'gateway/shared-types/player-id';
 import { Repository } from 'typeorm';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { useFullModule } from '@test/useFullModule';
 import { FantasyBucket, MmrBucketService } from 'gameserver/mmr-bucket.service';
+import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
+import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 
 describe("ProcessRnakedMatchHandler", () => {
   const te = useFullModule();
@@ -30,10 +31,10 @@ describe("ProcessRnakedMatchHandler", () => {
         fm.id,
         pims
           .filter((t) => t.team === DotaTeam.RADIANT)
-          .map((it) => new PlayerId(it.playerId)),
+          .map((it) => it.playerId),
         pims
           .filter((t) => t.team === DotaTeam.DIRE)
-          .map((it) => new PlayerId(it.playerId)),
+          .map((it) => it.playerId),
         fm.matchmaking_mode,
       ),
     );
@@ -192,6 +193,83 @@ describe("ProcessRnakedMatchHandler", () => {
       }
     }
   });
+
+  it("should give more mmr if on winstreak", async () => {
+    const fm = await createFakeMatch(te, DotaTeam.RADIANT);
+    const pims = await fillMatch(te, fm, 10);
+
+    const winstreakSteamId = pims.find(
+      (t) => t.team === DotaTeam.RADIANT,
+    )!.playerId;
+
+    jest
+      .spyOn(te.service(PlayerServiceV2), "getStreak")
+      .mockImplementation(
+        (
+          season: GameSeasonEntity,
+          steamId: string,
+          modes: MatchmakingMode[] | undefined,
+          beforeTimestamp: string,
+        ) => {
+          if (steamId === winstreakSteamId) {
+            return Promise.resolve(5);
+          }
+
+          return Promise.resolve(0);
+        },
+      );
+
+    await processRanked(fm, pims);
+
+    const mmrRepo = te.repo<MmrChangeLogEntity>(MmrChangeLogEntity);
+
+    const changes = await mmrRepo.find({
+      where: { matchId: fm.id },
+    });
+
+    const change = changes.find((t) => t.playerId === winstreakSteamId)!;
+    expect(change.change).toBeGreaterThan(30);
+    expect(change.streak).toEqual(5)
+  });
+
+
+  it("should remove more mmr if on losestreak", async () => {
+    const fm = await createFakeMatch(te, DotaTeam.RADIANT);
+    const pims = await fillMatch(te, fm, 10);
+
+    const winstreakSteamId = pims.find(
+      (t) => t.team === DotaTeam.DIRE,
+    )!.playerId;
+
+    jest
+      .spyOn(te.service(PlayerServiceV2), "getStreak")
+      .mockImplementation(
+        (
+          season: GameSeasonEntity,
+          steamId: string,
+          modes: MatchmakingMode[] | undefined,
+          beforeTimestamp: string,
+        ) => {
+          if (steamId === winstreakSteamId) {
+            return Promise.resolve(-5);
+          }
+
+          return Promise.resolve(0);
+        },
+      );
+
+    await processRanked(fm, pims);
+
+    const mmrRepo = te.repo<MmrChangeLogEntity>(MmrChangeLogEntity);
+
+    const changes = await mmrRepo.find({
+      where: { matchId: fm.id },
+    });
+
+    const change = changes.find((t) => t.playerId === winstreakSteamId)!;
+    expect(change.change).toBeLessThan(30);
+    expect(change.streak).toEqual(-5)
+  })
 
   it("should not update mmr for already processed match", async () => {
     const fm = await createFakeMatch(te, DotaTeam.RADIANT);

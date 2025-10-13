@@ -5,35 +5,38 @@ import { ItemMap } from 'util/items';
 @ViewEntity({
   materialized: true,
   name: "item_view",
-  expression: `with items as (select pim.item0 as item_id
-               from player_in_match pim
-               union
-               select pim.item1
-               from player_in_match pim
-               union
-               select pim.item2
-               from player_in_match pim
-               union
-               select pim.item3
-               from player_in_match pim
-               union
-               select pim.item4
-               from player_in_match pim
-               union
-               select pim.item5
-               from player_in_match pim)
-select items.item_id                                       as item_id,
-       count(pim)::int                                     as games_played,
-       sum((pim.team = fm.winner)::int)::int               as wins,
-       sum((pim.team != fm.winner)::int)::int              as loss,
-       (row_number() over (order by count(pim) desc))::int as popularity
-from items
-         left join player_in_match pim
-                   on pim.item0 = items.item_id or pim.item1 = items.item_id or pim.item2 = items.item_id or
-                      pim.item3 = items.item_id or pim.item4 = items.item_id or pim.item5 = items.item_id
-         inner join finished_match fm on fm.id = pim."matchId" and fm.matchmaking_mode in (0, 1)
-where items.item_id != 0
-group by items.item_id`
+  expression: `
+WITH flat_items AS
+  (SELECT pim."matchId",
+          pim.team,
+          unnest(array[pim.item0, pim.item1, pim.item2, pim.item3, pim.item4, pim.item5]) AS item_id
+   FROM player_in_match pim
+   JOIN finished_match fm ON fm.id = pim."matchId"
+   WHERE fm.matchmaking_mode IN (0,
+                                 1)),
+     filtered_items AS
+  (SELECT item_id,
+          team,
+          "matchId"
+   FROM flat_items
+   WHERE item_id <> 0),
+     with_match AS
+  (SELECT fi.*,
+          fm.winner
+   FROM filtered_items fi
+   JOIN finished_match fm ON fm.id = fi."matchId"),
+     item_stats AS
+  (SELECT item_id,
+          count(*)::integer AS games_played,
+          sum((team = winner)::int)::integer AS wins,
+          sum((team <> winner)::int)::integer AS loss
+   FROM with_match
+   GROUP BY item_id)
+SELECT *,
+       row_number() OVER (
+                          ORDER BY games_played DESC)::integer AS popularity
+FROM item_stats;
+`
 })
 export class ItemView {
   @Index()

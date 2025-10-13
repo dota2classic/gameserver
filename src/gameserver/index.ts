@@ -15,7 +15,6 @@ import { GameServerService } from 'gameserver/gameserver.service';
 import { PlayerBanHammeredHandler } from 'gameserver/event-handler/player-ban-hammered.handler';
 import { PlayerNotLoadedHandler } from 'gameserver/event-handler/player-not-loaded.handler';
 import { CrimeLogCreatedHandler } from 'gameserver/event-handler/crime-log-created.handler';
-import { PlayerDeclinedGameHandler } from 'gameserver/event-handler/player-declined-game.handler';
 import { ServerNotRespondingHandler } from 'gameserver/event-handler/server-not-responding.handler';
 import { GetReportsAvailableHandler } from 'gameserver/query/get-reports-available.handler';
 import { PlayerReportUpdatedHandler } from 'gameserver/event-handler/player-report-updated.handler';
@@ -24,7 +23,6 @@ import { ServerStatusHandler } from 'gameserver/event-handler/server-status.hand
 import { ProcessAchievementsHandler } from 'gameserver/command/ProcessAchievements/process-achievements.handler';
 import { AchievementService } from 'gameserver/achievement.service';
 import { PrepareGameHandler } from 'gameserver/command/PrepareGame/prepare-game.handler';
-import { LobbyReadyHandler } from 'gameserver/event-handler/lobby-ready.handler';
 import { PlayerConnectedHandler } from 'gameserver/event-handler/player-connected.handler';
 import { SaveGameResultsHandler } from 'gameserver/command/SaveGameResults/save-game-results.handler';
 import { SaveMatchFailedHandler } from 'gameserver/command/SaveMatchFailed/save-match-failed.handler';
@@ -36,6 +34,9 @@ import { PlayerFeedbackService } from 'gameserver/service/player-feedback.servic
 import { PlayerQualityService } from 'gameserver/service/player-quality.service';
 import { AssignStartedServerHandler } from 'gameserver/command/AssignStartedServer/assign-started-server.handler';
 import { LeaveGameSessionHandler } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.handler';
+import { CreateCrimeLogHandler } from 'gameserver/command/CreateCrimeLog/create-crime-log.handler';
+import { StartingMmrService } from 'gameserver/service/starting-mmr.service';
+import { CheckFirstGameHandler } from 'gameserver/command/CheckFirstGame/check-first-game.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -48,7 +49,9 @@ const CommandHandlers = [
   SaveMatchFailedHandler,
   SavePlayerAbandonHandler,
   AssignStartedServerHandler,
-  LeaveGameSessionHandler
+  LeaveGameSessionHandler,
+  CreateCrimeLogHandler,
+  CheckFirstGameHandler
 ];
 const EventHandlers = [
   PlayerConnectedHandler,
@@ -64,11 +67,10 @@ const EventHandlers = [
   MatchFinishedHandler,
 
   PlayerBanHammeredHandler,
-  LobbyReadyHandler,
 
   ServerStatusHandler,
   PlayerNotLoadedHandler,
-  PlayerDeclinedGameHandler,
+  // PlayerDeclinedGameHandler,
   CrimeLogCreatedHandler,
 
   ServerNotRespondingHandler,
@@ -88,7 +90,8 @@ const Services = [
   PlayerServiceV2,
   LeaderboardService,
   PlayerFeedbackService,
-  PlayerQualityService
+  PlayerQualityService,
+  StartingMmrService
 ];
 const Sagas = [GameserverSaga];
 

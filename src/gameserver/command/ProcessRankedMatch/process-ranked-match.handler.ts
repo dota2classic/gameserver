@@ -12,6 +12,7 @@ import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { MmrBucketService } from 'gameserver/mmr-bucket.service';
 import { GameSeasonService } from 'gameserver/service/game-season.service';
 import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
+import { StartingMmrService } from 'gameserver/service/starting-mmr.service';
 
 type GetMmr = (plr: VersionPlayerEntity) => number;
 
@@ -47,6 +48,7 @@ export class ProcessRankedMatchHandler
     private readonly datasource: DataSource,
     private readonly seasonService: GameSeasonService,
     private readonly plrService: PlayerServiceV2,
+    private readonly startingMmrService: StartingMmrService,
   ) {}
 
   public static calculateMmrDeviation(
@@ -65,6 +67,7 @@ export class ProcessRankedMatchHandler
   public computeMMRChange(
     cbGame: number,
     win: boolean,
+    streak: number,
     mmrDiff: number,
     cbGames: number = 10,
     baseMMRChange: number = 25,
@@ -88,8 +91,22 @@ export class ProcessRankedMatchHandler
     mmrChange = Math.min(mmrChange, maxAbsoluteChange);
     mmrChange = Math.max(mmrChange, -maxAbsoluteChange);
 
+    if (
+      streak !== 0 &&
+      Math.sign(streak) === Math.sign(mmrChange) &&
+      Math.abs(streak) > 1
+    ) {
+      // streak of 2: 1.4
+      // streak of 8: 2.3
+      const multiplier = 1 + Math.min(10, Math.abs(streak)) / 5;
+      this.logger.log(
+        `Player streak is ${streak}. MMR change multiplier is ${multiplier}`,
+      );
+      mmrChange *= multiplier;
+    }
+
     this.logger.log(
-      `Player mmr change: cb=${isCalibrationGame}, win=${win}, base=${change.toFixed(0)}, playerPerformanceCorrection=${playerPerformanceCorrection.toFixed(1)}, result = ${mmrChange} `,
+      `Player mmr change: cb=${isCalibrationGame}, win=${win}, base=${change.toFixed(0)}, playerPerformanceCorrection=${playerPerformanceCorrection.toFixed(1)}, result = ${mmrChange}, streak = ${streak}`,
     );
 
     return mmrChange;
@@ -98,7 +115,8 @@ export class ProcessRankedMatchHandler
   async execute(command: ProcessRankedMatchCommand) {
     if (
       command.mode !== MatchmakingMode.UNRANKED &&
-      command.mode !== MatchmakingMode.RANKED
+      command.mode !== MatchmakingMode.RANKED &&
+      command.mode !== MatchmakingMode.HIGHROOM
     )
       return;
 
@@ -130,7 +148,7 @@ export class ProcessRankedMatchHandler
       [...command.winners, ...command.losers].map(async (playerId, idx) =>
         this.changeMMR(
           currentSeason,
-          playerId.value,
+          playerId,
           idx < command.winners.length,
           diffDeviationFactor,
           winnerAverage,
@@ -138,8 +156,7 @@ export class ProcessRankedMatchHandler
           command.matchId,
           m.timestamp,
           playerMap,
-          m.players.find((it) => it.playerId === playerId.value)?.abandoned ||
-            false,
+          m.players.find((it) => it.playerId === playerId)?.abandoned || false,
         ),
       ),
     );
@@ -174,9 +191,7 @@ export class ProcessRankedMatchHandler
     const map = new Map<string, VersionPlayerEntity>();
     const plrs = await this.versionPlayerRepository.find({
       where: {
-        steamId: In(
-          [...command.losers, ...command.winners].map((t) => t.value),
-        ),
+        steamId: In([...command.losers, ...command.winners]),
         seasonId: currentSeason.id,
       },
     });
@@ -184,16 +199,17 @@ export class ProcessRankedMatchHandler
     plrs.forEach((plr) => map.set(plr.steamId, plr));
 
     // here we do some tricks
-    [...command.losers, ...command.winners].forEach((pid) => {
-      if (!map.has(pid.value)) {
+    for (const pid of [...command.losers, ...command.winners]) {
+      if (!map.has(pid)) {
         const vp = new VersionPlayerEntity(
-          pid.value,
-          VersionPlayerEntity.STARTING_MMR,
+          pid,
+          await this.startingMmrService.getStartingMMRForSteamId(pid),
           currentSeason.id,
         );
-        map.set(pid.value, vp);
+
+        map.set(pid, vp);
       }
-    });
+    }
 
     return map;
   }
@@ -205,11 +221,11 @@ export class ProcessRankedMatchHandler
     const getMmr: GetMmr = (plr: VersionPlayerEntity): number => plr.mmr;
 
     const winnerMMR = command.winners
-      .map((t) => playerMap.get(t.value))
+      .map((t) => playerMap.get(t))
       .reduce((a, b) => a + getMmr(b), 0);
 
     const loserMMR = command.losers
-      .map((t) => playerMap.get(t.value))
+      .map((t) => playerMap.get(t))
       .reduce((a, b) => a + getMmr(b), 0);
 
     const winnerAverage = winnerMMR / command.winners.length;
@@ -240,7 +256,11 @@ export class ProcessRankedMatchHandler
     const cb = await this.plrService.getCalibrationGame(
       season,
       steamId,
-      [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],
+      [
+        MatchmakingMode.RANKED,
+        MatchmakingMode.UNRANKED,
+        MatchmakingMode.HIGHROOM,
+      ],
       matchTimestamp,
     );
     const plr = playerMap.get(steamId);
@@ -256,10 +276,22 @@ export class ProcessRankedMatchHandler
       `Player's ${plr.steamId} performance coefficient is ${playerPerformanceCoefficient}`,
     );
 
+    const streak = await this.plrService.getStreak(
+      season,
+      steamId,
+      [
+        MatchmakingMode.RANKED,
+        MatchmakingMode.UNRANKED,
+        MatchmakingMode.HIGHROOM,
+      ],
+      matchTimestamp,
+    );
+
     let mmrChange = Math.round(
       this.computeMMRChange(
         cb,
-        winner,
+        didAbandon ? false : winner,
+        streak,
         mmrDiff,
         ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES, // CB GAMES = 0 for now
         25,
@@ -278,7 +310,7 @@ export class ProcessRankedMatchHandler
     try {
       let mmrBefore: number;
       mmrBefore = plr.mmr;
-      plr.mmr = plr.mmr + mmrChange;
+      plr.mmr = Math.max(1, plr.mmr + mmrChange);
 
       const change = new MmrChangeLogEntity();
       change.playerId = steamId;
@@ -288,6 +320,7 @@ export class ProcessRankedMatchHandler
         cb < ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES;
       change.change = Number(mmrChange);
       change.winner = winner;
+      change.streak = streak;
       change.hiddenMmr = true;
       change.mmrBefore = mmrBefore;
       change.mmrAfter = Number(mmrBefore + mmrChange);

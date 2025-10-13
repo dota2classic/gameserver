@@ -3,7 +3,7 @@ import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { HARD_PUNISHMENT, LIGHT_PUNISHMENT, MEDIUM_PUNISHMENT } from 'gateway/shared-types/timings';
+import { FIVE_MINUTES, HARD_PUNISHMENT, LIGHT_PUNISHMENT } from 'gateway/shared-types/timings';
 import { BanReason } from 'gateway/shared-types/ban';
 import { Logger } from '@nestjs/common';
 import { BanSystemEntry, BanSystemEvent } from 'gateway/events/gs/ban-system.event';
@@ -11,13 +11,14 @@ import { PlayerId } from 'gateway/shared-types/player-id';
 import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
-const ABANDON_PUNISHMENTS = [
-  1000 * 60 * 60 * 12, // 12 hours
-  1000 * 60 * 60 * 24, // 24 hours
-  1000 * 60 * 60 * 24 * 5, // 5 days
-  1000 * 60 * 60 * 24 * 14, // 2 weeks
-  1000 * 60 * 60 * 24 * 30, // 1 month
+const ABANDON_PUNISHMENTS_HOURS = [
+  1, // 12 hours
+  8, // 24 hours
+  3 * 24, // 5 days
+  7 * 24, // 2 weeks
+  14 * 24, // 1 month
 ];
+const hr = 1000 * 60 * 60;
 
 export const getBasePunishment = (crime: BanReason) => {
   switch (crime) {
@@ -26,7 +27,7 @@ export const getBasePunishment = (crime: BanReason) => {
     case BanReason.GAME_DECLINE:
       return LIGHT_PUNISHMENT;
     case BanReason.LOAD_FAILURE:
-      return MEDIUM_PUNISHMENT;
+      return FIVE_MINUTES;
     case BanReason.ABANDON:
       return HARD_PUNISHMENT;
     default:
@@ -41,7 +42,7 @@ export const getPunishmentCumulativeInterval = (crime: BanReason): string => {
     case BanReason.GAME_DECLINE:
       return "6h";
     case BanReason.LOAD_FAILURE:
-      return "7d";
+      return "3d";
     case BanReason.ABANDON:
       return "30d";
     default:
@@ -100,7 +101,8 @@ export class CrimeLogCreatedHandler
     if (
       thisCrime.lobby_type === MatchmakingMode.BOTS ||
       thisCrime.lobby_type === MatchmakingMode.LOBBY ||
-      thisCrime.lobby_type == MatchmakingMode.SOLOMID
+      thisCrime.lobby_type == MatchmakingMode.SOLOMID ||
+      thisCrime.lobby_type == MatchmakingMode.TURBO
     ) {
       thisCrime.handled = true;
       thisCrime.banTime = 0;
@@ -142,14 +144,20 @@ export class CrimeLogCreatedHandler
     if (thisCrime.crime === BanReason.ABANDON) {
       // Use predefined punishments
       const punishmentIdx = Math.min(
-        totalPunishmentCount,
-        ABANDON_PUNISHMENTS.length - 1,
+        Math.max(0, totalPunishmentCount - 1),
+        ABANDON_PUNISHMENTS_HOURS.length - 1,
       );
-      punishmentDuration = ABANDON_PUNISHMENTS[punishmentIdx];
+      punishmentDuration = ABANDON_PUNISHMENTS_HOURS[punishmentIdx] * hr;
     } else {
       const basePunishment = getBasePunishment(thisCrime.crime);
       punishmentDuration = basePunishment * totalPunishmentCount;
     }
+
+
+    if(thisCrime.lobby_type === MatchmakingMode.HIGHROOM) {
+      punishmentDuration *= 3;
+    }
+
     this.logger.log(
       `Punishment: ${punishmentDuration / 1000 / 60} minutes for ${
         thisCrime.steam_id

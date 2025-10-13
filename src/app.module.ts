@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppService } from 'app.service';
 import { CqrsModule } from '@nestjs/cqrs';
-import { ClientsModule, RedisOptions, RmqOptions, Transport } from '@nestjs/microservices';
+import { ClientsModule, RedisOptions, Transport } from '@nestjs/microservices';
 import { GameServerDomain } from 'gameserver';
 import { CoreController } from 'core.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -15,7 +15,6 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { MetaController } from 'rest/meta/meta.controller';
 import { MetaService } from 'rest/meta/meta.service';
 import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
-import { outerQuery } from 'gateway/util/outerQuery';
 import { CacheModule } from '@nestjs/cache-manager';
 import { MatchService } from 'rest/match/match.service';
 import { MatchMapper } from 'rest/match/match.mapper';
@@ -34,6 +33,10 @@ import { RecordController } from 'rest/record.controller';
 import { RecordService } from 'rest/service/record.service';
 import { MetricsModule } from 'metrics/metrics.module';
 import { DodgeService } from 'rest/service/dodge.service';
+import { Configuration, ForumApi } from 'generated-api/forum';
+import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
+import { outerQuery } from 'util/outerQuery';
+import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
 
 @Module({
   imports: [
@@ -43,7 +46,7 @@ import { DodgeService } from 'rest/service/dodge.service';
       load: [configuration],
     }),
     CacheModule.register({
-      isGlobal: true
+      isGlobal: true,
     }),
     ScheduleModule.forRoot(),
     CqrsModule,
@@ -54,6 +57,7 @@ import { DodgeService } from 'rest/service/dodge.service';
           type: "postgres",
           migrations: ["dist/src/database/migrations/*.*"],
           migrationsRun: true,
+          // maxQueryExecutionTime: 50,
           logging: ["error"],
         };
       },
@@ -61,34 +65,22 @@ import { DodgeService } from 'rest/service/dodge.service';
       inject: [ConfigService],
     }),
     TypeOrmModule.forFeature(Entities),
-    ClientsModule.registerAsync([
-      {
-        name: "RMQ",
-        useFactory(config: ConfigService): RmqOptions {
-          return {
-            transport: Transport.RMQ,
-            options: {
-              urls: [
-                {
-                  hostname: config.get<string>("rabbitmq.host"),
-                  port: config.get<number>("rabbitmq.port"),
-                  protocol: "amqp",
-                  username: config.get<string>("rabbitmq.user"),
-                  password: config.get<string>("rabbitmq.password"),
-                },
-              ],
-              queue: config.get<string>("rabbitmq.gameserver_commands"),
-              queueOptions: {
-                durable: true,
-              },
-              prefetchCount: 5,
+    RabbitMQModule.forRootAsync({
+      useFactory(config: ConfigService): RabbitMQConfig {
+        return {
+          exchanges: [
+            {
+              name: 'app.events',
+              type: 'topic',
             },
-          };
-        },
-        inject: [ConfigService],
-        imports: [],
+          ],
+          enableControllerDiscovery: true,
+          uri: `amqp://${config.get('rabbitmq.user')}:${config.get('rabbitmq.password')}@${config.get('rabbitmq.host')}:${config.get('rabbitmq.port')}`,
+        };
       },
-    ]),
+      imports: [],
+      inject: [ConfigService],
+    }),
     ClientsModule.registerAsync([
       {
         name: "QueryCore",
@@ -130,7 +122,17 @@ import { DodgeService } from 'rest/service/dodge.service';
     MmrBucketService,
     Mapper,
     RecordService,
+    ReqLoggingInterceptor,
     ...GameServerDomain,
+    {
+      provide: ForumApi,
+      useFactory: (config) => {
+        return new ForumApi(
+          new Configuration({ basePath: config.get("api.forumApiUrl") }),
+        );
+      },
+      inject: [ConfigService],
+    },
     outerQuery(GetUserInfoQuery, "QueryCore"),
   ],
 })

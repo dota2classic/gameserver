@@ -39,6 +39,7 @@ export class InfoMapper {
     enabled: it.enabled,
     enableCheats: it.enableCheats,
     fillBots: it.fillBots,
+    patch: it.patch
   });
 
   public mapGameSeason = (it: {

@@ -1,7 +1,6 @@
 import { CommandHandler, EventBus, ICommandHandler, QueryBus } from '@nestjs/cqrs';
 import { Inject, Logger } from '@nestjs/common';
 import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
-import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ClientProxy } from '@nestjs/microservices';
@@ -15,6 +14,8 @@ import { MatchEntity } from 'gameserver/model/match.entity';
 import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
 import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
 import { Role } from 'gateway/shared-types/roles';
+import { ForumApi } from 'generated-api/forum';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
@@ -23,16 +24,15 @@ export class FindGameServerHandler
   private readonly logger = new Logger(FindGameServerHandler.name);
 
   constructor(
-    @InjectRepository(GameServerSessionEntity)
-    private readonly gameServerSessionModelRepository: Repository<GameServerSessionEntity>,
     private readonly ebus: EventBus,
     @InjectRepository(MatchEntity)
     private readonly matchEntityRepository: Repository<MatchEntity>,
     private readonly qbus: QueryBus,
     @Inject("QueryCore") private readonly redisEventQueue: ClientProxy,
-    @Inject("RMQ") private readonly rmq: ClientProxy,
     @InjectRepository(MatchmakingModeMappingEntity)
     private readonly matchmakingModeMappingEntityRepository: Repository<MatchmakingModeMappingEntity>,
+    private readonly forum: ForumApi,
+    private readonly amqpConnection: AmqpConnection,
   ) {}
 
   async execute(command: FindGameServerCommand) {
@@ -50,7 +50,10 @@ export class FindGameServerHandler
     m = await this.matchEntityRepository.save(m);
     launchGameServerCommand.matchId = m.id;
 
-    this.logger.log("Created match stub", { match_id: m.id, lobby_type: m.mode });
+    this.logger.log("Created match stub", {
+      match_id: m.id,
+      lobby_type: m.mode,
+    });
 
     await this.submitQueueTask(launchGameServerCommand);
   }
@@ -60,6 +63,7 @@ export class FindGameServerHandler
   ): Promise<LaunchGameServerCommand> {
     const players: FullMatchPlayer[] = [];
 
+
     // TODO: i dont like it and want to move username resolving into operator
     const resolves = matchInfo.players.map(async (t) => {
       const res = await this.qbus.execute<
@@ -67,13 +71,24 @@ export class FindGameServerHandler
         GetUserInfoQueryResult
       >(new GetUserInfoQuery(t.playerId));
 
-      // FIXME: add server mutes
+      let isMuted: boolean = false;
+      try {
+        const r = await this.forum.forumControllerGetUser(t.playerId.value);
+        isMuted = new Date(r.muteUntil).getTime() > Date.now();
+      } catch (e) {
+        console.error(e);
+        this.logger.error(
+          `Couldn't get mute status of player ${t.playerId.value}`,
+          e,
+        );
+      }
+
       players.push(
         new FullMatchPlayer(
           t.playerId.value,
           res.name,
           res.roles.includes(Role.OLD),
-          false,
+          isMuted,
           t.partyId,
           t.team,
         ),
@@ -91,11 +106,13 @@ export class FindGameServerHandler
       matchInfo.fillBots,
       matchInfo.enableCheats,
       players,
+      matchInfo.patch,
+      matchInfo.region
     );
   }
 
   private async submitQueueTask(cmd: LaunchGameServerCommand) {
-    this.rmq.emit(LaunchGameServerCommand.name, cmd);
+    this.ebus.publish(cmd);
     this.logger.log("Submitted start server command to queue");
   }
 }

@@ -1,4 +1,3 @@
-import { Ctx, MessagePattern, Payload, RmqContext } from '@nestjs/microservices';
 import { Controller, Logger } from '@nestjs/common';
 import { CommandBus, Constructor } from '@nestjs/cqrs';
 import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
@@ -10,6 +9,17 @@ import { SaveMatchFailedCommand } from 'gameserver/command/SaveMatchFailed/save-
 import { SavePlayerAbandonCommand } from 'gameserver/command/SavePlayerAbandon/save-player-abandon.command';
 import { SrcdsServerStartedEvent } from 'gateway/events/srcds-server-started.event';
 import { AssignStartedServerCommand } from 'gameserver/command/AssignStartedServer/assign-started-server.command';
+import { RoomReadyEvent } from 'gateway/events/room-ready.event';
+import { PrepareGameCommand } from 'gameserver/command/PrepareGame/prepare-game.command';
+import { PlayerDeclinedGameEvent } from 'gateway/events/mm/player-declined-game.event';
+import { CreateCrimeLogCommand } from 'gameserver/command/CreateCrimeLog/create-crime-log.command';
+import { BanReason } from 'gateway/shared-types/ban';
+import { LobbyReadyEvent } from 'gateway/events/lobby-ready.event';
+import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
+import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
+import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
+import { MessageHandlerErrorBehavior } from '@golevelup/nestjs-rabbitmq/lib/amqp/errorBehaviors';
+import { Region } from 'gateway/shared-types/region';
 
 @Controller()
 export class RmqController {
@@ -20,37 +30,112 @@ export class RmqController {
     private readonly config: ConfigService,
   ) {}
 
-
-  @MessagePattern(SrcdsServerStartedEvent.name)
-  async SrcdsServerStartedEvent(
-    @Payload() data: SrcdsServerStartedEvent,
-    @Ctx() context: RmqContext,
-  ) {
-    await this.processMessage(new AssignStartedServerCommand(data.server, data.info), context);
+  @RabbitSubscribe({
+    exchange: "app.events",
+    routingKey: SrcdsServerStartedEvent.name,
+    queue: `gs-queue.${SrcdsServerStartedEvent.name}`,
+    errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
+  })
+  async SrcdsServerStartedEvent(data: SrcdsServerStartedEvent) {
+    this.logger.log("SrcdsServerStarted", data)
+    await this.processMessage(
+      new AssignStartedServerCommand(data.server, data.info),
+    );
   }
 
-  @MessagePattern(GameResultsEvent.name)
-  async GameResultsEvent(
-    @Payload() data: GameResultsEvent,
-    @Ctx() context: RmqContext,
-  ) {
-    await this.processMessage(new SaveGameResultsCommand(data), context);
+  @RabbitSubscribe({
+    exchange: "app.events",
+    routingKey: GameResultsEvent.name,
+    queue: `gs-queue.${GameResultsEvent.name}`,
+    errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
+  })
+  async GameResultsEvent(data: GameResultsEvent) {
+    await this.processMessage(new SaveGameResultsCommand(data));
   }
 
-  @MessagePattern(MatchFailedEvent.name)
-  async MatchFailedEvent(
-    @Payload() data: MatchFailedEvent,
-    @Ctx() context: RmqContext,
-  ) {
-    await this.processMessage(new SaveMatchFailedCommand(data), context);
+  @RabbitSubscribe({
+    exchange: "app.events",
+    routingKey: MatchFailedEvent.name,
+    queue: `gs-queue.${MatchFailedEvent.name}`,
+    errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
+  })
+  async MatchFailedEvent(data: MatchFailedEvent) {
+    await this.processMessage(new SaveMatchFailedCommand(data));
   }
 
-  @MessagePattern(PlayerAbandonedEvent.name)
-  async PlayerAbandonedEvent(
-    @Payload() data: PlayerAbandonedEvent,
-    @Ctx() context: RmqContext,
+  @RabbitSubscribe({
+    exchange: "app.events",
+    routingKey: PlayerAbandonedEvent.name,
+    queue: `gs-queue.${PlayerAbandonedEvent.name}`,
+    errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
+  })
+  async PlayerAbandonedEvent(data: PlayerAbandonedEvent) {
+    await this.processMessage(new SavePlayerAbandonCommand(data));
+  }
+
+  @RabbitSubscribe({
+    exchange: "app.events",
+    routingKey: RoomReadyEvent.name,
+    queue: `gs-queue.${RoomReadyEvent.name}`,
+    errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
+  })
+  async RoomReadyEvent(
+    data: RoomReadyEvent,
   ) {
-    await this.processMessage(new SavePlayerAbandonCommand(data), context);
+    await this.processMessage(
+      new PrepareGameCommand(
+        data.mode,
+        data.roomId,
+        data.players,
+        data.version,
+        Region.RU_MOSCOW // FIXME MAKE COME FROM MATCHMAKER
+      ),
+    );
+  }
+
+  @RabbitSubscribe({
+    exchange: "app.events",
+    routingKey: LobbyReadyEvent.name,
+    queue: `gs-queue.${LobbyReadyEvent.name}`,
+    errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
+  })
+  async LobbyReadyEvent(
+    data: LobbyReadyEvent,
+  ) {
+    await this.processMessage(
+      new FindGameServerCommand(
+        new GamePreparedEvent(
+          data.mode,
+          data.gameMode,
+          data.map,
+          data.version,
+          data.roomId,
+          data.players,
+          data.enableCheats,
+          data.fillBots,
+          data.patch,
+          data.region
+        ),
+      ),
+    );
+  }
+
+  @RabbitSubscribe({
+    exchange: "app.events",
+    routingKey: PlayerDeclinedGameEvent.name,
+    queue: `gs-queue.${PlayerDeclinedGameEvent.name}`,
+    errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
+  })
+  async PlayerDeclinedGameEvent(
+    data: PlayerDeclinedGameEvent
+  ) {
+    await this.processMessage(
+      new CreateCrimeLogCommand(
+        data.steamId,
+        BanReason.GAME_DECLINE,
+        data.mode,
+      ),
+    );
   }
 
   private async construct<T>(
@@ -62,19 +147,7 @@ export class RmqController {
     return buff;
   }
 
-  private async processMessage<T>(msg: T, context: RmqContext) {
-    const channel = context.getChannelRef();
-    const originalMsg = context.getMessage();
-
-    return Promise.resolve(msg)
-      .then((cmd) => this.cbus.execute(cmd))
-      .then(() => channel.ack(originalMsg))
-      .catch((e) => {
-        this.logger.error(
-          `Error while processing message`,
-          e,
-        );
-        channel.nack(originalMsg);
-      });
+  private async processMessage<T>(cmd: T) {
+    await this.cbus.execute(cmd);
   }
 }

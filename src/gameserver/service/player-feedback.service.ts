@@ -9,6 +9,7 @@ import { PlayerReportStatusEntity } from 'gameserver/model/player-report-status.
 import { PlayerReportsDto } from 'rest/dto/player.dto';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { PlayerFeedbackCreatedEvent } from 'gateway/events/player-feedback-created.event';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 @Injectable()
 export class PlayerFeedbackService {
@@ -23,6 +24,7 @@ export class PlayerFeedbackService {
     private readonly ds: DataSource,
     @InjectRepository(PlayerCrimeLogEntity)
     private readonly playerCrimeLogEntityRepository: Repository<PlayerCrimeLogEntity>,
+    private readonly amqpConnection: AmqpConnection,
   ) {}
 
   public async getPlayerReportState(
@@ -84,10 +86,11 @@ export class PlayerFeedbackService {
       );
     });
 
-    this.ebus.publish(new PlayerReportStateUpdatedEvent(reported));
-    await this.ebus.publish(
+    this.ebus.publish(
       new PlayerFeedbackCreatedEvent(reported, aspect, matchId),
     );
+
+    this.ebus.publish(new PlayerReportStateUpdatedEvent(reported));
 
     return this.playerReportStatusEntityRepository.findOneOrFail({
       where: {
@@ -118,5 +121,4 @@ AND pr.reported_steam_id = pim."playerId" GROUP
       [matchId, steamId],
     );
   }
-
 }

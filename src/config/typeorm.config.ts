@@ -21,6 +21,13 @@ export const getTypeormConfig = (
     migrationsRun: false,
     migrationsTableName: "gameserver_migrations",
     logging: true,
+
+    extra: {
+      max: 20, // maximum number of connections
+      min: 10, // minimum number of idle connections
+      idleTimeoutMillis: 30000, // close idle clients after 30 seconds
+      connectionTimeoutMillis: 10000, // return an error after 2 seconds if connection could not be established
+    },
   };
 };
 

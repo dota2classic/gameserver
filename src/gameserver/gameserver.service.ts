@@ -1,7 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
-import { PlayerId } from 'gateway/shared-types/player-id';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { LeaderboardView } from 'gameserver/model/leaderboard.view';
@@ -18,14 +17,14 @@ import { ConfigService } from '@nestjs/config';
 import { GameResultsEvent, PlayerInMatchDTO } from 'gateway/events/gs/game-results.event';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
 import { HeroMap } from 'util/items';
-import { SaveGameResultsCommand } from 'gameserver/command/SaveGameResults/save-game-results.command';
 import { SteamIds } from 'gameserver/steamids';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { MetricsService } from 'metrics/metrics.service';
 import { MmrBucketView } from 'gameserver/model/mmr-bucket.view';
-import { wait } from 'util/wait';
 import { PlayerFeedbackService } from 'gameserver/service/player-feedback.service';
-import { PlayerAspect } from 'gateway/shared-types/player-aspect';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
+import { Region } from 'gateway/shared-types/region';
+import { DotaPatch } from 'gateway/constants/patch';
 
 export interface Player {
   steam64: string;
@@ -80,12 +79,13 @@ export class GameServerService implements OnApplicationBootstrap {
     private readonly metrics: MetricsService,
     private readonly config: ConfigService,
     private readonly reportService: PlayerFeedbackService,
+    private readonly amqpConnection: AmqpConnection,
   ) {}
 
   @Cron(CronExpression.EVERY_5_MINUTES)
   async refreshLeaderboard() {
     await this.leaderboardViewRepository.query(
-      `refresh materialized view leaderboard_view`,
+      `refresh materialized view concurrently leaderboard_view`,
     );
     this.logger.log("Refreshed leaderboard_view");
   }
@@ -125,10 +125,10 @@ export class GameServerService implements OnApplicationBootstrap {
         match.id,
         match.players
           .filter((t) => t.team === match.winner)
-          .map((t) => new PlayerId(t.playerId)),
+          .map((t) => t.playerId),
         match.players
           .filter((t) => t.team !== match.winner)
-          .map((t) => new PlayerId(t.playerId)),
+          .map((t) => t.playerId),
         match.matchmaking_mode,
       ),
     );
@@ -178,35 +178,39 @@ export class GameServerService implements OnApplicationBootstrap {
       players: slice.map(({ steam_id }, idx) =>
         this.mockPim(steam_id, idx < 5 ? DotaTeam.RADIANT : DotaTeam.DIRE),
       ),
+      region: Region.RU_MOSCOW,
+      patch: DotaPatch.DOTA_684,
+      barracksStatus: [12, 15],
+      towerStatus: [22, 15],
     };
 
-    await this.cbus.execute(new SaveGameResultsCommand(g));
+    await this.amqpConnection.publish("app.events", GameResultsEvent.name, g);
 
-    await wait(1000);
+    // await wait(2000);
     // Do some reports
-    for (let player of g.players) {
-      const reported = shuffle(
-        g.players
-          .filter((t) => t.steam_id !== player.steam_id)
-          .map((it) => it.steam_id),
-      )[0];
-      const aspect: PlayerAspect = shuffle(
-        Object.keys(PlayerAspect)
-          .filter((key) => isNaN(Number(key)))
-          .map((it) => PlayerAspect[it]),
-      )[0];
-
-      try {
-        await this.reportService.handlePlayerReport(
-          player.steam_id,
-          reported,
-          aspect,
-          m.id,
-        );
-      } catch (e) {
-        this.logger.warn("Error while generating fake report", e);
-      }
-    }
+    // for (let player of g.players) {
+    //   const reported = shuffle(
+    //     g.players
+    //       .filter((t) => t.steam_id !== player.steam_id)
+    //       .map((it) => it.steam_id),
+    //   )[0];
+    //   const aspect: PlayerAspect = shuffle(
+    //     Object.keys(PlayerAspect)
+    //       .filter((key) => isNaN(Number(key)))
+    //       .map((it) => PlayerAspect[it]),
+    //   )[0];
+    //
+    //   try {
+    //     await this.reportService.handlePlayerReport(
+    //       player.steam_id,
+    //       reported,
+    //       aspect,
+    //       m.id,
+    //     );
+    //   } catch (e) {
+    //     this.logger.warn("Error while generating fake report", e);
+    //   }
+    // }
   }
 
   @Cron(CronExpression.EVERY_10_SECONDS)
@@ -246,6 +250,9 @@ export class GameServerService implements OnApplicationBootstrap {
       towerDamage: randint(10_000),
       heroHealing: randint(10_000),
       abandoned: Math.random() > 0.98,
+      supportGold: randint(1000),
+      supportAbilityValue: randint(1000),
+      misses: randint(3),
       hero:
         "npc_dota_hero_" +
         HeroMap[Math.floor(Math.random() * HeroMap.length)].name,

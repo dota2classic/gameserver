@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
+import { PlayerDailyRecord } from 'rest/dto/record.dto';
 
 export enum PlayerRecordType {
   KILLS = "KILLS",
@@ -29,6 +29,7 @@ export enum RecordTimespan {
   OVERALL,
   SEASON,
   MONTHLY,
+  DAY,
 }
 
 export interface RecordEntry {
@@ -36,8 +37,6 @@ export interface RecordEntry {
   steamId: string;
   match?: FinishedMatchEntity;
 }
-
-let i = 0;
 
 @Injectable()
 export class RecordService {
@@ -48,14 +47,6 @@ export class RecordService {
     private readonly playerInMatchEntityRepository: Repository<PlayerInMatchEntity>,
     private readonly datasource: DataSource,
   ) {}
-
-  @CacheTTL(10_000)
-  @CacheKey("dostuffshit")
-  public async doStuff() {
-    console.log("Do stuff: method called!");
-
-    return i++;
-  }
 
   public async getPlayerRecords(span: RecordTimespan, steamId?: string) {
     return Promise.all([
@@ -129,6 +120,22 @@ export class RecordService {
     ]);
   }
 
+  public async dailyPlayerRecords() {
+    return this.datasource.query<PlayerDailyRecord[]>(`
+SELECT "playerId" AS steam_id,
+       sum(mcle."change")::float AS mmr_change,
+       count(*)::int AS games,
+       (count(*) filter (
+                         WHERE mcle.winner))::int AS wins,
+       (count(*) filter (
+                         WHERE NOT mcle.winner))::int AS loss
+FROM mmr_change_log_entity mcle
+INNER JOIN finished_match fm ON fm.id = mcle."matchId"
+WHERE fm."timestamp"::date = now()::date
+GROUP BY steam_id;
+`)
+  }
+
   private async getMostFactory(
     span: RecordTimespan,
     type: PlayerRecordType,
@@ -153,6 +160,8 @@ export class RecordService {
       case RecordTimespan.MONTHLY:
         timeCondition = `extract(YEAR FROM fm.timestamp) = extract(YEAR FROM now()) and extract(MONTH FROM fm.timestamp) = extract(MONTH FROM now())`;
         break;
+      case RecordTimespan.DAY:
+        timeCondition = `fm.timestamp::date = now()::date`;
     }
 
     let pimJoin = 'pim."matchId" = fm.id';

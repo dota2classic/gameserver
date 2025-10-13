@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { EventBus, ofType } from '@nestjs/cqrs';
 import { ClientProxy } from '@nestjs/microservices';
 import { GameSessionCreatedEvent } from 'gateway/events/game-session-created.event';
@@ -19,10 +19,16 @@ import { GameServerSessionEntity } from 'gameserver/model/game-server-session.en
 import { PlayerSmurfDetectedEvent } from 'gateway/events/bans/player-smurf-detected.event';
 import { MatchRecordedEvent } from 'gateway/events/gs/match-recorded.event';
 import { PlayerReportBanCreatedEvent } from 'gateway/events/bans/player-report-ban-created.event';
+import { RunRconCommand } from 'gateway/commands/RunRcon/run-rcon.command';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { PlayerFeedbackCreatedEvent } from 'gateway/events/player-feedback-created.event';
+import { LaunchGameServerCommand } from 'gateway/commands/LaunchGameServer/launch-game-server.command';
+import { PlayerFinishedMatchEvent } from 'gateway/events/gs/player-finished-match.event';
 
 @Injectable()
-export class AppService {
+export class AppService implements OnApplicationBootstrap {
+  private logger = new Logger(AppService.name);
+
   constructor(
     private readonly ebus: EventBus,
     @InjectRepository(GameServerEntity)
@@ -30,6 +36,7 @@ export class AppService {
     @InjectRepository(GameServerSessionEntity)
     private readonly gameServerSessionEntityRepository: Repository<GameServerSessionEntity>,
     @Inject("QueryCore") private readonly redisEventQueue: ClientProxy,
+    private readonly amqpConnection: AmqpConnection,
   ) {}
 
   @Cron("*/30 * * * * *")
@@ -66,16 +73,45 @@ export class AppService {
       ServerActualizationRequestedEvent,
       KillServerRequestedEvent,
       BanSystemEvent,
-      PlayerNotLoadedEvent,
       PlayerReportBanCreatedEvent,
-      AchievementCompleteEvent,
-      PlayerSmurfDetectedEvent,
       MatchRecordedEvent,
-      PlayerFeedbackCreatedEvent
+      RunRconCommand,
     ];
 
     this.ebus
       .pipe(ofType(...publicEvents))
       .subscribe((t) => this.redisEventQueue.emit(t.constructor.name, t));
+
+    this.ebus
+      .pipe(
+        ofType<any, any>(
+          PlayerNotLoadedEvent,
+          PlayerFeedbackCreatedEvent,
+          PlayerSmurfDetectedEvent,
+          PlayerFinishedMatchEvent,
+          AchievementCompleteEvent,
+        ),
+      )
+      .subscribe((msg) =>
+        this.amqpConnection
+          .publish("app.events", msg.constructor.name, msg)
+          .then(() =>
+            this.logger.log(`Published RMQ event ${msg.constructor.name}`),
+          ),
+      );
+
+    this.ebus
+      .pipe(ofType(LaunchGameServerCommand))
+      .subscribe((msg: LaunchGameServerCommand) =>
+        this.amqpConnection
+          .publish(
+            "app.events",
+            `${LaunchGameServerCommand.name}.${msg.region}`,
+            msg,
+          )
+          .then(() =>
+            this.logger.log(`Published RMQ event ${msg.constructor.name}`),
+          ),
+      );
   }
 }

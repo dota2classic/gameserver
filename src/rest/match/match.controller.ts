@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseFilters } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseFilters, UseInterceptors } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { MatchDto, MatchPageDto } from 'rest/dto/match.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,9 +14,13 @@ import { MatchMapper } from 'rest/match/match.mapper';
 import { EntityNotFoundFilter } from 'rest/exception/entity-not-found.filter';
 import { PlayerFeedbackService } from 'gameserver/service/player-feedback.service';
 import { MatchReportMatrixDto } from 'rest/dto/player.dto';
+import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
+import { CommandBus } from '@nestjs/cqrs';
+import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
 
 @Controller("match")
 @ApiTags("match")
+@UseInterceptors(ReqLoggingInterceptor)
 export class MatchController {
   constructor(
     private readonly mapper: MatchMapper,
@@ -29,6 +33,7 @@ export class MatchController {
     // private readonly metaService: MetaService,
     private readonly matchService: MatchService,
     private readonly playerReportService: PlayerFeedbackService,
+    private readonly cbus: CommandBus,
   ) {}
 
   // remove meta service from here
@@ -76,11 +81,38 @@ export class MatchController {
     @Query("mode") mode?: MatchmakingMode,
   ): Promise<MatchPageDto> {
     const [matches, cnt] = await this.matchService.getMatchPage(
-      page,
-      perPage,
+      Math.max(0, page),
+      perPage <= 0 ? 25 : perPage,
       mode,
     );
     return makePage(matches, cnt, page, perPage, this.mapper.mapMatch);
+  }
+
+  @Get("/:id/ranked_process")
+  async fake(@Param("id", NullableIntPipe) id: number): Promise<number> {
+    const match = await this.matchRepository.findOne({
+      where: { id },
+      relations: ["players"],
+    });
+    if (
+      match.matchmaking_mode !== MatchmakingMode.UNRANKED &&
+      match.matchmaking_mode !== MatchmakingMode.RANKED
+    ) {
+      return;
+    }
+
+    await this.cbus.execute(
+      new ProcessRankedMatchCommand(
+        match.id,
+        match.players
+          .filter((t) => t.team === match.winner)
+          .map((plr) => plr.playerId),
+        match.players
+          .filter((t) => t.team !== match.winner)
+          .map((plr) => plr.playerId),
+        match.matchmaking_mode,
+      ),
+    );
   }
 
   @Get("/:id")
@@ -139,8 +171,8 @@ export class MatchController {
   ): Promise<MatchPageDto> {
     const [matches, total] = await this.matchService.getPlayerMatches(
       steam_id,
-      page,
-      perPage,
+      Math.max(0, page),
+      perPage <= 0 ? 25 : perPage,
       mode,
       hero,
     );

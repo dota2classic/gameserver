@@ -12,63 +12,108 @@ export interface AchievementProgress {
   progress: number;
 }
 
+export type AchievementUpdateResult = "none" | "progress" | "checkpoint";
+export type Progress = number | { progress: number; matchId: number | null };
+
 export abstract class BaseAchievement {
   public abstract key: AchievementKey;
-  public abstract maxProgress: number;
+  public abstract checkpoints: number[];
 
   public static REAL_LOBBY_TYPES = [
     MatchmakingMode.RANKED,
     MatchmakingMode.UNRANKED,
   ];
 
-  private logger = new Logger("Achievement");
+  public logger = new Logger("Achievement");
 
   constructor(
-    protected readonly finishedMatchEntityRepository: Repository<FinishedMatchEntity>,
-    protected readonly playerInMatchEntityRepository: Repository<PlayerInMatchEntity>,
+    public readonly finishedMatchEntityRepository: Repository<FinishedMatchEntity>,
+    public readonly playerInMatchEntityRepository: Repository<PlayerInMatchEntity>,
   ) {}
 
-  abstract getProgress(
+  abstract progress(
     pim: PlayerInMatchEntity,
     match: FinishedMatchEntity,
-  ): Promise<AchievementProgress>;
+  ): Promise<Progress>;
+
+  public async batchProgress(
+    pims: PlayerInMatchEntity[],
+    match: FinishedMatchEntity,
+  ): Promise<Progress[]> {
+    return Promise.all(pims.map((pim) => this.progress(pim, match)));
+  }
+
+  async getProgress(
+    pim: PlayerInMatchEntity,
+    match: FinishedMatchEntity,
+  ): Promise<AchievementProgress> {
+    const p = await this.progress(pim, match);
+
+    return typeof p === "number"
+      ? {
+          progress: p,
+          matchId: match.id,
+          hero: pim.hero,
+        }
+      : {
+          progress: p.progress,
+          matchId: p.matchId,
+          hero: pim.hero,
+        };
+  }
 
   public supportsLobbyType(type: MatchmakingMode): boolean {
-    return true;
+    return BaseAchievement.REAL_LOBBY_TYPES.includes(type);
   }
 
   async handleMatch(
     pim: PlayerInMatchEntity,
     match: FinishedMatchEntity,
-    achievement: AchievementEntity,
-  ) {
+    playerAchievementStatus: AchievementEntity,
+  ): Promise<AchievementUpdateResult> {
     if (!this.supportsLobbyType(match.matchmaking_mode)) {
       this.logger.log(`Achievement doesn't support lobby type`, {
         lobby_type: match.matchmaking_mode,
       });
-      return false;
+      return "none";
     }
-    if (this.isComplete(achievement)) {
-      // We are already good, skip
-      this.logger.log(
-        `Achievement already complete for player ${pim.playerId} @ ${this.key}`,
-      );
-      return false;
+    if (this.isFullyComplete(playerAchievementStatus)) {
+      return "none";
     }
     const progress = await this.getProgress(pim, match);
-    if (progress.progress > achievement.progress) {
-      achievement.progress = progress.progress;
-    }
-    if (this.isComplete(achievement)) {
-      achievement.matchId = progress.matchId;
-      achievement.hero = progress.hero;
-      achievement.progress = progress.progress;
+    const currentCheckpoint = this.getCompleteCheckpoint(
+      playerAchievementStatus,
+    );
+    if (progress.progress > playerAchievementStatus.progress) {
+      playerAchievementStatus.progress = this.clampProgress(progress.progress);
+      playerAchievementStatus.matchId = progress.matchId;
     }
 
-    return true;
+    if (
+      this.getCompleteCheckpoint(playerAchievementStatus) > currentCheckpoint
+    ) {
+      return "checkpoint";
+    }
+
+    return "progress";
   }
 
-  public isComplete(ach: AchievementEntity): boolean {
-    return ach.progress >= this.maxProgress;
+  public isFullyComplete(ach: AchievementEntity): boolean {
+    return this.getCompleteCheckpoint(ach) >= this.checkpoints.length - 1;
+  }
+
+  public getCompleteCheckpoint(ach: AchievementEntity): number {
+    for (let i = this.checkpoints.length; i >= 0; --i) {
+      if (ach.progress >= this.checkpoints[i]) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  public clampProgress(progress: number) {
+    const maxProgress = this.checkpoints[this.checkpoints.length - 1];
+
+    return Math.min(progress, maxProgress);
   }
 }

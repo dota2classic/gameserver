@@ -63,7 +63,11 @@ export class SaveGameResultsHandler
           modeOverride,
           event.duration,
           event.server,
-          season.id
+          season.id,
+          event.patch,
+          event.region,
+          event.towerStatus,
+          event.barracksStatus
         );
 
         m.externalMatchId = event.externalMatchId;
@@ -105,6 +109,13 @@ export class SaveGameResultsHandler
           pim.playerId = t.steam_id;
           pim.team = t.team;
           pim.hero = t.hero;
+
+
+          pim.misses = t.misses;
+          pim.supportGold = t.supportGold;
+          pim.supportAbilityValue = t.supportAbilityValue;
+          pim.bear = t.bear
+
           return pim;
         });
 

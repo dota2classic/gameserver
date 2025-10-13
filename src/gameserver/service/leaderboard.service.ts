@@ -42,12 +42,13 @@ export class LeaderboardService {
   public async getPlayerSummary(
     steamId: string,
   ): Promise<Omit<PlayerSummaryDto, "reports">> {
-    const [season, overall, matchAccessLevel, recalibration] =
+    const [season, overall, matchAccessLevel, recalibration, session] =
       await Promise.combine([
         this.getPlayerLeaderboardEntry(steamId),
         this.getPlayerLeaderboardEntryOverall(steamId),
         this.playerService.getMatchAccessLevel(steamId),
         this.playerService.getRecalibration(steamId),
+        this.playerService.getSession(steamId),
       ]);
 
     return {
@@ -67,6 +68,14 @@ export class LeaderboardService {
           season.calibrationGames,
         0,
       ),
+      session: session
+        ? {
+            serverUrl: session.session.url,
+            matchId: session.session.matchId,
+            lobbyType: session.session.matchmaking_mode,
+            abandoned: session.abandoned,
+          }
+        : undefined,
     };
   }
 

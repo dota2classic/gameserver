@@ -1,10 +1,10 @@
-import { otelSDK } from 'tracer';
+// import { otelSDK } from './tracer';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { CommandBus, EventBus, EventPublisher, ofType, QueryBus } from '@nestjs/cqrs';
-import { RmqOptions, Transport } from '@nestjs/microservices';
+import { Transport } from '@nestjs/microservices';
 import { inspect } from 'util';
-import { Logger } from '@nestjs/common';
+import { INestApplication, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ServerActualizationRequestedEvent } from 'gateway/events/gs/server-actualization-requested.event';
 import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
@@ -15,8 +15,11 @@ import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
 import './util/promise';
 import configuration from 'config/configuration';
 import { ConfigService } from '@nestjs/config';
+import fastify from 'fastify';
 
 import { types } from 'pg';
+import { WinstonWrapper } from '@dota2classic/nest_logger';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 
 types.setTypeParser(types.builtins.NUMERIC, (value: string): number =>
   parseFloat(value),
@@ -27,19 +30,28 @@ export function prepareModels(publisher: EventPublisher) {
 }
 
 async function bootstrap() {
-  await otelSDK.start();
+  // await otelSDK.start();
 
   const parsedConfig = configuration();
   const config = new ConfigService(parsedConfig);
 
-  const app = await NestFactory.create(AppModule, {
-    // logger: new WinstonWrapper(
-    //   config.get("fluentbit.host"),
-    //   config.get<number>("fluentbit.port"),
-    //   config.get<string>("fluentbit.application"),
-    //   config.get<boolean>("fluentbit.disabled"),
-    // ),
-  });
+  const app = (await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(
+      fastify({
+        trustProxy: true,
+        bodyLimit: 1024 * 1024 * 20, // 20 MB
+      }),
+    ),
+    {
+      logger: new WinstonWrapper(
+        config.get("fluentbit.host"),
+        config.get<number>("fluentbit.port"),
+        config.get<string>("fluentbit.application"),
+        config.get<boolean>("fluentbit.disabled"),
+      ),
+    },
+  )) as INestApplication<AppModule>;
 
   app.connectMicroservice({
     transport: Transport.REDIS,
@@ -53,26 +65,7 @@ async function bootstrap() {
     },
   });
 
-  app.connectMicroservice<RmqOptions>({
-    transport: Transport.RMQ,
-    options: {
-      urls: [
-        {
-          hostname: config.get<string>("rabbitmq.host"),
-          port: config.get<number>("rabbitmq.port"),
-          protocol: "amqp",
-          username: config.get<string>("rabbitmq.user"),
-          password: config.get<string>("rabbitmq.password"),
-        },
-      ],
-      queue: config.get<string>("rabbitmq.srcds_events"),
-      prefetchCount: 5,
-      noAck: false,
-      queueOptions: {
-        durable: true,
-      },
-    },
-  });
+  // app.use(compression());
 
   const options = new DocumentBuilder()
     .setTitle("GameServer api")
@@ -84,7 +77,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup("api", app, document);
 
-  await app.listen(5003);
+  await app.listen(5003, "0.0.0.0");
 
   await app.startAllMicroservices();
 
@@ -97,7 +90,6 @@ async function bootstrap() {
 
   const clogger = new Logger("CommandLogger");
   const elogger = new Logger("EventLogger");
-  const qlogger = new Logger("EventLogger");
 
   ebus.subscribe((e) => {
     if (e.constructor.name === ServerActualizationRequestedEvent.name) return;

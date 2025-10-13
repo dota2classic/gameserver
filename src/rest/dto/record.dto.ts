@@ -17,4 +17,14 @@ export class PlayerRecordsResponse {
   season: PlayerRecordDto[];
   overall: PlayerRecordDto[];
   month: PlayerRecordDto[];
+  day: PlayerRecordDto[];
+}
+
+
+export class PlayerDailyRecord {
+  steam_id: string;
+  mmr_change: number;
+  games: number;
+  wins: number;
+  loss: number;
 }

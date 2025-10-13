@@ -1,21 +1,23 @@
 import { Index, ViewColumn, ViewEntity } from 'typeorm';
 import { ItemView } from 'gameserver/model/item.view';
 
+
+// Counts duplicated items in one PIM
 @ViewEntity({
   name: "item_hero_view",
   dependsOn: [ItemView],
   expression: `
-select i.item_id as item_id, pim.hero as hero, count(pim)::int as played, sum((pim.team = fm.winner)::int)::int as wins
-from item_view i
-         left join player_in_match pim
-                   on pim.item0 = i.item_id
-                       or pim.item1 = i.item_id
-                       or pim.item2 = i.item_id
-                       or pim.item3 = i.item_id
-                       or pim.item4 = i.item_id
-                       or pim.item5 = i.item_id
-         inner join finished_match fm on fm.id = pim."matchId"
-group by pim.hero, i.item_id
+SELECT i.item_id,
+       pim.hero,
+       COUNT(*)::int AS played,
+       SUM((pim.team = fm.winner)::int)::int AS wins
+FROM player_in_match pim
+CROSS JOIN LATERAL UNNEST(ARRAY[pim.item0, pim.item1, pim.item2, pim.item3, pim.item4, pim.item5]) AS u(item_id)
+JOIN item_view i ON i.item_id = u.item_id
+JOIN finished_match fm ON fm.id = pim."matchId"
+WHERE fm.matchmaking_mode IN (0, 1)
+GROUP BY pim.hero,
+         i.item_id;
 `,
   materialized: true,
 })

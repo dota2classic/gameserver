@@ -66,7 +66,6 @@ export class PlayerReportUpdatedHandler
         r.reports += FREE_REPORT_PER_GAMES;
         r.reports = Math.min(r.reports, MAX_REPORTS_AVAILABLE);
         r.updated_with_match_id = event.matchId;
-        this.logger.log("Game threshold for adding reports: " + r.reports)
         await this.playerReportRepository.save(r);
       }
     }
