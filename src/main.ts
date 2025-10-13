@@ -31,6 +31,7 @@ export function prepareModels(publisher: EventPublisher) {
 
 async function bootstrap() {
   // await otelSDK.start();
+  console.log(process.env)
 
   const parsedConfig = configuration();
   const config = new ConfigService(parsedConfig);

@@ -47,8 +47,6 @@ export default (): ExpectedConfig => {
       port: process.env.RABBITMQ_PORT,
       user: process.env.RABBITMQ_USER,
       password: process.env.RABBITMQ_PASSWORD,
-      srcds_events: process.env.RABBITMQ_SRCDS_EVENTS,
-      gameserver_commands: process.env.RABBITMQ_GAMESERVER_COMMANDS,
     },
     // Optional: add a generic app mode if needed
     app: {
