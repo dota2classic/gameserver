@@ -54,5 +54,5 @@ jobs:
           push: true
           tags: |
             dota2classic/gameserver:k8s-${{ env.SHORT_SHA }}
-            dota2classic/tournament:k8s-latest
+            dota2classic/gameserver:k8s-latest
 

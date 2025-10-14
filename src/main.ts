@@ -1,7 +1,5 @@
 // import { otelSDK } from './tracer';
 
-console.log(process.env)
-
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { CommandBus, EventBus, EventPublisher, ofType, QueryBus } from '@nestjs/cqrs';
@@ -34,7 +32,6 @@ export function prepareModels(publisher: EventPublisher) {
 
 async function bootstrap() {
   // await otelSDK.start();
-
 
   const parsedConfig = configuration();
   const config = new ConfigService(parsedConfig);
