@@ -57,14 +57,13 @@ async function bootstrap() {
   app.connectMicroservice({
     transport: Transport.REDIS,
     options: {
-      username: "default",
+      url: `redis://${config.get("redis.host")}:6379`,
       host: config.get("redis.host"),
-      port: 6379,
       retryAttempts: Infinity,
       retryDelay: 5000,
       password: config.get("redis.password"),
     },
-  });
+  })
 
   // app.use(compression());
 
