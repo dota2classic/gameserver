@@ -1,4 +1,4 @@
-FROM node:20-alpine3.19 AS base
+FROM node:21-alpine AS base
 
 FROM base AS build
 
