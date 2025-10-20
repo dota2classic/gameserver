@@ -22,7 +22,7 @@ export class CoreController {
   private event<T>(constructor: Constructor<T>, data: any) {
     const buff = data;
     buff.__proto__ = constructor.prototype;
-    if (this.config.get("prod")) this.ebus.publish(buff);
+    this.ebus.publish(buff);
   }
 
   @EventPattern(TournamentGameReadyEvent.name)
