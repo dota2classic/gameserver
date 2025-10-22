@@ -1,0 +1,40 @@
+name: Manual Deploy to Kubernetes
+
+on:
+  workflow_run:
+    workflows: [ "Build and push Docker image" ]  # must match the name in your build workflow
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment (e.g., staging, prod)"
+        required: true
+        default: "prod"
+      deployment:
+        description: "Kubernetes deployment name"
+        required: true
+        default: "gameserver"
+
+jobs:
+  deploy:
+    name: Rollout Restart Deployment
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: latest
+
+      - name: Set up kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG_DATA }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Rollout restart deployment
+        run: |
+          kubectl rollout restart deployment ${{ github.event.inputs.deployment }} -n default
+          kubectl rollout status deployment ${{ github.event.inputs.deployment }} -n default
