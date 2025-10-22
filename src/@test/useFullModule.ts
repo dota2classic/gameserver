@@ -3,12 +3,11 @@ import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { INestApplication } from '@nestjs/common';
 import { Constructor, CqrsModule, EventBus } from '@nestjs/cqrs';
-import { DataSource, ObjectLiteral, Repository } from 'typeorm';
+import { ObjectLiteral, Repository } from 'typeorm';
 import { EntityClassOrSchema } from '@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type';
 import { Entities } from 'util/typeorm-config';
 import { ClientsModule, RedisOptions, RmqOptions, Transport } from '@nestjs/microservices';
 import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
-import { FantasyFunction1739896254921 } from 'database/migrations/1739896254921-FantasyFunction';
 import { AppService } from 'app.service';
 import { MetaService } from 'rest/meta/meta.service';
 import { MatchService } from 'rest/match/match.service';
@@ -269,9 +268,6 @@ export function useFullModule(): TestEnvironment {
     te.ebus = te.module.get(EventBus);
     te.ebusSpy = jest.spyOn(te.ebus, "publish");
 
-    await new FantasyFunction1739896254921().up(
-      te.service(DataSource).createQueryRunner(),
-    );
     console.log("Created fantasy score function");
 
     const gs = await te.repo<GameSeasonEntity>(GameSeasonEntity);

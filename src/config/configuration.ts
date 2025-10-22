@@ -1,9 +1,3 @@
-import { readFileSync } from 'fs';
-import * as yaml from 'js-yaml';
-import { join } from 'path';
-
-const YAML_CONFIG_FILENAME = "config.yaml";
-
 export interface ExpectedConfig {
   redis: {
     host: string;
@@ -20,13 +14,46 @@ export interface ExpectedConfig {
     };
   };
   fluentbit: {
-    host: string;
-    port: number;
+    application: string;
   };
 }
 
-export default (config = YAML_CONFIG_FILENAME): ExpectedConfig => {
-  return yaml.load(
-    readFileSync(join("./", config), "utf8"),
-  ) as ExpectedConfig;
+export default (): ExpectedConfig => {
+  return {
+    redis: {
+      host: process.env.REDIS_HOST,
+      password: process.env.REDIS_PASSWORD,
+    },
+    postgres: {
+      host: process.env.POSTGRES_HOST,
+      port: parseInt(process.env.POSTGRES_PORT || "5432"),
+      username: process.env.POSTGRES_USERNAME,
+      password: process.env.POSTGRES_PASSWORD,
+    },
+    telemetry: {
+      jaeger: {
+        url: process.env.JAEGER_URL || "http://localhost:4317",
+      },
+      prometheus: {
+        user: process.env.PROMETHEUS_USER,
+        password: process.env.PROMETHEUS_PASSWORD,
+      },
+    },
+    fluentbit: {
+      application: process.env.APP_NAME,
+      host: process.env.FLUENTBIT_HOST,
+      port: process.env.FLUENTBIT_PORT,
+    },
+    rabbitmq: {
+      host: process.env.RABBITMQ_HOST,
+      port: process.env.RABBITMQ_PORT,
+      user: process.env.RABBITMQ_USER,
+      password: process.env.RABBITMQ_PASSWORD,
+    },
+    // Optional: add a generic app mode if needed
+    app: {
+      prod:
+        process.env.NODE_ENV === "production" || process.env.PROD === "true",
+    },
+  } as ExpectedConfig;
 };
