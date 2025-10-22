@@ -1,8 +1,8 @@
-name: Manual Deploy to Kubernetes
+name: Deploy
 
 on:
   workflow_run:
-    workflows: [ "Test + Docker" ]  # must match the name in your build workflow
+    workflows: [ "Build" ]  # must match the name in your build workflow
     types:
       - completed
 
