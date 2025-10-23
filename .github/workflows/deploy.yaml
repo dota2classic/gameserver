@@ -3,6 +3,7 @@ name: Deploy
 on:
   workflow_run:
     workflows: [ "Build" ]  # must match the name in your build workflow
+    branches: master
     types:
       - completed
 
@@ -10,17 +11,29 @@ jobs:
   deploy:
     name: Rollout Restart Deployment
     runs-on: ubuntu-latest
-
-    # Only run if:
-    # - The build workflow succeeded
-    # - The branch is master (or main)
-    if: |
-      ${{ github.event.workflow_run.conclusion == 'success' &&
-          github.event.workflow_run.head_branch == 'master' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'master' }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set short SHA
+        id: vars
+        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v6.7.0
+        with:
+          push: true
+          tags: |
+            dota2classic/gameserver:k8s-${{ env.SHORT_SHA }}
+            dota2classic/gameserver:k8s-latest
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v4
