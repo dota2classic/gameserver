@@ -519,10 +519,10 @@
     enabled "2.0.x"
     kuler "^2.0.0"
 
-"@dota2classic/nest_logger@0.0.10":
-  version "0.0.10"
-  resolved "https://registry.yarnpkg.com/@dota2classic/nest_logger/-/nest_logger-0.0.10.tgz#ef806d82531827d6d730f2e5388ff388a8a3f4c5"
-  integrity sha512-n0BJaV0CY0E2199li+Drvjue2800+/hMiHz4jKpAuOze2Wlw5HrXu3GtQkONKr4E6sNZAf/k3PR4Tb2dSrcpFg==
+"@dota2classic/nest_logger@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@dota2classic/nest_logger/-/nest_logger-0.0.15.tgz#b6b135a893b4da002da40004e61f9df4e587ccb4"
+  integrity sha512-vTORcircf63R01KA4vK4K9V9tEUBfGGz4eq2Vp4Cvvt01uf3bIcEJi2LiYEHCKNEQ4J93D/5nkLvjRCALpFnwQ==
   dependencies:
     fluent-logger "^3.4.1"
     winston "^3.17.0"

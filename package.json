@@ -30,7 +30,7 @@
     "migration:revert": "npx ts-node -r dotenv/config  -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d ./src/config/typeorm.config.ts"
   },
   "dependencies": {
-    "@dota2classic/nest_logger": "0.0.10",
+    "@dota2classic/nest_logger": "^0.0.15",
     "@fastify/static": "^6.12.0",
     "@golevelup/nestjs-rabbitmq": "^6.0.1",
     "@nestjs/cache-manager": "^2.3.0",
