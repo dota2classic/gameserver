@@ -50,7 +50,9 @@ export default (): ExpectedConfig => {
       user: process.env.RABBITMQ_USER,
       password: process.env.RABBITMQ_PASSWORD,
     },
-    // Optional: add a generic app mode if needed
+    api: {
+      forumApiUrl: process.env.FORUM_API
+    },
     app: {
       prod:
         process.env.NODE_ENV === "production" || process.env.PROD === "true",
