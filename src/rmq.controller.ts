@@ -39,7 +39,7 @@ export class RmqController {
   async SrcdsServerStartedEvent(data: SrcdsServerStartedEvent) {
     this.logger.log("SrcdsServerStarted", data)
     await this.processMessage(
-      new AssignStartedServerCommand(data.server, data.info),
+      new AssignStartedServerCommand(data.matchId, data.server),
     );
   }
 
