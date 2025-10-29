@@ -5,7 +5,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { DataSource, Repository } from 'typeorm';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
-import { SrcdsServerStartedEvent } from 'gateway/events/srcds-server-started.event';
 import { GameSessionCreatedEvent } from 'gateway/events/game-session-created.event';
 import { MatchStartedEvent } from 'gateway/events/match-started.event';
 import { GameServerInfo } from 'gateway/shared-types/game-server-info';
@@ -57,7 +56,7 @@ export class AssignStartedServerHandler implements ICommandHandler<AssignStarted
     );
   }
 
-  private async createGameSession(event: SrcdsServerStartedEvent, match: MatchEntity) {
+  private async createGameSession(event: AssignStartedServerCommand, match: MatchEntity) {
     return this.datasource.transaction(async (em) => {
       // Session
       const matchInfo = match.matchInfoJson;
