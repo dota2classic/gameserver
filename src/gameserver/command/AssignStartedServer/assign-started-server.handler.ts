@@ -73,14 +73,14 @@ export class AssignStartedServerHandler implements ICommandHandler<AssignStarted
       );
 
       await em.save(GameServerSessionEntity, session);
-      this.logger.log(`Game server session created ${matchInfo.matchId}`)
+      this.logger.log(`Game server session created ${match.id}`)
 
       // Players
       const players = matchInfo.players.map(
         (p) =>
           new GameSessionPlayerEntity(
             p.steamId,
-            matchInfo.matchId,
+            match.id,
             p.partyId,
             p.team,
             DotaConnectionState.DOTA_CONNECTION_STATE_NOT_YET_CONNECTED,
