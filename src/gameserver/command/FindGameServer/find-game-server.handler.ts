@@ -113,6 +113,6 @@ export class FindGameServerHandler
 
   private async submitQueueTask(cmd: LaunchGameServerCommand) {
     this.ebus.publish(cmd);
-    this.logger.log("Submitted start server command to queue");
+    this.logger.log("Submitted start server command to queue", cmd);
   }
 }

@@ -62,7 +62,7 @@ export class AssignStartedServerHandler implements ICommandHandler<AssignStarted
       const matchInfo = match.matchInfoJson;
 
       const session = new GameServerSessionEntity(
-        matchInfo.matchId,
+        match.id,
         event.server,
         matchInfo.roomId,
         matchInfo.lobbyType,
