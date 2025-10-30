@@ -33,7 +33,6 @@ export class LiveMatchUpdateHandler
       session.gameMode = event.game_mode;
       session.matchmaking_mode = event.matchmaking_mode;
       session.duration = event.duration;
-      session.url = event.server;
 
       await em.save(GameServerSessionEntity, session);
       session.players.map((plr) => {
