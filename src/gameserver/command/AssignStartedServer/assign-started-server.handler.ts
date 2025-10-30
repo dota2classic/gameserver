@@ -27,7 +27,7 @@ export class AssignStartedServerHandler implements ICommandHandler<AssignStarted
   ) {}
 
   async execute(cmd: AssignStartedServerCommand) {
-    this.logger.log("Srcds server started: assigning server url")
+    this.logger.log("Srcds server started: assigning server url", cmd)
     const m = await this.matchEntityRepository.findOneOrFail({
       where: { id: cmd.matchId },
     });
