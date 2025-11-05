@@ -90,7 +90,7 @@ export class AssignStartedServerHandler implements ICommandHandler<AssignStarted
       await em.save(GameSessionPlayerEntity, players);
       session.players = players;
 
-      this.logger.log(`Game server session players created ${matchInfo.matchId}`)
+      this.logger.log(`Game server session players created ${match.id}`)
 
       return session;
     });
