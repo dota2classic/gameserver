@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
+  AggregatedStatsDto,
   GameSeasonDto,
   GameServerDto,
   GameSessionDto,
@@ -83,7 +84,7 @@ export class InfoController {
       dto.enabled,
       dto.enableCheats,
       dto.fillBots,
-      dto.patch
+      dto.patch,
     );
   }
 
@@ -94,5 +95,35 @@ export class InfoController {
       relations: ["players"],
     });
     return allSessions.reduce((a, b) => a + b.players.length, 0);
+  }
+
+  @Get("aggregated_stats")
+  public async getAggregatedStats(): Promise<AggregatedStatsDto> {
+    const result: {
+      players_yesterday: number;
+      players_last_week: number;
+      games_last_week: number;
+    }[] = await this.gameServerEntityRepository.query(
+      `
+      SELECT (COUNT(DISTINCT pim."playerId") filter (
+                                              WHERE fm.timestamp >= CURRENT_DATE - interval '1 day'
+                                                AND fm.timestamp < CURRENT_DATE))::int AS players_yesterday,
+       (COUNT(DISTINCT pim."playerId") filter (
+                                              WHERE fm.timestamp >= CURRENT_DATE - interval '30 days'
+                                                AND fm.timestamp < CURRENT_DATE))::int AS players_last_week,
+       (COUNT(DISTINCT fm.id) filter (
+                                     WHERE fm.timestamp >= CURRENT_DATE - interval '30 days'
+                                       AND fm.timestamp < CURRENT_DATE
+                                       AND fm.matchmaking_mode IN (0, 1, 11)))::int AS games_last_week
+FROM player_in_match pim
+INNER JOIN finished_match fm ON fm.id = pim."matchId";
+      `,
+    );
+
+    return {
+      playersWeekly: result[0].players_last_week,
+      humanGamesWeekly: result[0].games_last_week,
+      playersYesterday: result[0].players_yesterday,
+    };
   }
 }

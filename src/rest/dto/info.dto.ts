@@ -65,3 +65,11 @@ export class GameSeasonDto {
   startTimestamp: string;
   isActive: boolean;
 }
+
+
+
+export class AggregatedStatsDto {
+  playersYesterday: number;
+  playersWeekly: number;
+  humanGamesWeekly: number;
+}
