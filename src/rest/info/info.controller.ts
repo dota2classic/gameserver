@@ -109,10 +109,10 @@ export class InfoController {
                                               WHERE fm.timestamp >= CURRENT_DATE - interval '1 day'
                                                 AND fm.timestamp < CURRENT_DATE))::int AS players_yesterday,
        (COUNT(DISTINCT pim."playerId") filter (
-                                              WHERE fm.timestamp >= CURRENT_DATE - interval '30 days'
+                                              WHERE fm.timestamp >= CURRENT_DATE - interval '7 days'
                                                 AND fm.timestamp < CURRENT_DATE))::int AS players_last_week,
        (COUNT(DISTINCT fm.id) filter (
-                                     WHERE fm.timestamp >= CURRENT_DATE - interval '30 days'
+                                     WHERE fm.timestamp >= CURRENT_DATE - interval '7 days'
                                        AND fm.timestamp < CURRENT_DATE
                                        AND fm.matchmaking_mode IN (0, 1, 11)))::int AS games_last_week
 FROM player_in_match pim
