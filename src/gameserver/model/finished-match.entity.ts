@@ -17,7 +17,7 @@ import { DotaPatch } from 'gateway/constants/patch';
 import { Region } from 'gateway/shared-types/region';
 
 @Entity("finished_match")
-@Index('idx_finished_match_id_winner', ['id', 'winner'])
+@Index("idx_finished_match_id_winner", ["id", "winner"])
 export default class FinishedMatchEntity {
   @Column("smallint")
   winner!: number;
@@ -74,22 +74,24 @@ export default class FinishedMatchEntity {
   @Column({ name: "season_id", default: 1 })
   seasonId: number;
 
+  @Column({ name: "replay_path", nullable: true, default: null })
+  replayPath: string;
 
   @Column({
     name: "tower_status",
     array: true,
     type: "int",
-    default: [0, 0]
+    default: [0, 0],
   })
-  towerStatus: number[]
+  towerStatus: number[];
 
   @Column({
     name: "barrack_status",
     array: true,
     type: "int",
-    default: [0, 0]
+    default: [0, 0],
   })
-  barrackStatus: number[]
+  barrackStatus: number[];
 
   constructor(
     id: number | undefined,
@@ -103,7 +105,7 @@ export default class FinishedMatchEntity {
     patch: DotaPatch,
     region: Region,
     barrackStatus: number[] = [0, 0],
-    towerStatus: number[] = [0, 0]
+    towerStatus: number[] = [0, 0],
   ) {
     this.id = id;
     this.winner = winner;

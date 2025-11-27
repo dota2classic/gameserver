@@ -20,6 +20,9 @@ import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
 import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 import { MessageHandlerErrorBehavior } from '@golevelup/nestjs-rabbitmq/lib/amqp/errorBehaviors';
 import { Region } from 'gateway/shared-types/region';
+import { MatchArtifactUploadedEvent } from 'gateway/events/match-artifact-uploaded.event';
+import { AttachReplayCommand } from 'gameserver/command/AttachReplayCommand/attach-replay.command';
+import { MatchArtifactType } from 'gateway/shared-types/match-artifact-type';
 
 @Controller()
 export class RmqController {
@@ -37,7 +40,7 @@ export class RmqController {
     errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
   })
   async SrcdsServerStartedEvent(data: SrcdsServerStartedEvent) {
-    this.logger.log("SrcdsServerStarted", data)
+    this.logger.log("SrcdsServerStarted", data);
     await this.processMessage(
       new AssignStartedServerCommand(data.matchId, data.server),
     );
@@ -79,16 +82,14 @@ export class RmqController {
     queue: `gs-queue.${RoomReadyEvent.name}`,
     errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
   })
-  async RoomReadyEvent(
-    data: RoomReadyEvent,
-  ) {
+  async RoomReadyEvent(data: RoomReadyEvent) {
     await this.processMessage(
       new PrepareGameCommand(
         data.mode,
         data.roomId,
         data.players,
         data.version,
-        Region.RU_MOSCOW // FIXME MAKE COME FROM MATCHMAKER
+        Region.RU_MOSCOW, // FIXME MAKE COME FROM MATCHMAKER
       ),
     );
   }
@@ -99,9 +100,7 @@ export class RmqController {
     queue: `gs-queue.${LobbyReadyEvent.name}`,
     errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
   })
-  async LobbyReadyEvent(
-    data: LobbyReadyEvent,
-  ) {
+  async LobbyReadyEvent(data: LobbyReadyEvent) {
     await this.processMessage(
       new FindGameServerCommand(
         new GamePreparedEvent(
@@ -114,7 +113,7 @@ export class RmqController {
           data.enableCheats,
           data.fillBots,
           data.patch,
-          data.region
+          data.region,
         ),
       ),
     );
@@ -126,9 +125,7 @@ export class RmqController {
     queue: `gs-queue.${PlayerDeclinedGameEvent.name}`,
     errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
   })
-  async PlayerDeclinedGameEvent(
-    data: PlayerDeclinedGameEvent
-  ) {
+  async PlayerDeclinedGameEvent(data: PlayerDeclinedGameEvent) {
     await this.processMessage(
       new CreateCrimeLogCommand(
         data.steamId,
@@ -136,6 +133,23 @@ export class RmqController {
         data.mode,
       ),
     );
+  }
+
+  @RabbitSubscribe({
+    exchange: "app.events",
+    routingKey: MatchArtifactUploadedEvent.name,
+    queue: `gs-queue.${MatchArtifactUploadedEvent.name}`,
+  })
+  async MatchArtifactUploadedEvent(data: MatchArtifactUploadedEvent) {
+    if (data.artifactType === MatchArtifactType.REPLAY) {
+      await this.processMessage(
+        new AttachReplayCommand(
+          data.matchId,
+          data.lobbyType,
+          `${data.bucket}/${data.key}`,
+        ),
+      );
+    }
   }
 
   private async construct<T>(
