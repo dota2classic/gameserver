@@ -22,6 +22,7 @@ export class MatchMapper {
     timestamp: match.timestamp,
     towerStatus: match.towerStatus,
     barrackStatus: match.barrackStatus,
+    replayPath: match.replayPath
   });
 
   public mapPlayerInMatch = (it: PlayerInMatchEntity): PlayerInMatchDto => ({

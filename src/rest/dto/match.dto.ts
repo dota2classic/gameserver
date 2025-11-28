@@ -12,6 +12,8 @@ export class MatchDto {
   @ApiProperty({ enum: Dota_GameMode, enumName: "Dota_GameMode" })
   game_mode: Dota_GameMode;
 
+  replayPath?: string;
+
   radiant: PlayerInMatchDto[];
   dire: PlayerInMatchDto[];
   winner: number;

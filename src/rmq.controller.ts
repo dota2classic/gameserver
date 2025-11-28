@@ -141,6 +141,7 @@ export class RmqController {
     queue: `gs-queue.${MatchArtifactUploadedEvent.name}`,
   })
   async MatchArtifactUploadedEvent(data: MatchArtifactUploadedEvent) {
+    this.logger.log("Handling uploaded artifact", data)
     if (data.artifactType === MatchArtifactType.REPLAY) {
       await this.processMessage(
         new AttachReplayCommand(

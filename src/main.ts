@@ -10,10 +10,11 @@ import './util/promise';
 import configuration from 'config/configuration';
 import { ConfigService } from '@nestjs/config';
 import fastify from 'fastify';
-
 import { types } from 'pg';
 import { WinstonWrapper } from '@dota2classic/nest_logger';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+
+require('dotenv').config()
 
 types.setTypeParser(types.builtins.NUMERIC, (value: string): number =>
   parseFloat(value),
