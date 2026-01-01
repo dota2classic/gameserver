@@ -1,7 +1,7 @@
 import { Controller, Get, Inject, Logger, Param, UseInterceptors } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Cache, CACHE_MANAGER, CacheInterceptor } from '@nestjs/cache-manager';
-import { PlayerDailyRecord, PlayerRecordDto, PlayerRecordsResponse } from 'rest/dto/record.dto';
+import { PlayerDailyRecord, PlayerRecordDto, PlayerRecordsResponse, PlayerYearSummaryDto } from 'rest/dto/record.dto';
 import { RecordService, RecordTimespan } from 'rest/service/record.service';
 import { Mapper } from 'rest/mapper';
 import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
@@ -19,6 +19,10 @@ export class RecordController {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
+  @Get("year/:steamId")
+  public async yearResults(@Param('steamId') steamId: string): Promise<PlayerYearSummaryDto> {
+    return this.recordService.yearResults(2025, steamId)
+  }
 
 
   @Get("player_daily")

@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { PlayerDailyRecord } from 'rest/dto/record.dto';
+import { PlayerDailyRecord, PlayerYearSummaryDto } from 'rest/dto/record.dto';
 
 export enum PlayerRecordType {
   KILLS = "KILLS",
@@ -36,6 +36,40 @@ export interface RecordEntry {
   type: PlayerRecordType;
   steamId: string;
   match?: FinishedMatchEntity;
+}
+
+export interface PlayerYearSummary {
+  steam_id: string;
+
+  last_hits: number;
+  denies: number;
+  gold: number;
+  support_gold: number;
+
+  kills: number;
+  deaths: number;
+  assists: number;
+  misses: number;
+
+  kda: number;
+
+  played_games: number;
+}
+
+interface PlayerMostPlayedMode {
+  steam_id: string;
+
+  mode: MatchmakingMode;
+
+  played_games: number;
+}
+
+interface PlayerMostPurchasedItem {
+  steam_id: string;
+
+  most_purchased_item: number;
+
+  purchase_count: number;
 }
 
 @Injectable()
@@ -133,7 +167,7 @@ FROM mmr_change_log_entity mcle
 INNER JOIN finished_match fm ON fm.id = mcle."matchId"
 WHERE fm."timestamp"::date = now()::date
 GROUP BY steam_id;
-`)
+`);
   }
 
   private async getMostFactory(
@@ -204,6 +238,123 @@ GROUP BY steam_id;
       type,
       match: fm,
       steamId: d.steam_id,
+    };
+  }
+
+  public async yearResults(
+    year: number,
+    steamId: string,
+  ): Promise<PlayerYearSummaryDto> {
+    const aggStats: PlayerYearSummary = await this.playerInMatchEntityRepository
+      .query(
+        `SELECT pa.steam_id,
+       sum(pim.last_hits) AS last_hits,
+       sum(pim.denies) AS denies,
+       sum(pim.gold) AS gold,
+       sum(pim.support_gold) AS support_gold,
+       sum(pim.kills) AS kills,
+       sum(pim.deaths) AS deaths,
+       sum(pim.assists) AS assists,
+       sum(pim.misses) AS misses,
+       avg((pim.kills + pim.deaths) / greatest(1, pim.assists)) AS kda,
+       count(fm.id) AS played_games
+FROM player_activity pa
+INNER JOIN finished_match fm ON fm.id = pa.match_id
+INNER JOIN player_in_match pim ON pim."playerId" = pa.steam_id
+AND pim."matchId" = pa.match_id
+WHERE extract('YEAR'
+              FROM pa.datetime) = $1
+  AND pa.steam_id = $2
+GROUP BY pa.steam_id`,
+        [year, steamId],
+      )
+      .then((it) => it[0]);
+
+    const itemData = await this.datasource
+      .query<PlayerMostPurchasedItem[]>(
+        `
+    SELECT
+        steam_id,
+        item AS most_purchased_item,
+        cnt as purchase_count
+    FROM (
+        SELECT
+            pa.steam_id,
+            item,
+            count(*) AS cnt,
+            row_number() OVER (
+                PARTITION BY pa.steam_id
+                ORDER BY count(*) DESC
+            ) AS rn
+        FROM player_activity pa
+        JOIN player_in_match pim
+            ON pim."playerId" = pa.steam_id
+           AND pim."matchId" = pa.match_id
+        CROSS JOIN LATERAL unnest(ARRAY[
+            pim.item0,
+            pim.item1,
+            pim.item2,
+            pim.item3,
+            pim.item4,
+            pim.item5
+        ]) AS item
+        WHERE extract(YEAR FROM pa.datetime) = $1
+          AND pa.steam_id = $2
+          AND item IS NOT null
+          and item != 0
+        GROUP BY pa.steam_id, item
+    ) t
+    WHERE rn = 1
+    `,
+        [year, steamId],
+      )
+      .then((it) => it[0]);
+
+    const mostPlayedMode = await this.datasource
+      .query<PlayerMostPlayedMode[]>(
+        `
+SELECT
+    steam_id,
+    mode,
+    played_games
+FROM (
+    SELECT
+        pa.steam_id,
+        pa."mode",
+        count(*) AS played_games,
+        row_number() OVER (
+            PARTITION BY pa.steam_id
+            ORDER BY count(*) DESC
+        ) AS rn
+    FROM player_activity pa
+    WHERE extract(YEAR FROM pa.datetime) = $1
+      AND pa.steam_id = $2
+    GROUP BY pa.steam_id, pa."mode"
+) t
+WHERE rn = 1;
+    `,
+        [year, steamId],
+      )
+      .then((it) => it[0]);
+
+    return {
+      assists: aggStats?.assists || 0,
+      deaths: aggStats?.deaths || 0,
+      denies: aggStats?.denies || 0,
+      gold: aggStats?.gold || 0,
+      kda: aggStats?.kda || 0,
+      kills: aggStats?.kills || 0,
+      last_hits: aggStats?.last_hits || 0,
+      misses: aggStats?.misses || 0,
+      support_gold: aggStats?.support_gold || 0,
+      played_games: aggStats?.played_games || 0,
+      steam_id: steamId,
+
+      most_played_mode: mostPlayedMode?.mode || MatchmakingMode.BOTS,
+      most_played_mode_count: mostPlayedMode?.played_games || 0,
+
+      most_purchased_item: itemData?.most_purchased_item || 0,
+      most_purchased_item_count: itemData?.purchase_count || 0,
     };
   }
 }
