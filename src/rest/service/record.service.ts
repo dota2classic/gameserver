@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
@@ -74,6 +74,8 @@ interface PlayerMostPurchasedItem {
 
 @Injectable()
 export class RecordService {
+  private logger = new Logger(RecordService.name)
+
   constructor(
     @InjectRepository(FinishedMatchEntity)
     private readonly finishedMatchEntityRepository: Repository<FinishedMatchEntity>,
@@ -245,6 +247,7 @@ GROUP BY steam_id;
     year: number,
     steamId: string,
   ): Promise<PlayerYearSummaryDto> {
+    this.logger.log(`Getting yearly summary for ${steamId}`);
     const aggStats: PlayerYearSummary = await this.playerInMatchEntityRepository
       .query(
         `SELECT pa.steam_id,
