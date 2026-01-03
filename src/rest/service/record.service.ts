@@ -259,7 +259,7 @@ GROUP BY steam_id;
        sum(pim.deaths) AS deaths,
        sum(pim.assists) AS assists,
        sum(pim.misses) AS misses,
-       avg((pim.kills + pim.deaths) / greatest(1, pim.assists)) AS kda,
+       avg((pim.kills + pim.assists) / greatest(1, pim.deaths)) AS kda,
        count(fm.id) AS played_games
 FROM player_activity pa
 INNER JOIN finished_match fm ON fm.id = pa.match_id
