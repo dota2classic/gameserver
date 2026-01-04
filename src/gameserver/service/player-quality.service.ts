@@ -37,7 +37,7 @@ export class PlayerQualityService {
       .createQueryBuilder("pip")
       .leftJoinAndSelect(PlayerBanEntity, "pbe", "pbe.steam_id = pip.steamId")
       .where("pip.ip in (:...ips)", { ips: allIps.map((it) => it.ip) })
-      .select('distinct pip.steam_id, pbe.end_time as end_time, pbe.reason')
+      .select("distinct pip.steam_id, pbe.end_time as end_time, pbe.reason")
       .getRawMany<PlayerIpWithBans>();
   }
 
@@ -45,27 +45,30 @@ export class PlayerQualityService {
     // Find all ips this player connected with
     const result = await this.getSmurfData(steamId);
 
-    const hasActiveBan =
-      result.filter((t) => t.end_time && t.end_time.getTime() > Date.now())
-        .length > 0;
+    const ongoingBans = result.filter(
+      (t) => t.end_time && t.end_time.getTime() > Date.now(),
+    );
 
-    if (!hasActiveBan) {
+    const hasActiveBan = ongoingBans.length > 0;
+
+    if (!hasActiveBan || ongoingBans[0].steam_id === steamId) {
       return;
     }
 
-    this.ebus.publish(
-      new PlayerSmurfDetectedEvent(
-        steamId,
-        result.map((it) => it.steam_id),
-        result.map((it) => {
-          const endTime = it.end_time || new Date(0);
-          return new BanStatus(
-            new Date().getTime() < endTime.getTime(),
-            endTime.toISOString(),
-            it.reason,
-          );
-        }),
-      ),
-    );
+    if (result)
+      this.ebus.publish(
+        new PlayerSmurfDetectedEvent(
+          steamId,
+          result.map((it) => it.steam_id),
+          result.map((it) => {
+            const endTime = it.end_time || new Date(0);
+            return new BanStatus(
+              new Date().getTime() < endTime.getTime(),
+              endTime.toISOString(),
+              it.reason,
+            );
+          }),
+        ),
+      );
   }
 }
