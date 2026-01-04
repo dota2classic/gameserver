@@ -51,7 +51,7 @@ export class PlayerQualityService {
 
     const hasActiveBan = ongoingBans.length > 0;
 
-    if (!hasActiveBan || ongoingBans[0].steam_id === steamId) {
+    if (!hasActiveBan || (ongoingBans.length === 1 && ongoingBans[0].steam_id === steamId)) {
       return;
     }
 
