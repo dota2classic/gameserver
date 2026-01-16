@@ -55,7 +55,7 @@ export class PlayerQualityService {
       return;
     }
 
-    if (result)
+    if (result && result.length < 15)
       this.ebus.publish(
         new PlayerSmurfDetectedEvent(
           steamId,
