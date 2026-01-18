@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { LaunchGameServerCommand } from 'gateway/commands/LaunchGameServer/launch-game-server.command';
 
@@ -22,6 +22,11 @@ export class MatchEntity {
 
   @Column({ type: "simple-json", nullable: true, default: null })
   matchInfoJson: LaunchGameServerCommand;
+
+  @CreateDateColumn({
+    name: "created_at",
+  })
+  createdAt: Date;
 
 
   static NOT_DECIDED_SERVER: string = "NOT_DECIDED_SERVER";
