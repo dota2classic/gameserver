@@ -102,6 +102,7 @@ export class CrimeLogCreatedHandler
       thisCrime.lobby_type === MatchmakingMode.BOTS ||
       thisCrime.lobby_type === MatchmakingMode.LOBBY ||
       thisCrime.lobby_type == MatchmakingMode.SOLOMID ||
+      thisCrime.lobby_type == MatchmakingMode.TOURNAMENT ||
       thisCrime.lobby_type == MatchmakingMode.TURBO
     ) {
       thisCrime.handled = true;
