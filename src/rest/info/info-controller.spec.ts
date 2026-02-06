@@ -12,7 +12,6 @@ import { GameServerSessionEntity } from 'gameserver/model/game-server-session.en
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { createGameMode } from '@test/values';
 import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
-import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { UpdateGamemodeDto } from 'rest/dto/info.dto';
 import { Repository } from 'typeorm';
 import { Dota_Map } from 'gateway/shared-types/dota-map';
@@ -42,10 +41,9 @@ describe("InfoController", () => {
       MatchmakingModeMappingEntity,
       GameServerSessionEntity,
       GameSessionPlayerEntity,
-      GameServerEntity,
       GameSeasonEntity,
       VersionPlayerEntity,
-      RecalibrationEntity
+      RecalibrationEntity,
     ];
 
     module = await Test.createTestingModule({
@@ -118,7 +116,7 @@ describe("InfoController", () => {
           enabled: false,
           enableCheats: false,
           fillBots: false,
-          patch: DotaPatch.DOTA_684
+          patch: DotaPatch.DOTA_684,
         } satisfies UpdateGamemodeDto)
         .expect(200);
 
@@ -136,7 +134,7 @@ describe("InfoController", () => {
         dotaMap: Dota_Map.DOTA681,
         enableCheats: false,
         fillBots: false,
-        patch: DotaPatch.DOTA_684
+        patch: DotaPatch.DOTA_684,
       } satisfies MatchmakingModeMappingEntity);
     });
   });

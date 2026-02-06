@@ -1,6 +1,5 @@
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
-import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 import { LeaderboardView } from 'gameserver/model/leaderboard.view';
@@ -35,9 +34,7 @@ export const Entities: Function[] = [
   GameServerSessionEntity,
   GameSessionPlayerEntity,
 
-  GameServerEntity,
   PlayerCrimeLogEntity,
-
 
   MmrChangeLogEntity,
   PlayerReportStatusEntity,
@@ -47,10 +44,9 @@ export const Entities: Function[] = [
   LeaderboardView,
   MmrBucketView,
 
-
   ItemView,
   ItemHeroView,
   PlayerIpEntity,
   DodgeListEntity,
-  RecalibrationEntity
+  RecalibrationEntity,
 ];

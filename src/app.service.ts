@@ -6,13 +6,11 @@ import { DiscoveryRequestedEvent } from 'gateway/events/discovery-requested.even
 import { MatchStartedEvent } from 'gateway/events/match-started.event';
 import { MatchCancelledEvent } from 'gateway/events/match-cancelled.event';
 import { MatchFinishedEvent } from 'gateway/events/match-finished.event';
-import { Cron } from '@nestjs/schedule';
 import { ServerActualizationRequestedEvent } from 'gateway/events/gs/server-actualization-requested.event';
 import { KillServerRequestedEvent } from 'gateway/events/gs/kill-server-requested.event';
 import { BanSystemEvent } from 'gateway/events/gs/ban-system.event';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
 import { AchievementCompleteEvent } from 'gateway/events/gs/achievement-complete.event';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
@@ -31,33 +29,11 @@ export class AppService implements OnApplicationBootstrap {
 
   constructor(
     private readonly ebus: EventBus,
-    @InjectRepository(GameServerEntity)
-    private readonly gameServerEntityRepository: Repository<GameServerEntity>,
     @InjectRepository(GameServerSessionEntity)
     private readonly gameServerSessionEntityRepository: Repository<GameServerSessionEntity>,
     @Inject("QueryCore") private readonly redisEventQueue: ClientProxy,
     private readonly amqpConnection: AmqpConnection,
   ) {}
-
-  @Cron("*/30 * * * * *")
-  async actualizeServers() {
-    // for all servers
-    const all = await this.gameServerEntityRepository.find();
-
-    const all2 = await this.gameServerSessionEntityRepository.find();
-
-    await Promise.all(
-      all.map(async (gs) => {
-        await this.ebus.publish(new ServerActualizationRequestedEvent(gs.url));
-      }),
-    );
-
-    await Promise.all(
-      all2.map(async (gs) => {
-        await this.ebus.publish(new ServerActualizationRequestedEvent(gs.url));
-      }),
-    );
-  }
 
   async onApplicationBootstrap() {
     try {

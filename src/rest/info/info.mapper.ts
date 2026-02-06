@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { GameServerEntity } from 'gameserver/model/game-server.entity';
-import { GameSeasonDto, GameServerDto, GameSessionDto, MatchmakingModeInfoDto } from 'rest/dto/info.dto';
+import { GameSeasonDto, GameSessionDto, MatchmakingModeInfoDto } from 'rest/dto/info.dto';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { DotaTeam } from 'gateway/shared-types/dota-team';
 import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
@@ -8,11 +7,6 @@ import { Dota2Version } from 'gateway/shared-types/dota2version';
 
 @Injectable()
 export class InfoMapper {
-  public mapGameServer = (it: GameServerEntity): GameServerDto => ({
-    url: it.url,
-    version: it.version,
-  });
-
   public mapGameSession = (it: GameServerSessionEntity): GameSessionDto => ({
     url: it.url,
     matchId: it.matchId,
@@ -39,7 +33,7 @@ export class InfoMapper {
     enabled: it.enabled,
     enableCheats: it.enableCheats,
     fillBots: it.fillBots,
-    patch: it.patch
+    patch: it.patch,
   });
 
   public mapGameSeason = (it: {

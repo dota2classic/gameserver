@@ -1,11 +1,10 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Put, UseInterceptors } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import {
   AggregatedStatsDto,
   GameSeasonDto,
-  GameServerDto,
   GameSessionDto,
   MatchmakingModeInfoDto,
   UpdateGamemodeDto,
@@ -16,7 +15,6 @@ import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-
 import { InfoMapper } from 'rest/info/info.mapper';
 import { InfoService } from 'rest/info/info.service';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { GameServerEntity } from 'gameserver/model/game-server.entity';
 import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
 
@@ -26,23 +24,15 @@ import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
 export class InfoController {
   constructor(
     private readonly mapper: InfoMapper,
+    private readonly ds: DataSource,
     @InjectRepository(GameServerSessionEntity)
     private readonly gameServerSessionModelRepository: Repository<GameServerSessionEntity>,
-    @InjectRepository(GameServerEntity)
-    private readonly gameServerEntityRepository: Repository<GameServerEntity>,
     @InjectRepository(MatchmakingModeMappingEntity)
     private readonly matchmakingModeMappingEntityRepository: Repository<MatchmakingModeMappingEntity>,
     @InjectRepository(GameSeasonEntity)
     private readonly gameSeasonEntityRepository: Repository<GameSeasonEntity>,
     private readonly infoService: InfoService,
   ) {}
-
-  @Get("game_servers")
-  public async gameServers(): Promise<GameServerDto[]> {
-    return this.gameServerEntityRepository
-      .find()
-      .then((t) => t.map(this.mapper.mapGameServer));
-  }
 
   @Get("seasons")
   public async getSeasons(): Promise<GameSeasonDto[]> {
@@ -103,7 +93,7 @@ export class InfoController {
       players_yesterday: number;
       players_last_week: number;
       games_last_week: number;
-    }[] = await this.gameServerEntityRepository.query(
+    }[] = await this.ds.query(
       `
       SELECT (COUNT(DISTINCT pim."playerId") filter (
                                               WHERE fm.timestamp >= CURRENT_DATE - interval '1 day'
