@@ -27,7 +27,8 @@ export class GameserverSaga {
       filter(
         (t: MatchRecordedEvent) =>
           t.type === MatchmakingMode.RANKED ||
-          t.type === MatchmakingMode.UNRANKED,
+          t.type === MatchmakingMode.UNRANKED ||
+          t.type === MatchmakingMode.HIGHROOM,
       ),
       map((e: MatchRecordedEvent) => {
         const losers = e.players
