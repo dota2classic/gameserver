@@ -29,7 +29,7 @@ export class MmrBucketService {
     fm.id = pim."matchId"
   where
     pim."playerId" = $1
-    and fm.matchmaking_mode in (0, 1)
+    and fm.matchmaking_mode in (0, 1, 8)
     and fm.duration > 0 and pim."matchId" = $2
       `,
       [steamId, matchId],
@@ -49,7 +49,7 @@ export class MmrBucketService {
       inner join version_player vp on vp.steam_id = pim."playerId"
       where
         pim."playerId" = $1
-        and fm.matchmaking_mode in (0, 1)
+        and fm.matchmaking_mode in (0, 1, 8)
         and fm.duration > 0
         and fm.timestamp >= (
             select
