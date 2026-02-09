@@ -164,7 +164,7 @@ limit 1`,
   FROM player_in_match p
   JOIN finished_match f ON f.id = p."matchId"
   WHERE p."playerId" = $1
-    AND f."timestamp" < $2 AND f.matchmaking_mode in (0, 1) AND f.timestamp > $3
+    AND f."timestamp" < $2 AND f.matchmaking_mode in (0, 1, 8) AND f.timestamp > $3
 ), grouped_streaks AS (
   SELECT
     *,
