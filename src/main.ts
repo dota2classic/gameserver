@@ -1,18 +1,17 @@
 // import { otelSDK } from './tracer';
 
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { EventPublisher } from '@nestjs/cqrs';
-import { Transport } from '@nestjs/microservices';
-import { INestApplication } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import './util/promise';
-import configuration from 'config/configuration';
-import { ConfigService } from '@nestjs/config';
-import fastify from 'fastify';
-import { types } from 'pg';
-import { WinstonWrapper } from '@dota2classic/nest_logger';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module";
+import { EventPublisher } from "@nestjs/cqrs";
+import { Transport } from "@nestjs/microservices";
+import { INestApplication } from "@nestjs/common";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import "./util/promise";
+import configuration from "config/configuration";
+import { ConfigService } from "@nestjs/config";
+import fastify from "fastify";
+import { types } from "pg";
+import { FastifyAdapter, NestFastifyApplication } from "@nestjs/platform-fastify";
 
 require('dotenv').config()
 
@@ -39,12 +38,12 @@ async function bootstrap() {
       }),
     ),
     {
-      logger: new WinstonWrapper(
-        config.get("fluentbit.host"),
-        config.get<number>("fluentbit.port"),
-        config.get<string>("fluentbit.application"),
-        config.get<boolean>("fluentbit.disabled"),
-      ),
+      // logger: new WinstonWrapper(
+      //   config.get("fluentbit.host"),
+      //   config.get<number>("fluentbit.port"),
+      //   config.get<string>("fluentbit.application"),
+      //   config.get<boolean>("fluentbit.disabled"),
+      // ),
     },
   )) as INestApplication<AppModule>;
 
