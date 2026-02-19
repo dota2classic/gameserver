@@ -109,7 +109,8 @@ export class FindGameServerHandler
       matchInfo.region,
       matchInfo.noRunes,
       matchInfo.midTowerToWin,
-      matchInfo.killsToWin
+      matchInfo.killsToWin,
+      matchInfo.enableBanStage
     );
   }
 

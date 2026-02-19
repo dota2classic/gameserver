@@ -39,7 +39,8 @@ export class PrepareGameHandler implements ICommandHandler<PrepareGameCommand> {
         command.region,
         false,
         false,
-        0
+        0,
+        [MatchmakingMode.UNRANKED, MatchmakingMode.HIGHROOM].includes(command.lobbyType),
       ),
     );
   }

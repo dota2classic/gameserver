@@ -117,6 +117,7 @@ export class RmqController {
           data.noRunes,
           data.midTowerToWin,
           data.killsToWin,
+          data.enableBanStage
         ),
       ),
     );

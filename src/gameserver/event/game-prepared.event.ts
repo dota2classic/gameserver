@@ -21,5 +21,6 @@ export class GamePreparedEvent {
     public readonly noRunes: boolean,
     public readonly midTowerToWin: boolean,
     public readonly killsToWin: number,
+    public readonly enableBanStage: boolean
   ) {}
 }
