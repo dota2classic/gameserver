@@ -114,7 +114,12 @@ export class RmqController {
           data.fillBots,
           data.patch,
           data.region,
-          false
+          data.noRunes,
+          data.midTowerToWin
+            ? {
+                killsToWin: data.midTowerKillsToWin,
+              }
+            : undefined,
         ),
       ),
     );
@@ -142,7 +147,7 @@ export class RmqController {
     queue: `gs-queue.${MatchArtifactUploadedEvent.name}`,
   })
   async MatchArtifactUploadedEvent(data: MatchArtifactUploadedEvent) {
-    this.logger.log("Handling uploaded artifact", data)
+    this.logger.log("Handling uploaded artifact", data);
     if (data.artifactType === MatchArtifactType.REPLAY) {
       await this.processMessage(
         new AttachReplayCommand(
