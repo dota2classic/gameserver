@@ -6,10 +6,6 @@ import { MatchPlayer } from "gateway/events/room-ready.event";
 import { DotaPatch } from "gateway/constants/patch";
 import { Region } from "gateway/shared-types/region";
 
-export interface MidTowerToWinInfo {
-  killsToWin: number;
-}
-
 export class GamePreparedEvent {
   constructor(
     public readonly mode: MatchmakingMode,
@@ -23,6 +19,7 @@ export class GamePreparedEvent {
     public readonly patch: DotaPatch,
     public readonly region: Region,
     public readonly noRunes: boolean,
-    public readonly midTowerToWin?: MidTowerToWinInfo,
+    public readonly midTowerToWin: boolean,
+    public readonly killsToWin: number,
   ) {}
 }

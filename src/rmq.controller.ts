@@ -115,11 +115,8 @@ export class RmqController {
           data.patch,
           data.region,
           data.noRunes,
-          data.midTowerToWin
-            ? {
-                killsToWin: data.midTowerKillsToWin,
-              }
-            : undefined,
+          data.midTowerToWin,
+          data.killsToWin,
         ),
       ),
     );

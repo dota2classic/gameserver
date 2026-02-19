@@ -7,7 +7,6 @@ import { ClientProxy } from "@nestjs/microservices";
 import {
   FullMatchPlayer,
   LaunchGameServerCommand,
-  MidTowerToWinConfig,
 } from "gateway/commands/LaunchGameServer/launch-game-server.command";
 import { GetUserInfoQuery } from "gateway/queries/GetUserInfo/get-user-info.query";
 import { GetUserInfoQueryResult } from "gateway/queries/GetUserInfo/get-user-info-query.result";
@@ -109,9 +108,8 @@ export class FindGameServerHandler
       matchInfo.patch,
       matchInfo.region,
       matchInfo.noRunes,
-      matchInfo.midTowerToWin
-        ? new MidTowerToWinConfig(matchInfo.midTowerToWin.killsToWin)
-        : undefined,
+      matchInfo.midTowerToWin,
+      matchInfo.killsToWin
     );
   }
 
