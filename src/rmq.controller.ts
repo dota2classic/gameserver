@@ -1,28 +1,28 @@
-import { Controller, Logger } from '@nestjs/common';
-import { CommandBus, Constructor } from '@nestjs/cqrs';
-import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
-import { MatchFailedEvent } from 'gateway/events/match-failed.event';
-import { PlayerAbandonedEvent } from 'gateway/events/bans/player-abandoned.event';
-import { ConfigService } from '@nestjs/config';
-import { SaveGameResultsCommand } from 'gameserver/command/SaveGameResults/save-game-results.command';
-import { SaveMatchFailedCommand } from 'gameserver/command/SaveMatchFailed/save-match-failed.command';
-import { SavePlayerAbandonCommand } from 'gameserver/command/SavePlayerAbandon/save-player-abandon.command';
-import { SrcdsServerStartedEvent } from 'gateway/events/srcds-server-started.event';
-import { AssignStartedServerCommand } from 'gameserver/command/AssignStartedServer/assign-started-server.command';
-import { RoomReadyEvent } from 'gateway/events/room-ready.event';
-import { PrepareGameCommand } from 'gameserver/command/PrepareGame/prepare-game.command';
-import { PlayerDeclinedGameEvent } from 'gateway/events/mm/player-declined-game.event';
-import { CreateCrimeLogCommand } from 'gameserver/command/CreateCrimeLog/create-crime-log.command';
-import { BanReason } from 'gateway/shared-types/ban';
-import { LobbyReadyEvent } from 'gateway/events/lobby-ready.event';
-import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
-import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
-import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
-import { MessageHandlerErrorBehavior } from '@golevelup/nestjs-rabbitmq/lib/amqp/errorBehaviors';
-import { Region } from 'gateway/shared-types/region';
-import { MatchArtifactUploadedEvent } from 'gateway/events/match-artifact-uploaded.event';
-import { AttachReplayCommand } from 'gameserver/command/AttachReplayCommand/attach-replay.command';
-import { MatchArtifactType } from 'gateway/shared-types/match-artifact-type';
+import { Controller, Logger } from "@nestjs/common";
+import { CommandBus, Constructor } from "@nestjs/cqrs";
+import { GameResultsEvent } from "gateway/events/gs/game-results.event";
+import { MatchFailedEvent } from "gateway/events/match-failed.event";
+import { PlayerAbandonedEvent } from "gateway/events/bans/player-abandoned.event";
+import { ConfigService } from "@nestjs/config";
+import { SaveGameResultsCommand } from "gameserver/command/SaveGameResults/save-game-results.command";
+import { SaveMatchFailedCommand } from "gameserver/command/SaveMatchFailed/save-match-failed.command";
+import { SavePlayerAbandonCommand } from "gameserver/command/SavePlayerAbandon/save-player-abandon.command";
+import { SrcdsServerStartedEvent } from "gateway/events/srcds-server-started.event";
+import { AssignStartedServerCommand } from "gameserver/command/AssignStartedServer/assign-started-server.command";
+import { RoomReadyEvent } from "gateway/events/room-ready.event";
+import { PrepareGameCommand } from "gameserver/command/PrepareGame/prepare-game.command";
+import { PlayerDeclinedGameEvent } from "gateway/events/mm/player-declined-game.event";
+import { CreateCrimeLogCommand } from "gameserver/command/CreateCrimeLog/create-crime-log.command";
+import { BanReason } from "gateway/shared-types/ban";
+import { LobbyReadyEvent } from "gateway/events/lobby-ready.event";
+import { FindGameServerCommand } from "gameserver/command/FindGameServer/find-game-server.command";
+import { GamePreparedEvent } from "gameserver/event/game-prepared.event";
+import { RabbitSubscribe } from "@golevelup/nestjs-rabbitmq";
+import { MessageHandlerErrorBehavior } from "@golevelup/nestjs-rabbitmq/lib/amqp/errorBehaviors";
+import { Region } from "gateway/shared-types/region";
+import { MatchArtifactUploadedEvent } from "gateway/events/match-artifact-uploaded.event";
+import { AttachReplayCommand } from "gameserver/command/AttachReplayCommand/attach-replay.command";
+import { MatchArtifactType } from "gateway/shared-types/match-artifact-type";
 
 @Controller()
 export class RmqController {
@@ -114,6 +114,7 @@ export class RmqController {
           data.fillBots,
           data.patch,
           data.region,
+          false
         ),
       ),
     );

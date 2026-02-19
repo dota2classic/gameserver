@@ -1,21 +1,22 @@
-import { CommandHandler, EventBus, ICommandHandler, QueryBus } from '@nestjs/cqrs';
-import { Inject, Logger } from '@nestjs/common';
-import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { ClientProxy } from '@nestjs/microservices';
+import { CommandHandler, EventBus, ICommandHandler, QueryBus } from "@nestjs/cqrs";
+import { Inject, Logger } from "@nestjs/common";
+import { FindGameServerCommand } from "gameserver/command/FindGameServer/find-game-server.command";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { ClientProxy } from "@nestjs/microservices";
 import {
   FullMatchPlayer,
   LaunchGameServerCommand,
-} from 'gateway/commands/LaunchGameServer/launch-game-server.command';
-import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
-import { GetUserInfoQueryResult } from 'gateway/queries/GetUserInfo/get-user-info-query.result';
-import { MatchEntity } from 'gameserver/model/match.entity';
-import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
-import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
-import { Role } from 'gateway/shared-types/roles';
-import { ForumApi } from 'generated-api/forum';
-import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
+  MidTowerToWinConfig,
+} from "gateway/commands/LaunchGameServer/launch-game-server.command";
+import { GetUserInfoQuery } from "gateway/queries/GetUserInfo/get-user-info.query";
+import { GetUserInfoQueryResult } from "gateway/queries/GetUserInfo/get-user-info-query.result";
+import { MatchEntity } from "gameserver/model/match.entity";
+import { MatchmakingModeMappingEntity } from "gameserver/model/matchmaking-mode-mapping.entity";
+import { GamePreparedEvent } from "gameserver/event/game-prepared.event";
+import { Role } from "gateway/shared-types/roles";
+import { ForumApi } from "generated-api/forum";
+import { AmqpConnection } from "@golevelup/nestjs-rabbitmq";
 
 @CommandHandler(FindGameServerCommand)
 export class FindGameServerHandler
@@ -63,7 +64,6 @@ export class FindGameServerHandler
   ): Promise<LaunchGameServerCommand> {
     const players: FullMatchPlayer[] = [];
 
-
     // TODO: i dont like it and want to move username resolving into operator
     const resolves = matchInfo.players.map(async (t) => {
       const res = await this.qbus.execute<
@@ -107,7 +107,11 @@ export class FindGameServerHandler
       matchInfo.enableCheats,
       players,
       matchInfo.patch,
-      matchInfo.region
+      matchInfo.region,
+      matchInfo.noRunes,
+      matchInfo.midTowerToWin
+        ? new MidTowerToWinConfig(matchInfo.midTowerToWin.killsToWin)
+        : undefined,
     );
   }
 

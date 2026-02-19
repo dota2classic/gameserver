@@ -1,15 +1,15 @@
-import { CommandHandler, EventBus, ICommandHandler, QueryBus } from '@nestjs/cqrs';
-import { Logger } from '@nestjs/common';
-import { PrepareGameCommand } from 'gameserver/command/PrepareGame/prepare-game.command';
-import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
-import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { Dota_Map } from 'gateway/shared-types/dota-map';
-import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
-import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Dota2Version } from 'gateway/shared-types/dota2version';
-import { DotaPatch } from 'gateway/constants/patch';
+import { CommandHandler, EventBus, ICommandHandler, QueryBus } from "@nestjs/cqrs";
+import { Logger } from "@nestjs/common";
+import { PrepareGameCommand } from "gameserver/command/PrepareGame/prepare-game.command";
+import { GamePreparedEvent } from "gameserver/event/game-prepared.event";
+import { MatchmakingMode } from "gateway/shared-types/matchmaking-mode";
+import { Dota_Map } from "gateway/shared-types/dota-map";
+import { Dota_GameMode } from "gateway/shared-types/dota-game-mode";
+import { MatchmakingModeMappingEntity } from "gameserver/model/matchmaking-mode-mapping.entity";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Dota2Version } from "gateway/shared-types/dota2version";
+import { DotaPatch } from "gateway/constants/patch";
 
 @CommandHandler(PrepareGameCommand)
 export class PrepareGameHandler implements ICommandHandler<PrepareGameCommand> {
@@ -36,7 +36,8 @@ export class PrepareGameHandler implements ICommandHandler<PrepareGameCommand> {
         mapping?.enableCheats || false,
         mapping?.fillBots || false,
         mapping?.patch || DotaPatch.DOTA_684,
-        command.region
+        command.region,
+        false
       ),
     );
   }
