@@ -110,14 +110,9 @@ export class RmqController {
           data.version,
           data.roomId,
           data.players,
-          data.enableCheats,
-          data.fillBots,
           data.patch,
           data.region,
-          data.noRunes,
-          data.midTowerToWin,
-          data.killsToWin,
-          data.enableBanStage
+          data.params,
         ),
       ),
     );

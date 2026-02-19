@@ -102,15 +102,10 @@ export class FindGameServerHandler
       matchInfo.gameMode,
       matchInfo.roomId,
       matchInfo.map,
-      matchInfo.fillBots,
-      matchInfo.enableCheats,
       players,
       matchInfo.patch,
       matchInfo.region,
-      matchInfo.noRunes,
-      matchInfo.midTowerToWin,
-      matchInfo.killsToWin,
-      matchInfo.enableBanStage
+      matchInfo.params
     );
   }
 

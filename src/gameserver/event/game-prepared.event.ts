@@ -5,6 +5,7 @@ import { Dota_Map } from "gateway/shared-types/dota-map";
 import { MatchPlayer } from "gateway/events/room-ready.event";
 import { DotaPatch } from "gateway/constants/patch";
 import { Region } from "gateway/shared-types/region";
+import { GameServerPluginParameters } from "gateway/commands/LaunchGameServer/game-server-plugin-parameters";
 
 export class GamePreparedEvent {
   constructor(
@@ -14,13 +15,8 @@ export class GamePreparedEvent {
     public readonly version: Dota2Version,
     public readonly roomId: string,
     public readonly players: MatchPlayer[],
-    public readonly enableCheats: boolean,
-    public readonly fillBots: boolean,
     public readonly patch: DotaPatch,
     public readonly region: Region,
-    public readonly noRunes: boolean,
-    public readonly midTowerToWin: boolean,
-    public readonly killsToWin: number,
-    public readonly enableBanStage: boolean
+    public readonly params: GameServerPluginParameters,
   ) {}
 }

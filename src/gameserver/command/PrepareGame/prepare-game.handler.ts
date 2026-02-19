@@ -10,6 +10,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Dota2Version } from "gateway/shared-types/dota2version";
 import { DotaPatch } from "gateway/constants/patch";
+import { GameServerPluginParameters } from "gateway/commands/LaunchGameServer/game-server-plugin-parameters";
 
 @CommandHandler(PrepareGameCommand)
 export class PrepareGameHandler implements ICommandHandler<PrepareGameCommand> {
@@ -33,14 +34,18 @@ export class PrepareGameHandler implements ICommandHandler<PrepareGameCommand> {
         Dota2Version.Dota_684,
         command.roomId,
         command.players,
-        mapping?.enableCheats || false,
-        mapping?.fillBots || false,
         mapping?.patch || DotaPatch.DOTA_684,
         command.region,
-        false,
-        false,
-        0,
-        [MatchmakingMode.UNRANKED, MatchmakingMode.HIGHROOM].includes(command.lobbyType),
+        new GameServerPluginParameters(
+          false,
+          false,
+          0,
+          [MatchmakingMode.UNRANKED, MatchmakingMode.HIGHROOM].includes(
+            command.lobbyType,
+          ),
+          mapping?.fillBots || false,
+          mapping?.enableCheats || false,
+        ),
       ),
     );
   }
