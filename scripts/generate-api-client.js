@@ -41,6 +41,10 @@ async function main() {
     access: "public",
     provenance: true,
   };
+  pkg.repository = {
+    type: "git",
+    url: "https://github.com/dota2classic/gameserver",
+  };
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
 
   const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, "utf-8"));
