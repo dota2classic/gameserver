@@ -37,6 +37,10 @@ async function main() {
   pkg.main = "./dist/Api.js";
   pkg.types = "./dist/Api.d.ts";
   pkg.files = ["dist"];
+  pkg.publishConfig = {
+    access: "public",
+    provenance: true,
+  };
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
 
   const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, "utf-8"));
