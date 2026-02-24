@@ -13,23 +13,7 @@ const packageName = process.env.NPM_PACKAGE_NAME || "@dota2classic/gs-api-genera
 const packageVersion = process.env.NPM_PACKAGE_VERSION || "0.0.1";
 const outputDir = process.env.OUTPUT_DIR || "./generated-client";
 
-async function main() {
-  console.log("Generating API client...");
-  console.log(`  Package: ${packageName}@${packageVersion}`);
-  console.log(`  Output: ${outputDir}`);
-
-  await runClientGenerator(AppModule, {
-    title: "GameServer API",
-    description: "Matches, players, MMRs",
-    version: "1.0",
-    tags: ["game"],
-    bearerAuth: true,
-    packageName: packageName,
-    packageVersion: packageVersion,
-    outputDir: outputDir,
-  });
-
-  // Patch generated files to use dist/ output
+function patchGeneratedFiles() {
   const pkgPath = path.join(outputDir, "package.json");
   const tsconfigPath = path.join(outputDir, "tsconfig.json");
 
@@ -51,7 +35,35 @@ async function main() {
   tsconfig.compilerOptions.outDir = "./dist";
   fs.writeFileSync(tsconfigPath, JSON.stringify(tsconfig, null, 2) + "\n");
 
-  console.log("API client generated successfully!");
+  console.log("Patched generated files for npm publishing.");
+}
+
+// Hook into process exit to apply patches after generator completes
+process.on("exit", () => {
+  try {
+    if (fs.existsSync(path.join(outputDir, "package.json"))) {
+      patchGeneratedFiles();
+    }
+  } catch (err) {
+    console.error("Failed to patch generated files:", err);
+  }
+});
+
+async function main() {
+  console.log("Generating API client...");
+  console.log(`  Package: ${packageName}@${packageVersion}`);
+  console.log(`  Output: ${outputDir}`);
+
+  await runClientGenerator(AppModule, {
+    title: "GameServer API",
+    description: "Matches, players, MMRs",
+    version: "1.0",
+    tags: ["game"],
+    bearerAuth: true,
+    packageName: packageName,
+    packageVersion: packageVersion,
+    outputDir: outputDir,
+  });
 }
 
 main().catch((err) => {
