@@ -23,6 +23,8 @@
     "docker:local": "docker build . -t dota2classic/matchmaking:gameserver",
     "nodemon": "nodemon scrapper.js",
     "apigen:forum": "openapi-generator-cli  generate --model-name-prefix Forum --import-mappings Role  --import-mappings BanReason --import-mappings ThreadType=1 --import-mappings Dota_GameMode=2  --import-mappings MatchmakingMode=1  --skip-validate-spec -i http://localhost:6009/api-json -g typescript-fetch -t ./.openapi-generator/typescript-fetch-swr -o ./generated --additional-properties useSingleRequestParameter=false && rm -rf src/generated-api/forum && cp -r ./generated src/generated-api/forum && rm -rf ./generated && node scripts/after-codegen.js forum",
+    "apigen": "node scripts/generate-api-client.js",
+
     "migration:generate": "npx ts-node -r dotenv/config  -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d ./src/config/typeorm.config.ts",
     "migration:create": "npx ts-node -r dotenv/config  -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:create",
     "migration:run": "npx ts-node -r dotenv/config  -P ./tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run -d ./src/config/typeorm.config.ts",
@@ -81,6 +83,7 @@
     "winston": "^3.17.0"
   },
   "devDependencies": {
+    "@dota2classic/nest-openapi-client-generator": "^0.0.7",
     "@nestjs/cli": "^10.4.8",
     "@nestjs/schematics": "^10.2.3",
     "@nestjs/testing": "^10.4.10",

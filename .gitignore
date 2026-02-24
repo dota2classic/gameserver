@@ -3,6 +3,7 @@
 /node_modules
 
 .env
+.npmrc
 # Logs
 logs
 *.log
@@ -36,3 +37,7 @@ matches/*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# Generated API client
+/generated-client
+/openapi.json
