@@ -3,7 +3,7 @@ import { CrimeLogCreatedEvent } from "gameserver/event/crime-log-created.event";
 import { PlayerCrimeLogEntity } from "gameserver/model/player-crime-log.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { FIVE_MINUTES, HARD_PUNISHMENT, LIGHT_PUNISHMENT } from "gateway/shared-types/timings";
+import { LIGHT_PUNISHMENT } from "gateway/shared-types/timings";
 import { BanReason } from "gateway/shared-types/ban";
 import { Logger } from "@nestjs/common";
 import { BanSystemEntry, BanSystemEvent } from "gateway/events/gs/ban-system.event";
@@ -11,50 +11,35 @@ import { PlayerId } from "gateway/shared-types/player-id";
 import { PlayerBanEntity } from "gameserver/model/player-ban.entity";
 import { MatchmakingMode } from "gateway/shared-types/matchmaking-mode";
 
-const ABANDON_PUNISHMENTS_HOURS = [
-  1, // 12 hours
-  8, // 24 hours
-  3 * 24, // 5 days
-  7 * 24, // 2 weeks
-  14 * 24, // 1 month
-];
 const hr = 1000 * 60 * 60;
 const min = 1000 * 60;
 
-const LOAD_FAILURE_PUNISHMENTS_MS = [
-  10 * min,  // 1st offense
-  30 * min,  // 2nd
-  1 * hr,    // 3rd
-  2 * hr,    // 4th
-  6 * hr,    // 5th
-  12 * hr,   // 6th
-  24 * hr,   // 7th
-  48 * hr,   // 8th+
+const ABANDON_PUNISHMENTS_MS = [
+  1 * hr, // 1st offense: 1 hour
+  8 * hr, // 2nd:         8 hours
+  3 * 24 * hr, // 3rd:         3 days
+  7 * 24 * hr, // 4th:         7 days
+  14 * 24 * hr, // 5th+:       14 days
 ];
 
-/**
- * Returns ban duration in ms for the Nth load-failure offense (1-based).
- * Returns 0 for invalid input.
- */
-export const getLoadFailurePunishment = (n: number): number => {
-  if (n < 1) return 0;
-  return LOAD_FAILURE_PUNISHMENTS_MS[Math.min(n - 1, LOAD_FAILURE_PUNISHMENTS_MS.length - 1)];
-};
+const LOAD_FAILURE_PUNISHMENTS_MS = [
+  10 * min, // 1st offense
+  30 * min, // 2nd
+  1 * hr, // 3rd
+  2 * hr, // 4th
+  6 * hr, // 5th
+  12 * hr, // 6th
+  24 * hr, // 7th
+  48 * hr, // 8th+
+];
 
-export const getBasePunishment = (crime: BanReason) => {
-  switch (crime) {
-    case BanReason.INFINITE_BAN:
-      return Infinity;
-    case BanReason.GAME_DECLINE:
-      return LIGHT_PUNISHMENT;
-    case BanReason.LOAD_FAILURE:
-      return FIVE_MINUTES;
-    case BanReason.ABANDON:
-      return HARD_PUNISHMENT;
-    default:
-      return 0;
-  }
-};
+const EXEMPT_LOBBY_TYPES = new Set([
+  MatchmakingMode.BOTS,
+  MatchmakingMode.LOBBY,
+  MatchmakingMode.SOLOMID,
+  MatchmakingMode.TOURNAMENT,
+  MatchmakingMode.TURBO,
+]);
 
 export const getPunishmentCumulativeInterval = (crime: BanReason): string => {
   switch (crime) {
@@ -63,7 +48,7 @@ export const getPunishmentCumulativeInterval = (crime: BanReason): string => {
     case BanReason.GAME_DECLINE:
       return "6h";
     case BanReason.LOAD_FAILURE:
-      return "14d";
+      return "7d";
     case BanReason.ABANDON:
       return "30d";
     default:
@@ -71,12 +56,38 @@ export const getPunishmentCumulativeInterval = (crime: BanReason): string => {
   }
 };
 
-export const countCrimes = (crimes: PlayerCrimeLogEntity[]) => {
+export const countCrimes = (
+  crimes: PlayerCrimeLogEntity[],
+): Map<BanReason, number> => {
   const grouped: Map<BanReason, number> = new Map();
-  for (let crime of crimes) {
+  for (const crime of crimes) {
     grouped.set(crime.crime, (grouped.get(crime.crime) || 0) + 1);
   }
   return grouped;
+};
+
+const clampedIndex = (arr: number[], n: number) =>
+  Math.min(n - 1, arr.length - 1);
+
+const computePunishment = (crime: BanReason, offenseCount: number): number => {
+  switch (crime) {
+    case BanReason.ABANDON:
+      return ABANDON_PUNISHMENTS_MS[
+        clampedIndex(ABANDON_PUNISHMENTS_MS, offenseCount)
+      ];
+    case BanReason.LOAD_FAILURE:
+      return offenseCount < 1
+        ? 0
+        : LOAD_FAILURE_PUNISHMENTS_MS[
+            clampedIndex(LOAD_FAILURE_PUNISHMENTS_MS, offenseCount)
+          ];
+    case BanReason.GAME_DECLINE:
+      return LIGHT_PUNISHMENT * offenseCount;
+    case BanReason.INFINITE_BAN:
+      return Infinity;
+    default:
+      return 0;
+  }
 };
 
 @EventsHandler(CrimeLogCreatedEvent)
@@ -84,6 +95,7 @@ export class CrimeLogCreatedHandler
   implements IEventHandler<CrimeLogCreatedEvent>
 {
   private readonly logger = new Logger(CrimeLogCreatedHandler.name);
+
   constructor(
     @InjectRepository(PlayerCrimeLogEntity)
     private readonly playerCrimeLogEntityRepository: Repository<PlayerCrimeLogEntity>,
@@ -92,11 +104,7 @@ export class CrimeLogCreatedHandler
     private readonly ebus: EventBus,
   ) {
     this.playerCrimeLogEntityRepository
-      .find({
-        where: {
-          handled: false,
-        },
-      })
+      .find({ where: { handled: false } })
       .then((unhandled) =>
         Promise.all(
           unhandled.map((it) => this.handle(new CrimeLogCreatedEvent(it.id))),
@@ -110,32 +118,14 @@ export class CrimeLogCreatedHandler
   }
 
   async handle(event: CrimeLogCreatedEvent) {
-    // ok, first we find last crime
-
     const thisCrime = await this.playerCrimeLogEntityRepository.findOne({
       where: { id: event.id },
     });
 
     if (!thisCrime) return;
 
-    // We don't punish for crimes in bots
-    if (
-      thisCrime.lobby_type === MatchmakingMode.BOTS ||
-      thisCrime.lobby_type === MatchmakingMode.LOBBY ||
-      thisCrime.lobby_type == MatchmakingMode.SOLOMID ||
-      thisCrime.lobby_type == MatchmakingMode.TOURNAMENT ||
-      thisCrime.lobby_type == MatchmakingMode.TURBO
-    ) {
-      thisCrime.handled = true;
-      thisCrime.banTime = 0;
-      await this.playerCrimeLogEntityRepository.save(thisCrime);
-      this.logger.verbose("Don't punish for crime in bot/lobby match", {
-        steam_id: thisCrime.steam_id,
-        id: thisCrime.id,
-        crime: thisCrime.crime,
-        lobby_type: thisCrime.lobby_type,
-        created_at: thisCrime.created_at,
-      });
+    if (EXEMPT_LOBBY_TYPES.has(thisCrime.lobby_type)) {
+      await this.dismissCrime(thisCrime);
       return;
     }
 
@@ -143,49 +133,31 @@ export class CrimeLogCreatedHandler
 
     this.logger.log(`Cumulative interval for crime is ${cumInterval}`);
 
-    const frequentCrimesCount = await this.playerCrimeLogEntityRepository
+    const priorCrimes = await this.playerCrimeLogEntityRepository
       .createQueryBuilder("pc")
       .select()
       .where("pc.steam_id = :sid", { sid: thisCrime.steam_id })
       .andWhere(`pc.created_at >= now() - :cum_interval::interval`, {
         cum_interval: cumInterval,
-      }) // interval here
-      .andWhere({
-        handled: true,
       })
+      .andWhere({ handled: true })
       .andWhere(`pc."banTime" > 0`)
       .getMany();
 
-    // total crimes done within 24 hours
-    const countedCrimes = countCrimes(frequentCrimesCount);
+    // +1 to include the current crime
+    const offenseCount =
+      (countCrimes(priorCrimes).get(thisCrime.crime) || 0) + 1;
 
-    // We do `+1` because it doesn't count current crime, but we want to
-    let totalPunishmentCount = (countedCrimes.get(thisCrime.crime) || 0) + 1;
+    let punishmentDuration = computePunishment(thisCrime.crime, offenseCount);
 
-    let punishmentDuration: number;
-    if (thisCrime.crime === BanReason.ABANDON) {
-      const punishmentIdx = Math.min(
-        Math.max(0, totalPunishmentCount - 1),
-        ABANDON_PUNISHMENTS_HOURS.length - 1,
-      );
-      punishmentDuration = ABANDON_PUNISHMENTS_HOURS[punishmentIdx] * hr;
-    } else if (thisCrime.crime === BanReason.LOAD_FAILURE) {
-      punishmentDuration = getLoadFailurePunishment(totalPunishmentCount);
-    } else {
-      const basePunishment = getBasePunishment(thisCrime.crime);
-      punishmentDuration = basePunishment * totalPunishmentCount;
-    }
-
-
-    if(thisCrime.lobby_type === MatchmakingMode.HIGHROOM) {
+    if (thisCrime.lobby_type === MatchmakingMode.HIGHROOM) {
       punishmentDuration *= 3;
     }
 
     this.logger.log(
-      `Punishment: ${punishmentDuration / 1000 / 60} minutes for ${
-        thisCrime.steam_id
-      }. Total punishment count: ${totalPunishmentCount}`,
+      `Punishment: ${punishmentDuration / min} minutes for ${thisCrime.steam_id}. Offense count: ${offenseCount}`,
     );
+
     thisCrime.banTime = punishmentDuration;
     thisCrime.handled = true;
     await this.playerCrimeLogEntityRepository.save(thisCrime);
@@ -194,21 +166,30 @@ export class CrimeLogCreatedHandler
       thisCrime.steam_id,
       punishmentDuration,
       thisCrime,
-      frequentCrimesCount,
+      priorCrimes,
     );
+  }
+
+  private async dismissCrime(crime: PlayerCrimeLogEntity) {
+    crime.handled = true;
+    crime.banTime = 0;
+    await this.playerCrimeLogEntityRepository.save(crime);
+    this.logger.verbose("Don't punish for crime in exempt lobby type", {
+      steam_id: crime.steam_id,
+      id: crime.id,
+      crime: crime.crime,
+      lobby_type: crime.lobby_type,
+      created_at: crime.created_at,
+    });
   }
 
   private async applyBan(
     steam_id: string,
     duration: number,
     crime: PlayerCrimeLogEntity,
-    frequentCrimesCount: PlayerCrimeLogEntity[],
+    priorCrimes: PlayerCrimeLogEntity[],
   ) {
-    let ban = await this.playerBanRepository.findOne({
-      where: {
-        steam_id: steam_id,
-      },
-    });
+    let ban = await this.playerBanRepository.findOne({ where: { steam_id } });
 
     this.logger.log(`Updating ban time for user`, {
       steam_id,
@@ -216,30 +197,29 @@ export class CrimeLogCreatedHandler
       crime,
     });
 
+    const now = Date.now();
     if (!ban) {
       this.logger.log("New ban entity");
       ban = new PlayerBanEntity();
       ban.steam_id = steam_id;
       ban.reason = crime.crime;
-      ban.endTime = new Date(new Date().getTime() + duration);
-      await this.playerBanRepository.save(ban);
-    } else if (ban.endTime.getTime() < new Date().getTime()) {
+      ban.endTime = new Date(now + duration);
+    } else if (ban.endTime.getTime() < now) {
       this.logger.log("Ban time expired: making now() + duration");
-      ban.endTime = new Date(new Date().getTime() + duration);
+      ban.endTime = new Date(now + duration);
       ban.reason = crime.crime;
-      await this.playerBanRepository.save(ban);
     } else {
-      this.logger.log("Ban time is active: making endTime + duration");
-      // already banned, need to incrmeent
+      this.logger.log("Ban time is active: extending endTime by duration");
       ban.endTime = new Date(ban.endTime.getTime() + duration);
       ban.reason = crime.crime;
-      await this.playerBanRepository.save(ban);
     }
+
+    await this.playerBanRepository.save(ban);
 
     this.ebus.publish(
       new BanSystemEvent(
         new PlayerId(steam_id),
-        frequentCrimesCount.map(
+        priorCrimes.map(
           (t) => new BanSystemEntry(t.crime, t.created_at.getTime()),
         ),
         ban.endTime.getTime(),
