@@ -1,15 +1,15 @@
-import { EventBus, EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
-import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { FIVE_MINUTES, HARD_PUNISHMENT, LIGHT_PUNISHMENT } from 'gateway/shared-types/timings';
-import { BanReason } from 'gateway/shared-types/ban';
-import { Logger } from '@nestjs/common';
-import { BanSystemEntry, BanSystemEvent } from 'gateway/events/gs/ban-system.event';
-import { PlayerId } from 'gateway/shared-types/player-id';
-import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
-import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
+import { EventBus, EventsHandler, IEventHandler } from "@nestjs/cqrs";
+import { CrimeLogCreatedEvent } from "gameserver/event/crime-log-created.event";
+import { PlayerCrimeLogEntity } from "gameserver/model/player-crime-log.entity";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { FIVE_MINUTES, HARD_PUNISHMENT, LIGHT_PUNISHMENT } from "gateway/shared-types/timings";
+import { BanReason } from "gateway/shared-types/ban";
+import { Logger } from "@nestjs/common";
+import { BanSystemEntry, BanSystemEvent } from "gateway/events/gs/ban-system.event";
+import { PlayerId } from "gateway/shared-types/player-id";
+import { PlayerBanEntity } from "gameserver/model/player-ban.entity";
+import { MatchmakingMode } from "gateway/shared-types/matchmaking-mode";
 
 const ABANDON_PUNISHMENTS_HOURS = [
   1, // 12 hours
@@ -19,6 +19,27 @@ const ABANDON_PUNISHMENTS_HOURS = [
   14 * 24, // 1 month
 ];
 const hr = 1000 * 60 * 60;
+const min = 1000 * 60;
+
+const LOAD_FAILURE_PUNISHMENTS_MS = [
+  10 * min,  // 1st offense
+  30 * min,  // 2nd
+  1 * hr,    // 3rd
+  2 * hr,    // 4th
+  6 * hr,    // 5th
+  12 * hr,   // 6th
+  24 * hr,   // 7th
+  48 * hr,   // 8th+
+];
+
+/**
+ * Returns ban duration in ms for the Nth load-failure offense (1-based).
+ * Returns 0 for invalid input.
+ */
+export const getLoadFailurePunishment = (n: number): number => {
+  if (n < 1) return 0;
+  return LOAD_FAILURE_PUNISHMENTS_MS[Math.min(n - 1, LOAD_FAILURE_PUNISHMENTS_MS.length - 1)];
+};
 
 export const getBasePunishment = (crime: BanReason) => {
   switch (crime) {
@@ -42,7 +63,7 @@ export const getPunishmentCumulativeInterval = (crime: BanReason): string => {
     case BanReason.GAME_DECLINE:
       return "6h";
     case BanReason.LOAD_FAILURE:
-      return "3d";
+      return "14d";
     case BanReason.ABANDON:
       return "30d";
     default:
@@ -143,12 +164,13 @@ export class CrimeLogCreatedHandler
 
     let punishmentDuration: number;
     if (thisCrime.crime === BanReason.ABANDON) {
-      // Use predefined punishments
       const punishmentIdx = Math.min(
         Math.max(0, totalPunishmentCount - 1),
         ABANDON_PUNISHMENTS_HOURS.length - 1,
       );
       punishmentDuration = ABANDON_PUNISHMENTS_HOURS[punishmentIdx] * hr;
+    } else if (thisCrime.crime === BanReason.LOAD_FAILURE) {
+      punishmentDuration = getLoadFailurePunishment(totalPunishmentCount);
     } else {
       const basePunishment = getBasePunishment(thisCrime.crime);
       punishmentDuration = basePunishment * totalPunishmentCount;
