@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
-import { fetchWithRetry } from 'util/fetchWithRetry';
-import { lerp } from 'util/lerp';
+import { Injectable, Logger } from "@nestjs/common";
+import { VersionPlayerEntity } from "gameserver/model/version-player.entity";
+import { fetchWithRetry } from "util/fetchWithRetry";
+import { lerp } from "util/lerp";
 
 export interface DotaPlayerProfile {
   solo_competitive_rank: number;
@@ -42,6 +42,8 @@ export class StartingMmrService {
   private logger = new Logger(StartingMmrService.name);
 
   public async getStartingMMRForSteamId(steamId: string) {
+    return 1000;
+    // running experiment: always return 1000 here
     try {
       const profile: DotaPlayerProfile = await fetchWithRetry(
         `https://api.opendota.com/api/players/${steamId}`,
