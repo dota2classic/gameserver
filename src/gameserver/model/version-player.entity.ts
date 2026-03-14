@@ -1,11 +1,11 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
-import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
+import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn } from "typeorm";
+import { GameSeasonEntity } from "gameserver/model/game-season.entity";
 
 @Entity("version_player")
 @Index("version_player_unique_per_season", ['steamId', 'seasonId'],{ unique: true})
 export class VersionPlayerEntity {
 
-  public static STARTING_MMR = 1500;
+  public static STARTING_MMR = 1000;
 
   @PrimaryColumn({ name: "steam_id" })
   steamId: string;
