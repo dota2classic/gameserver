@@ -1,27 +1,28 @@
-import { Inject, Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
-import { EventBus, ofType } from '@nestjs/cqrs';
-import { ClientProxy } from '@nestjs/microservices';
-import { GameSessionCreatedEvent } from 'gateway/events/game-session-created.event';
-import { DiscoveryRequestedEvent } from 'gateway/events/discovery-requested.event';
-import { MatchStartedEvent } from 'gateway/events/match-started.event';
-import { MatchCancelledEvent } from 'gateway/events/match-cancelled.event';
-import { MatchFinishedEvent } from 'gateway/events/match-finished.event';
-import { ServerActualizationRequestedEvent } from 'gateway/events/gs/server-actualization-requested.event';
-import { KillServerRequestedEvent } from 'gateway/events/gs/kill-server-requested.event';
-import { BanSystemEvent } from 'gateway/events/gs/ban-system.event';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
-import { AchievementCompleteEvent } from 'gateway/events/gs/achievement-complete.event';
-import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
-import { PlayerSmurfDetectedEvent } from 'gateway/events/bans/player-smurf-detected.event';
-import { MatchRecordedEvent } from 'gateway/events/gs/match-recorded.event';
-import { PlayerReportBanCreatedEvent } from 'gateway/events/bans/player-report-ban-created.event';
-import { RunRconCommand } from 'gateway/commands/RunRcon/run-rcon.command';
-import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
-import { PlayerFeedbackCreatedEvent } from 'gateway/events/player-feedback-created.event';
-import { LaunchGameServerCommand } from 'gateway/commands/LaunchGameServer/launch-game-server.command';
-import { PlayerFinishedMatchEvent } from 'gateway/events/gs/player-finished-match.event';
+import { Inject, Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
+import { EventBus, ofType } from "@nestjs/cqrs";
+import { ClientProxy } from "@nestjs/microservices";
+import { GameSessionCreatedEvent } from "gateway/events/game-session-created.event";
+import { DiscoveryRequestedEvent } from "gateway/events/discovery-requested.event";
+import { MatchStartedEvent } from "gateway/events/match-started.event";
+import { MatchCancelledEvent } from "gateway/events/match-cancelled.event";
+import { MatchFinishedEvent } from "gateway/events/match-finished.event";
+import { ServerActualizationRequestedEvent } from "gateway/events/gs/server-actualization-requested.event";
+import { KillServerRequestedEvent } from "gateway/events/gs/kill-server-requested.event";
+import { BanSystemEvent } from "gateway/events/gs/ban-system.event";
+import { Repository } from "typeorm";
+import { InjectRepository } from "@nestjs/typeorm";
+import { PlayerNotLoadedEvent } from "gateway/events/bans/player-not-loaded.event";
+import { AchievementCompleteEvent } from "gateway/events/gs/achievement-complete.event";
+import { GameServerSessionEntity } from "gameserver/model/game-server-session.entity";
+import { PlayerSmurfDetectedEvent } from "gateway/events/bans/player-smurf-detected.event";
+import { MatchRecordedEvent } from "gateway/events/gs/match-recorded.event";
+import { PlayerReportBanCreatedEvent } from "gateway/events/bans/player-report-ban-created.event";
+import { RunRconCommand } from "gateway/commands/RunRcon/run-rcon.command";
+import { AmqpConnection } from "@golevelup/nestjs-rabbitmq";
+import { PlayerFeedbackCreatedEvent } from "gateway/events/player-feedback-created.event";
+import { LaunchGameServerCommand } from "gateway/commands/LaunchGameServer/launch-game-server.command";
+import { PlayerFinishedMatchEvent } from "gateway/events/gs/player-finished-match.event";
+import { GameSessionUpdateEvent } from "gateway/events/gs/game-session-update.event";
 
 @Injectable()
 export class AppService implements OnApplicationBootstrap {
@@ -52,6 +53,7 @@ export class AppService implements OnApplicationBootstrap {
       PlayerReportBanCreatedEvent,
       MatchRecordedEvent,
       RunRconCommand,
+      GameSessionUpdateEvent,
     ];
 
     this.ebus
