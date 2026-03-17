@@ -1,43 +1,44 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
-import { INestApplication } from '@nestjs/common';
-import { Constructor, CqrsModule, EventBus } from '@nestjs/cqrs';
-import { ObjectLiteral, Repository } from 'typeorm';
-import { EntityClassOrSchema } from '@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type';
-import { Entities } from 'util/typeorm-config';
-import { ClientsModule, RedisOptions, RmqOptions, Transport } from '@nestjs/microservices';
-import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
-import { AppService } from 'app.service';
-import { MetaService } from 'rest/meta/meta.service';
-import { MatchService } from 'rest/match/match.service';
-import { PlayerService } from 'rest/service/player.service';
-import { MatchMapper } from 'rest/match/match.mapper';
-import { MetaMapper } from 'rest/meta/meta.mapper';
-import { InfoMapper } from 'rest/info/info.mapper';
-import { InfoService } from 'rest/info/info.service';
-import { MmrBucketService } from 'gameserver/mmr-bucket.service';
-import { Mapper } from 'rest/mapper';
-import { GameServerDomain } from 'gameserver';
-import { ConfigModule } from '@nestjs/config';
-import { RabbitMQContainer, StartedRabbitMQContainer } from '@testcontainers/rabbitmq';
-import { CoreController } from 'core.controller';
-import { RmqController } from 'rmq.controller';
-import { QueryController } from 'query.controller';
-import { MatchController } from 'rest/match/match.controller';
-import { PlayerController } from 'rest/player.controller';
-import { InfoController } from 'rest/info/info.controller';
-import { MetaController } from 'rest/meta/meta.controller';
-import { CrimeController } from 'rest/crime/crime.controller';
-import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
-import { MetricsService } from 'metrics/metrics.service';
-import { WinstonWrapper } from '@dota2classic/nest_logger';
-import { DodgeService } from 'rest/service/dodge.service';
-import { CacheModule } from '@nestjs/cache-manager';
-import { StartingMmrService } from 'gameserver/service/starting-mmr.service';
-import { MockStartingMmrService } from '@test/MockStartingMmrService';
-import { ForumApi } from 'generated-api/forum';
-import { RabbitMQConfig, RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
+import { Test, TestingModule } from "@nestjs/testing";
+import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
+import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm";
+import { INestApplication } from "@nestjs/common";
+import { Constructor, CqrsModule, EventBus } from "@nestjs/cqrs";
+import { ObjectLiteral, Repository } from "typeorm";
+import { EntityClassOrSchema } from "@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type";
+import { Entities } from "util/typeorm-config";
+import { ClientsModule, RedisOptions, RmqOptions, Transport } from "@nestjs/microservices";
+import { RedisContainer, StartedRedisContainer } from "@testcontainers/redis";
+import { AppService } from "app.service";
+import { MetaService } from "rest/meta/meta.service";
+import { MatchService } from "rest/match/match.service";
+import { PlayerService } from "rest/service/player.service";
+import { MatchMapper } from "rest/match/match.mapper";
+import { MetaMapper } from "rest/meta/meta.mapper";
+import { InfoMapper } from "rest/info/info.mapper";
+import { InfoService } from "rest/info/info.service";
+import { MmrBucketService } from "gameserver/mmr-bucket.service";
+import { Mapper } from "rest/mapper";
+import { GameServerDomain } from "gameserver";
+import { ConfigModule } from "@nestjs/config";
+import { RabbitMQContainer, StartedRabbitMQContainer } from "@testcontainers/rabbitmq";
+import { CoreController } from "core.controller";
+import { RmqController } from "rmq.controller";
+import { QueryController } from "query.controller";
+import { MatchController } from "rest/match/match.controller";
+import { PlayerController } from "rest/player.controller";
+import { InfoController } from "rest/info/info.controller";
+import { MetaController } from "rest/meta/meta.controller";
+import { CrimeController } from "rest/crime/crime.controller";
+import { GameSeasonEntity } from "gameserver/model/game-season.entity";
+import { MetricsService } from "metrics/metrics.service";
+import { WinstonWrapper } from "@dota2classic/nest_logger";
+import { DodgeService } from "rest/service/dodge.service";
+import { CacheModule } from "@nestjs/cache-manager";
+import { StartingMmrService } from "gameserver/service/starting-mmr.service";
+import { MockStartingMmrService } from "@test/MockStartingMmrService";
+import { ForumApi } from "generated-api/forum";
+import { RabbitMQConfig, RabbitMQModule } from "@golevelup/nestjs-rabbitmq";
+import { GameSessionService } from "gameserver/service/game-session.service";
 import SpyInstance = jest.SpyInstance;
 
 export interface TestEnvironment {
@@ -227,6 +228,7 @@ export function useFullModule(): TestEnvironment {
         MatchMapper,
         MetaMapper,
         InfoMapper,
+        GameSessionService,
         InfoService,
         MmrBucketService,
         DodgeService,
