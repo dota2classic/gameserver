@@ -1,15 +1,14 @@
-import { EventPattern } from '@nestjs/microservices';
-import { Controller, Logger } from '@nestjs/common';
-import { Constructor, EventBus } from '@nestjs/cqrs';
-import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
-import { GameServerDiscoveredEvent } from 'gateway/events/game-server-discovered.event';
-import { PlayerBanHammeredEvent } from 'gateway/events/bans/player-ban-hammered.event';
-import { ServerSessionSyncEvent } from 'gateway/events/gs/server-session-sync.event';
-import { TournamentGameReadyEvent } from 'gateway/events/tournament/tournament-game-ready.event';
-import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event';
-import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
-import { ConfigService } from '@nestjs/config';
-import { PlayerConnectedEvent } from 'gateway/events/srcds/player-connected.event';
+import { EventPattern } from "@nestjs/microservices";
+import { Controller, Logger } from "@nestjs/common";
+import { Constructor, EventBus } from "@nestjs/cqrs";
+import { GameServerStoppedEvent } from "gateway/events/game-server-stopped.event";
+import { GameServerDiscoveredEvent } from "gateway/events/game-server-discovered.event";
+import { PlayerBanHammeredEvent } from "gateway/events/bans/player-ban-hammered.event";
+import { TournamentGameReadyEvent } from "gateway/events/tournament/tournament-game-ready.event";
+import { LiveMatchUpdateEvent } from "gateway/events/gs/live-match-update.event";
+import { ServerStatusEvent } from "gateway/events/gs/server-status.event";
+import { ConfigService } from "@nestjs/config";
+import { PlayerConnectedEvent } from "gateway/events/srcds/player-connected.event";
 
 @Controller()
 export class CoreController {
@@ -33,11 +32,6 @@ export class CoreController {
   @EventPattern(GameServerStoppedEvent.name)
   async GameServerStoppedEvent(data: GameServerStoppedEvent) {
     this.event(GameServerStoppedEvent, data);
-  }
-
-  @EventPattern(ServerSessionSyncEvent.name)
-  async ServerSessionSyncEvent(data: ServerSessionSyncEvent) {
-    this.event(ServerSessionSyncEvent, data);
   }
 
   @EventPattern(GameServerDiscoveredEvent.name)

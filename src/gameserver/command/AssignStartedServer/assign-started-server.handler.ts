@@ -1,16 +1,16 @@
-import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
-import { Logger } from '@nestjs/common';
-import { AssignStartedServerCommand } from 'gameserver/command/AssignStartedServer/assign-started-server.command';
-import { InjectRepository } from '@nestjs/typeorm';
-import { MatchEntity } from 'gameserver/model/match.entity';
-import { DataSource, Repository } from 'typeorm';
-import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
-import { GameSessionCreatedEvent } from 'gateway/events/game-session-created.event';
-import { MatchStartedEvent } from 'gateway/events/match-started.event';
-import { GameServerInfo } from 'gateway/shared-types/game-server-info';
-import { Dota_GameRulesState } from 'gateway/shared-types/dota-game-rules-state';
-import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
-import { DotaConnectionState } from 'gateway/shared-types/dota-player-connection-state';
+import { CommandHandler, EventBus, ICommandHandler } from "@nestjs/cqrs";
+import { Logger } from "@nestjs/common";
+import { AssignStartedServerCommand } from "gameserver/command/AssignStartedServer/assign-started-server.command";
+import { InjectRepository } from "@nestjs/typeorm";
+import { MatchEntity } from "gameserver/model/match.entity";
+import { DataSource, Repository } from "typeorm";
+import { GameServerSessionEntity } from "gameserver/model/game-server-session.entity";
+import { GameSessionCreatedEvent } from "gateway/events/game-session-created.event";
+import { MatchStartedEvent } from "gateway/events/match-started.event";
+import { GameServerInfo } from "gateway/shared-types/game-server-info";
+import { Dota_GameRulesState } from "gateway/shared-types/dota-game-rules-state";
+import { GameSessionPlayerEntity } from "gameserver/model/game-session-player.entity";
+import { DotaConnectionState } from "gateway/shared-types/dota-player-connection-state";
 
 @CommandHandler(AssignStartedServerCommand)
 export class AssignStartedServerHandler implements ICommandHandler<AssignStartedServerCommand> {
@@ -54,6 +54,7 @@ export class AssignStartedServerHandler implements ICommandHandler<AssignStarted
         new GameServerInfo(session.url),
       ),
     );
+
   }
 
   private async createGameSession(event: AssignStartedServerCommand, match: MatchEntity) {

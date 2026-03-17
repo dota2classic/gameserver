@@ -1,14 +1,14 @@
-import { CommandBus, CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
-import { Logger } from '@nestjs/common';
-import { SavePlayerAbandonCommand } from 'gameserver/command/SavePlayerAbandon/save-player-abandon.command';
-import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
-import { BanReason } from 'gateway/shared-types/ban';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CrimeLogCreatedEvent } from 'gameserver/event/crime-log-created.event';
-import { MetricsService } from 'metrics/metrics.service';
-import { LeaveGameSessionCommand } from 'gameserver/command/LeaveGameSessionCommand/leave-game-session.command';
-import { Dota_GameRulesState } from 'gateway/shared-types/dota-game-rules-state';
+import { CommandBus, CommandHandler, EventBus, ICommandHandler } from "@nestjs/cqrs";
+import { Logger } from "@nestjs/common";
+import { SavePlayerAbandonCommand } from "gameserver/command/SavePlayerAbandon/save-player-abandon.command";
+import { PlayerCrimeLogEntity } from "gameserver/model/player-crime-log.entity";
+import { BanReason } from "gateway/shared-types/ban";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { CrimeLogCreatedEvent } from "gameserver/event/crime-log-created.event";
+import { MetricsService } from "metrics/metrics.service";
+import { LeaveGameSessionCommand } from "gameserver/command/LeaveGameSessionCommand/leave-game-session.command";
+import { Dota_GameRulesState } from "gateway/shared-types/dota-game-rules-state";
 
 @CommandHandler(SavePlayerAbandonCommand)
 export class SavePlayerAbandonHandler
@@ -37,7 +37,10 @@ export class SavePlayerAbandonHandler
       return;
     }
 
-    if (event.gameState === Dota_GameRulesState.POST_GAME) {
+    if (
+      event.gameState === Dota_GameRulesState.POST_GAME ||
+      event.gameState === Dota_GameRulesState.DISCONNECT
+    ) {
       this.logger.log(
         "Player abandoned after game finished, not creating a crime",
       );

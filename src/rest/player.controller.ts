@@ -1,9 +1,9 @@
-import { Body, Controller, Delete, Get, Inject, Logger, Param, Post, Query, UseInterceptors } from '@nestjs/common';
-import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Mapper } from 'rest/mapper';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, DataSource, Repository } from 'typeorm';
+import { Body, Controller, Delete, Get, Inject, Logger, Param, Post, Query, UseInterceptors } from "@nestjs/common";
+import { CacheInterceptor, CacheTTL } from "@nestjs/cache-manager";
+import { ApiQuery, ApiTags } from "@nestjs/swagger";
+import { Mapper } from "rest/mapper";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Connection, DataSource, Repository } from "typeorm";
 import {
   AbandonSessionDto,
   BanStatusDto,
@@ -17,36 +17,36 @@ import {
   ReportsAvailableDto,
   SmurfData,
   StartRecalibrationDto,
-} from 'rest/dto/player.dto';
-import { CommandBus, EventBus, QueryBus } from '@nestjs/cqrs';
-import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
-import { PlayerId } from 'gateway/shared-types/player-id';
-import { GameServerService } from 'gameserver/gameserver.service';
-import { PlayerService } from 'rest/service/player.service';
-import { HeroStatsDto } from 'rest/dto/hero.dto';
-import { BanStatus } from 'gateway/queries/GetPlayerInfo/get-player-info-query.result';
-import { LeaderboardView } from 'gameserver/model/leaderboard.view';
-import { PlayerBanEntity } from 'gameserver/model/player-ban.entity';
-import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
-import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
-import { NullableIntPipe } from 'util/pipes';
-import { AchievementService } from 'gameserver/achievement.service';
-import { AchievementEntity } from 'gameserver/model/achievement.entity';
-import { AchievementDto, DBAchievementDto } from 'rest/dto/achievement.dto';
-import { makePage } from 'gateway/util/make-page';
-import { AchievementKey } from 'gateway/shared-types/achievemen-key';
-import { LeaderboardService } from 'gameserver/service/leaderboard.service';
-import { GameSeasonService } from 'gameserver/service/game-season.service';
-import { PlayerFeedbackService } from 'gameserver/service/player-feedback.service';
-import { PlayerQualityService } from 'gameserver/service/player-quality.service';
-import { DodgeService } from 'rest/service/dodge.service';
-import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
-import { GetReportsAvailableQuery } from 'gateway/queries/GetReportsAvailable/get-reports-available.query';
-import { GetReportsAvailableQueryResult } from 'gateway/queries/GetReportsAvailable/get-reports-available-query.result';
-import { ClientProxy } from '@nestjs/microservices';
-import { RunRconCommand } from 'gateway/commands/RunRcon/run-rcon.command';
-import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
-import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
+} from "rest/dto/player.dto";
+import { CommandBus, EventBus, QueryBus } from "@nestjs/cqrs";
+import { MakeSureExistsCommand } from "gameserver/command/MakeSureExists/make-sure-exists.command";
+import { PlayerId } from "gateway/shared-types/player-id";
+import { GameServerService } from "gameserver/gameserver.service";
+import { PlayerService } from "rest/service/player.service";
+import { HeroStatsDto } from "rest/dto/hero.dto";
+import { BanStatus } from "gateway/queries/GetPlayerInfo/get-player-info-query.result";
+import { LeaderboardView } from "gameserver/model/leaderboard.view";
+import { PlayerBanEntity } from "gameserver/model/player-ban.entity";
+import { GameSeasonEntity } from "gameserver/model/game-season.entity";
+import { VersionPlayerEntity } from "gameserver/model/version-player.entity";
+import { NullableIntPipe } from "util/pipes";
+import { AchievementService } from "gameserver/achievement.service";
+import { AchievementEntity } from "gameserver/model/achievement.entity";
+import { AchievementDto, DBAchievementDto } from "rest/dto/achievement.dto";
+import { makePage } from "gateway/util/make-page";
+import { AchievementKey } from "gateway/shared-types/achievemen-key";
+import { LeaderboardService } from "gameserver/service/leaderboard.service";
+import { GameSeasonService } from "gameserver/service/game-season.service";
+import { PlayerFeedbackService } from "gameserver/service/player-feedback.service";
+import { PlayerQualityService } from "gameserver/service/player-quality.service";
+import { DodgeService } from "rest/service/dodge.service";
+import { PlayerServiceV2 } from "gameserver/service/player-service-v2.service";
+import { GetReportsAvailableQuery } from "gateway/queries/GetReportsAvailable/get-reports-available.query";
+import { GetReportsAvailableQueryResult } from "gateway/queries/GetReportsAvailable/get-reports-available-query.result";
+import { ClientProxy } from "@nestjs/microservices";
+import { GameSessionPlayerEntity } from "gameserver/model/game-session-player.entity";
+import { ReqLoggingInterceptor } from "rest/service/req-logging.interceptor";
+import { GameSessionService } from "gameserver/service/game-session.service";
 
 
 // Holy fucking shit refactor THIS ASAP
@@ -86,6 +86,7 @@ export class PlayerController {
     @Inject("QueryCore") private readonly redisEventQueue: ClientProxy,
     @InjectRepository(GameSessionPlayerEntity)
     private readonly gameSessionPlayerEntityRepository: Repository<GameSessionPlayerEntity>,
+    private readonly sessionService: GameSessionService
   ) {}
 
   @Get("/:id/achievements")
@@ -411,16 +412,6 @@ offset $2 limit $3`,
 
   @Post("/abandon")
   async abandonSession(@Body() dto: AbandonSessionDto) {
-    const sesh = await this.playerServiceV2.getSession(dto.steamId);
-
-    this.logger.log("Session to abandon: ", dto);
-    if (sesh) {
-      this.ebus.publish(
-        new RunRconCommand(`d2c_abandon ${sesh.steamId}`, sesh.session.url),
-      );
-      sesh.userAbandoned = true;
-      await this.gameSessionPlayerEntityRepository.save(sesh);
-      this.logger.log(`UserAbandon game ${sesh.steamId}`, sesh.matchId);
-    }
+    await this.sessionService.abandonSession(dto.steamId);
   }
 }

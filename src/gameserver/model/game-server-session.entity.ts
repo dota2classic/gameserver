@@ -1,10 +1,10 @@
-import { Column, Entity, OneToMany, PrimaryColumn, Relation } from 'typeorm';
-import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { Dota_GameMode } from 'gateway/shared-types/dota-game-mode';
-import { Dota_GameRulesState } from 'gateway/shared-types/dota-game-rules-state';
-import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
-import { Dota_Map } from 'gateway/shared-types/dota-map';
-import { MatchSummary } from 'gateway/shared-types/match-summary';
+import { Column, Entity, OneToMany, PrimaryColumn, Relation } from "typeorm";
+import { MatchmakingMode } from "gateway/shared-types/matchmaking-mode";
+import { Dota_GameMode } from "gateway/shared-types/dota-game-mode";
+import { Dota_GameRulesState } from "gateway/shared-types/dota-game-rules-state";
+import { GameSessionPlayerEntity } from "gameserver/model/game-session-player.entity";
+import { Dota_Map } from "gateway/shared-types/dota-map";
+import { MatchSummary } from "gateway/shared-types/match-summary";
 
 @Entity("game_server_session")
 export class GameServerSessionEntity {
