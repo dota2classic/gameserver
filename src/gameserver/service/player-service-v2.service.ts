@@ -12,12 +12,8 @@ import { Dota_GameRulesState } from 'gateway/shared-types/dota-game-rules-state'
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
 import { StartingMmrService } from 'gameserver/service/starting-mmr.service';
+import { PlayerEducationLockEntity } from 'gameserver/model/player-education-lock.entity';
 
-function getMatchAccessLevel(anyGames: number, anyWins: number) {
-  if (anyWins) return MatchAccessLevel.HUMAN_GAMES;
-  if (anyGames) return MatchAccessLevel.SIMPLE_MODES;
-  return MatchAccessLevel.EDUCATION;
-}
 
 @Injectable()
 export class PlayerServiceV2 {
@@ -32,6 +28,8 @@ export class PlayerServiceV2 {
     private readonly sessionRepo: Repository<GameServerSessionEntity>,
     @InjectRepository(GameSessionPlayerEntity)
     private readonly sessionPlayerRepo: Repository<GameSessionPlayerEntity>,
+    @InjectRepository(PlayerEducationLockEntity)
+    private readonly educationLockRepo: Repository<PlayerEducationLockEntity>,
     private readonly gameSeasonService: GameSeasonService,
     private readonly ds: DataSource,
     private readonly startingMmr: StartingMmrService,
@@ -70,26 +68,29 @@ export class PlayerServiceV2 {
     return q.getCount();
   }
 
-  public async getMatchAccessLevel(steamId: string): Promise<MatchAccessLevel> {
-    const result: { any_wins: number; any_games: number }[] =
-      await this.playerInMatchRepository.query(
-        `
-select
-  (count(*) filter(
-where
-  pim.team = fm.winner and fm.matchmaking_mode in (0, 1, 7)))::int as any_wins,
-  count(pim)::int as any_games
-from
-  player_in_match pim
-inner join finished_match fm on
-  fm.id = pim."matchId"
-where
-  pim."playerId" = $1
-`,
-        [steamId],
-      );
+  public async getEducationStatus(
+    steamId: string,
+  ): Promise<{ accessLevel: MatchAccessLevel; readinessProgress: number }> {
+    const lock = await this.educationLockRepo.findOne({ where: { steamId } });
 
-    return getMatchAccessLevel(result[0].any_games, result[0].any_wins);
+    // No lock = existing player created before this feature — free access
+    if (!lock || lock.resolved) {
+      return { accessLevel: MatchAccessLevel.HUMAN_GAMES, readinessProgress: 1 };
+    }
+
+    const accessLevel =
+      lock.totalBotGames === 0
+        ? MatchAccessLevel.EDUCATION
+        : MatchAccessLevel.SIMPLE_MODES;
+
+    const readinessProgress =
+      Math.min(lock.totalBotGames, lock.requiredGames) / lock.requiredGames;
+
+    return { accessLevel, readinessProgress };
+  }
+
+  public async getMatchAccessLevel(steamId: string): Promise<MatchAccessLevel> {
+    return (await this.getEducationStatus(steamId)).accessLevel;
   }
 
   async startRecalibration(steamId: string) {

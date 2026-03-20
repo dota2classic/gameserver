@@ -9,6 +9,7 @@ import { GamePreparedEvent } from 'gameserver/event/game-prepared.event';
 import { FindGameServerCommand } from 'gameserver/command/FindGameServer/find-game-server.command';
 import { MatchRecordedEvent } from 'gateway/events/gs/match-recorded.event';
 import { CheckFirstGameCommand } from 'gameserver/command/CheckFirstGame/check-first-game.command';
+import { UpdateEducationLockCommand } from 'gameserver/command/UpdateEducationLock/update-education-lock.command';
 
 @Injectable()
 export class GameserverSaga {
@@ -58,6 +59,21 @@ export class GameserverSaga {
     );
   };
 
+
+  @Saga()
+  updateEducationLocks = (events$: Observable<any>): Observable<ICommand> => {
+    return events$.pipe(
+      ofType(MatchRecordedEvent),
+      filter(
+        (e: MatchRecordedEvent) =>
+          e.type === MatchmakingMode.BOTS || e.type === MatchmakingMode.TURBO,
+      ),
+      map(
+        (e: MatchRecordedEvent) =>
+          new UpdateEducationLockCommand(e.players.map((p) => p.steam_id)),
+      ),
+    );
+  };
 
   @Saga()
   checkFirstGame = (events$: Observable<any>): Observable<ICommand> => {
