@@ -1,14 +1,14 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Logger } from '@nestjs/common';
-import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { inspect } from 'util';
-import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
-import { GameSeasonService } from 'gameserver/service/game-season.service';
-import { StartingMmrService } from 'gameserver/service/starting-mmr.service';
-import { PlayerEducationLockEntity } from 'gameserver/model/player-education-lock.entity';
-import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
+import { Logger } from "@nestjs/common";
+import { MakeSureExistsCommand } from "gameserver/command/MakeSureExists/make-sure-exists.command";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { inspect } from "util";
+import { VersionPlayerEntity } from "gameserver/model/version-player.entity";
+import { GameSeasonService } from "gameserver/service/game-season.service";
+import { StartingMmrService } from "gameserver/service/starting-mmr.service";
+import { PlayerEducationLockEntity } from "gameserver/model/player-education-lock.entity";
+import PlayerInMatchEntity from "gameserver/model/player-in-match.entity";
 
 @CommandHandler(MakeSureExistsCommand)
 export class MakeSureExistsHandler
@@ -64,18 +64,21 @@ export class MakeSureExistsHandler
       .orIgnore()
       .execute();
 
-    const hasBotWins = await this.playerInMatchRepo
+    const botGamesQuery = this.playerInMatchRepo
       .createQueryBuilder('pim')
       .innerJoin('pim.match', 'fm')
       .where('pim.playerId = :steamId', { steamId })
-      .andWhere('fm.matchmaking_mode IN (:...modes)', { modes: [7, 13] })
-      .andWhere('pim.team = fm.winner')
-      .getCount() > 0;
+      .andWhere('fm.matchmaking_mode IN (:...modes)', { modes: [7, 13] });
+
+    const [totalBotGames, hasBotWins] = await Promise.all([
+      botGamesQuery.getCount(),
+      botGamesQuery.clone().andWhere('pim.team = fm.winner').getCount().then(c => c > 0),
+    ]);
 
     await this.educationLockRepo
       .createQueryBuilder()
       .insert()
-      .values({ steamId, requiredGames: 1, resolved: hasBotWins, totalBotGames: 0, recentKda: 0, recentWinrate: 0 })
+      .values({ steamId, requiredGames: 1, resolved: hasBotWins, totalBotGames, recentKda: 0, recentWinrate: 0 })
       .orIgnore()
       .execute();
   }
