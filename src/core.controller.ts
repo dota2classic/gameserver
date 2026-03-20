@@ -1,6 +1,6 @@
 import { EventPattern } from "@nestjs/microservices";
 import { Controller, Logger } from "@nestjs/common";
-import { Constructor, EventBus } from "@nestjs/cqrs";
+import { CommandBus, Constructor, EventBus } from "@nestjs/cqrs";
 import { GameServerStoppedEvent } from "gateway/events/game-server-stopped.event";
 import { GameServerDiscoveredEvent } from "gateway/events/game-server-discovered.event";
 import { PlayerBanHammeredEvent } from "gateway/events/bans/player-ban-hammered.event";
@@ -9,11 +9,14 @@ import { LiveMatchUpdateEvent } from "gateway/events/gs/live-match-update.event"
 import { ServerStatusEvent } from "gateway/events/gs/server-status.event";
 import { ConfigService } from "@nestjs/config";
 import { PlayerConnectedEvent } from "gateway/events/srcds/player-connected.event";
+import { UserMightExistEvent } from "gateway/events/user/user-might-exist.event";
+import { MakeSureExistsCommand } from "gameserver/command/MakeSureExists/make-sure-exists.command";
 
 @Controller()
 export class CoreController {
   constructor(
     private readonly ebus: EventBus,
+    private readonly cbus: CommandBus,
     private readonly config: ConfigService,
   ) {}
   private readonly logger = new Logger(CoreController.name);
@@ -59,4 +62,10 @@ export class CoreController {
   async PlayerConnectedEvent(data: PlayerConnectedEvent) {
     this.event(PlayerConnectedEvent, data);
   }
+
+  @EventPattern(UserMightExistEvent.name)
+  async UserMightExistEvent(data: UserMightExistEvent) {
+    await this.cbus.execute(new MakeSureExistsCommand(data.id));
+  }
 }
+
