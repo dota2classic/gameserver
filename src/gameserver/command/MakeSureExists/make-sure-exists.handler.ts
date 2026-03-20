@@ -7,6 +7,8 @@ import { inspect } from 'util';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { GameSeasonService } from 'gameserver/service/game-season.service';
 import { StartingMmrService } from 'gameserver/service/starting-mmr.service';
+import { PlayerEducationLockEntity } from 'gameserver/model/player-education-lock.entity';
+import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 
 @CommandHandler(MakeSureExistsCommand)
 export class MakeSureExistsHandler
@@ -17,6 +19,10 @@ export class MakeSureExistsHandler
   constructor(
     @InjectRepository(VersionPlayerEntity)
     private readonly versionPlayerRepository: Repository<VersionPlayerEntity>,
+    @InjectRepository(PlayerEducationLockEntity)
+    private readonly educationLockRepo: Repository<PlayerEducationLockEntity>,
+    @InjectRepository(PlayerInMatchEntity)
+    private readonly playerInMatchRepo: Repository<PlayerInMatchEntity>,
     private readonly gsService: GameSeasonService,
     private readonly startingMmrService: StartingMmrService,
   ) {}
@@ -55,6 +61,21 @@ export class MakeSureExistsHandler
           season.id,
         ),
       )
+      .orIgnore()
+      .execute();
+
+    const hasBotWins = await this.playerInMatchRepo
+      .createQueryBuilder('pim')
+      .innerJoin('pim.match', 'fm')
+      .where('pim.playerId = :steamId', { steamId })
+      .andWhere('fm.matchmaking_mode IN (:...modes)', { modes: [7, 13] })
+      .andWhere('pim.team = fm.winner')
+      .getCount() > 0;
+
+    await this.educationLockRepo
+      .createQueryBuilder()
+      .insert()
+      .values({ steamId, requiredGames: 1, resolved: hasBotWins, totalBotGames: 0, recentKda: 0, recentWinrate: 0 })
       .orIgnore()
       .execute();
   }

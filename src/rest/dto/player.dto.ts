@@ -68,6 +68,7 @@ export class PlayerSummaryDto {
   calibrationGamesLeft: number;
   @ApiProperty({ enum: MatchAccessLevel, enumName: "MatchAccessLevel" })
   accessLevel: MatchAccessLevel;
+  readinessProgress: number;
   reports: PlayerAspectCountDto[];
 }
 

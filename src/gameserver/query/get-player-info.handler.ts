@@ -86,7 +86,7 @@ GROUP BY vp.steam_id,
 
     const humanGamesPlayed = await this.getPlayedGames(command.playerId.value);
 
-    const accessLevel = await this.playerServiceV2.getMatchAccessLevel(command.playerId.value)
+    const accessLevel = await this.playerServiceV2.getMatchAccessLevel(command.playerId.value);
 
     const dodgeList = await this.dodge.getDodgeList(command.playerId.value).then(it => it.map(x => x.dodgedSteamId))
 
@@ -99,7 +99,7 @@ GROUP BY vp.steam_id,
       humanGamesPlayed || 0,
       ban?.asBanStatus() || BanStatus.NOT_BANNED,
       accessLevel,
-      dodgeList
+      dodgeList,
     );
   }
 

@@ -36,6 +36,7 @@ import { CreateCrimeLogHandler } from 'gameserver/command/CreateCrimeLog/create-
 import { StartingMmrService } from 'gameserver/service/starting-mmr.service';
 import { CheckFirstGameHandler } from 'gameserver/command/CheckFirstGame/check-first-game.handler';
 import { AttachReplayHandler } from 'gameserver/command/AttachReplayCommand/attach-replay.handler';
+import { UpdateEducationLockHandler } from 'gameserver/command/UpdateEducationLock/update-education-lock.handler';
 
 const CommandHandlers = [
   FindGameServerHandler,
@@ -52,6 +53,7 @@ const CommandHandlers = [
   CreateCrimeLogHandler,
   AttachReplayHandler,
   CheckFirstGameHandler,
+  UpdateEducationLockHandler,
 ];
 const EventHandlers = [
   PlayerConnectedHandler,
