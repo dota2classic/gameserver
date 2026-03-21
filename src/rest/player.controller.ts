@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, Inject, Logger, Param, Post, Query, UseInterceptors } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Logger,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseInterceptors,
+} from "@nestjs/common";
 import { CacheInterceptor, CacheTTL } from "@nestjs/cache-manager";
 import { ApiQuery, ApiTags } from "@nestjs/swagger";
 import { Mapper } from "rest/mapper";
@@ -9,7 +21,9 @@ import {
   BanStatusDto,
   DodgeListEntryDto,
   DodgePlayerDto,
+  EducationLockDto,
   LeaderboardEntryPageDto,
+  PatchEducationLockDto,
   PlayerSummaryDto,
   PlayerTeammateDto,
   PlayerTeammatePage,
@@ -413,5 +427,18 @@ offset $2 limit $3`,
   @Post("/abandon")
   async abandonSession(@Body() dto: AbandonSessionDto) {
     await this.sessionService.abandonSession(dto.steamId);
+  }
+
+  @Get("/education_lock/:id")
+  async getEducationLock(@Param("id") steamId: string): Promise<EducationLockDto | null> {
+    return this.playerServiceV2.getEducationLock(steamId);
+  }
+
+  @Patch("/education_lock/:id")
+  async patchEducationLock(
+    @Param("id") steamId: string,
+    @Body() dto: PatchEducationLockDto,
+  ): Promise<EducationLockDto> {
+    return this.playerServiceV2.patchEducationLock(steamId, dto.requiredGames);
   }
 }

@@ -1,9 +1,9 @@
-import { BanReason } from 'gateway/shared-types/ban';
-import { Page } from 'gateway/shared-types/page';
-import { ApiProperty } from '@nestjs/swagger';
-import { PlayerAspect } from 'gateway/shared-types/player-aspect';
-import { MatchAccessLevel } from 'gateway/shared-types/match-access-level';
-import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
+import { BanReason } from "gateway/shared-types/ban";
+import { Page } from "gateway/shared-types/page";
+import { ApiProperty } from "@nestjs/swagger";
+import { PlayerAspect } from "gateway/shared-types/player-aspect";
+import { MatchAccessLevel } from "gateway/shared-types/match-access-level";
+import { MatchmakingMode } from "gateway/shared-types/matchmaking-mode";
 
 export class LeaderboardEntryDto {
   rank: number | null;
@@ -141,4 +141,17 @@ export class DodgeListEntryDto {
 
 export class StartRecalibrationDto {
   steamId: string;
+}
+
+export class EducationLockDto {
+  steamId: string;
+  requiredGames: number;
+  resolved: boolean;
+  totalBotGames: number;
+  recentKda: number;
+  recentWinrate: number;
+}
+
+export class PatchEducationLockDto {
+  requiredGames: number;
 }

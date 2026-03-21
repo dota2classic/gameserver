@@ -1,18 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
-import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
-import { MatchAccessLevel } from 'gateway/shared-types/match-access-level';
-import { RecalibrationEntity } from 'gameserver/model/recalibration.entity';
-import { GameSeasonService } from 'gameserver/service/game-season.service';
-import { Dota_GameRulesState } from 'gateway/shared-types/dota-game-rules-state';
-import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
-import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
-import { StartingMmrService } from 'gameserver/service/starting-mmr.service';
-import { PlayerEducationLockEntity } from 'gameserver/model/player-education-lock.entity';
+import { Injectable } from "@nestjs/common";
+import { GameSeasonEntity } from "gameserver/model/game-season.entity";
+import { MatchmakingMode } from "gateway/shared-types/matchmaking-mode";
+import { VersionPlayerEntity } from "gameserver/model/version-player.entity";
+import { InjectRepository } from "@nestjs/typeorm";
+import { DataSource, Repository } from "typeorm";
+import PlayerInMatchEntity from "gameserver/model/player-in-match.entity";
+import { MatchAccessLevel } from "gateway/shared-types/match-access-level";
+import { RecalibrationEntity } from "gameserver/model/recalibration.entity";
+import { GameSeasonService } from "gameserver/service/game-season.service";
+import { Dota_GameRulesState } from "gateway/shared-types/dota-game-rules-state";
+import { GameServerSessionEntity } from "gameserver/model/game-server-session.entity";
+import { GameSessionPlayerEntity } from "gameserver/model/game-session-player.entity";
+import { StartingMmrService } from "gameserver/service/starting-mmr.service";
+import { PlayerEducationLockEntity } from "gameserver/model/player-education-lock.entity";
 
 
 @Injectable()
@@ -91,6 +91,15 @@ export class PlayerServiceV2 {
 
   public async getMatchAccessLevel(steamId: string): Promise<MatchAccessLevel> {
     return (await this.getEducationStatus(steamId)).accessLevel;
+  }
+
+  public async getEducationLock(steamId: string): Promise<PlayerEducationLockEntity | null> {
+    return this.educationLockRepo.findOne({ where: { steamId } });
+  }
+
+  public async patchEducationLock(steamId: string, requiredGames: number): Promise<PlayerEducationLockEntity> {
+    await this.educationLockRepo.update({ steamId }, { requiredGames });
+    return this.educationLockRepo.findOne({ where: { steamId } });
   }
 
   async startRecalibration(steamId: string) {
