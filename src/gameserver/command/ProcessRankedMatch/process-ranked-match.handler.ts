@@ -1,18 +1,17 @@
-import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Logger } from '@nestjs/common';
-import { ProcessRankedMatchCommand } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.command';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, Repository } from 'typeorm';
-import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { GameServerService } from 'gameserver/gameserver.service';
-import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
-import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
-import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
-import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
-import { MmrBucketService } from 'gameserver/mmr-bucket.service';
-import { GameSeasonService } from 'gameserver/service/game-season.service';
-import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
-import { StartingMmrService } from 'gameserver/service/starting-mmr.service';
+import { CommandBus, CommandHandler, ICommandHandler } from "@nestjs/cqrs";
+import { Logger } from "@nestjs/common";
+import { ProcessRankedMatchCommand } from "gameserver/command/ProcessRankedMatch/process-ranked-match.command";
+import { InjectRepository } from "@nestjs/typeorm";
+import { DataSource, In, Repository } from "typeorm";
+import { MatchmakingMode } from "gateway/shared-types/matchmaking-mode";
+import { VersionPlayerEntity } from "gameserver/model/version-player.entity";
+import { MmrChangeLogEntity } from "gameserver/model/mmr-change-log.entity";
+import { GameSeasonEntity } from "gameserver/model/game-season.entity";
+import FinishedMatchEntity from "gameserver/model/finished-match.entity";
+import { MmrBucketService } from "gameserver/mmr-bucket.service";
+import { GameSeasonService } from "gameserver/service/game-season.service";
+import { PlayerServiceV2 } from "gameserver/service/player-service-v2.service";
+import { StartingMmrService } from "gameserver/service/starting-mmr.service";
 
 type GetMmr = (plr: VersionPlayerEntity) => number;
 
@@ -42,7 +41,6 @@ export class ProcessRankedMatchHandler
     private readonly mmrChangeLogEntityRepository: Repository<MmrChangeLogEntity>,
     @InjectRepository(FinishedMatchEntity)
     private readonly finishedMatchEntityRepository: Repository<FinishedMatchEntity>,
-    private readonly gameServerService: GameServerService,
     private readonly cbus: CommandBus,
     private readonly mmrBucketService: MmrBucketService,
     private readonly datasource: DataSource,
