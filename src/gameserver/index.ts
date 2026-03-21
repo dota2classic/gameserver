@@ -1,3 +1,7 @@
+// TODO: DEPRECATED — the GameServerDomain array is no longer used in AppModule.
+// All handlers and services have been distributed into their respective feature modules:
+//   SessionModule, RankingModule, MatchModule, ModerationModule, AchievementModule, EducationModule, PlayerModule
+// This file is dead code and should be removed once the module refactoring is complete.
 import { GameserverSaga } from 'gameserver/saga/gameserver.saga';
 import { FindGameServerHandler } from 'gameserver/command/FindGameServer/find-game-server.handler';
 import { GameServerStoppedHandler } from 'gameserver/event-handler/game-server-stopped.handler';

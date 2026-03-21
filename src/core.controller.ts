@@ -1,3 +1,5 @@
+// TODO: DEPRECATED — replaced by PlayerRedisListener (src/player/player-redis.listener.ts), ModerationRedisListener (src/moderation/moderation-redis.listener.ts), and SessionRedisListener (src/session/session-redis.listener.ts)
+// This file is dead code and should be removed once the module refactoring is complete.
 import { EventPattern } from "@nestjs/microservices";
 import { Controller, Logger } from "@nestjs/common";
 import { CommandBus, Constructor, EventBus } from "@nestjs/cqrs";

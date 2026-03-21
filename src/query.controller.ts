@@ -1,3 +1,5 @@
+// TODO: DEPRECATED — replaced by PlayerQueryController (src/player/player-query.controller.ts), SessionQueryController (src/session/session-query.controller.ts), and ModerationQueryController (src/moderation/moderation-query.controller.ts)
+// This file is dead code and should be removed once the module refactoring is complete.
 import { QueryBus } from '@nestjs/cqrs';
 import { Controller, Type } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';

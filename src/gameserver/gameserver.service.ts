@@ -1,3 +1,6 @@
+// TODO: DEPRECATED — scheduler methods have been extracted to LeaderboardRefreshScheduler (src/ranking/leaderboard-refresh.scheduler.ts)
+// The debug methods (generateFakeMatch, debugProcessRankedMatch) remain here for now.
+// This file should be reviewed and removed once fully migrated.
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';

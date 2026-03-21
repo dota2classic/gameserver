@@ -1,3 +1,5 @@
+// TODO: DEPRECATED — replaced by MatchRmqListener (src/match/match-rmq.listener.ts) and SessionRmqListener (src/session/session-rmq.listener.ts)
+// This file is dead code and should be removed once the module refactoring is complete.
 import { Controller, Logger } from "@nestjs/common";
 import { CommandBus, Constructor } from "@nestjs/cqrs";
 import { GameResultsEvent } from "gateway/events/gs/game-results.event";
