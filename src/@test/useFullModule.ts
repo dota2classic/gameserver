@@ -21,9 +21,6 @@ import { Mapper } from "rest/mapper";
 import { GameServerDomain } from "gameserver";
 import { ConfigModule } from "@nestjs/config";
 import { RabbitMQContainer, StartedRabbitMQContainer } from "@testcontainers/rabbitmq";
-import { CoreController } from "core.controller";
-import { RmqController } from "rmq.controller";
-import { QueryController } from "query.controller";
 import { MatchController } from "rest/match/match.controller";
 import { InfoController } from "rest/info/info.controller";
 import { PlayerProfileController } from "player/player-profile.controller";
@@ -34,6 +31,14 @@ import { PlayerSessionController } from "session/player-session.controller";
 import { PlayerEducationController } from "education/player-education.controller";
 import { PlayerAchievementsController } from "achievement/player-achievements.controller";
 import { EducationLockService } from "education/education-lock.service";
+import { PlayerQueryController } from "player/player-query.controller";
+import { SessionQueryController } from "session/session-query.controller";
+import { ModerationQueryController } from "moderation/moderation-query.controller";
+import { PlayerRedisListener } from "player/player-redis.listener";
+import { ModerationRedisListener } from "moderation/moderation-redis.listener";
+import { SessionRedisListener } from "session/session-redis.listener";
+import { MatchRmqListener } from "match/match-rmq.listener";
+import { SessionRmqListener } from "session/session-rmq.listener";
 import { MetaController } from "rest/meta/meta.controller";
 import { CrimeController } from "rest/crime/crime.controller";
 import { GameSeasonEntity } from "gameserver/model/game-season.entity";
@@ -256,9 +261,14 @@ export function useFullModule(): TestEnvironment {
         },
       ],
       controllers: [
-        CoreController,
-        RmqController,
-        QueryController,
+        MatchRmqListener,
+        SessionRmqListener,
+        PlayerQueryController,
+        SessionQueryController,
+        ModerationQueryController,
+        PlayerRedisListener,
+        ModerationRedisListener,
+        SessionRedisListener,
         MatchController,
         InfoController,
         PlayerProfileController,

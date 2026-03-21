@@ -1,14 +1,14 @@
-import { Global, Module } from '@nestjs/common';
-import { CqrsModule } from '@nestjs/cqrs';
-import { ScheduleModule } from '@nestjs/schedule';
-import { CacheModule } from '@nestjs/cache-manager';
-import { ClientsModule, RedisOptions, Transport } from '@nestjs/microservices';
-import { ConfigService } from '@nestjs/config';
-import { RabbitMQModule, RabbitMQConfig } from '@golevelup/nestjs-rabbitmq';
-import { Configuration, ForumApi } from 'generated-api/forum';
-import { outerQuery } from 'util/outerQuery';
-import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
-import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
+import { Global, Module } from "@nestjs/common";
+import { CqrsModule } from "@nestjs/cqrs";
+import { ScheduleModule } from "@nestjs/schedule";
+import { CacheModule } from "@nestjs/cache-manager";
+import { ClientsModule, RedisOptions, Transport } from "@nestjs/microservices";
+import { ConfigService } from "@nestjs/config";
+import { RabbitMQConfig, RabbitMQModule } from "@golevelup/nestjs-rabbitmq";
+import { Configuration, ForumApi } from "generated-api/forum";
+import { outerQuery } from "util/outerQuery";
+import { GetUserInfoQuery } from "gateway/queries/GetUserInfo/get-user-info.query";
+import { ReqLoggingInterceptor } from "rest/service/req-logging.interceptor";
 
 const GetUserInfoQueryHandler = outerQuery(GetUserInfoQuery, 'QueryCore');
 
@@ -61,7 +61,7 @@ const GetUserInfoQueryHandler = outerQuery(GetUserInfoQuery, 'QueryCore');
     RabbitMQModule,
     ReqLoggingInterceptor,
     ForumApi,
-    GetUserInfoQueryHandler.provide,
+    GetUserInfoQueryHandler,
   ],
 })
 export class CoreModule {}
