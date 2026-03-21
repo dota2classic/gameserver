@@ -10,6 +10,8 @@ import { outerQuery } from 'util/outerQuery';
 import { GetUserInfoQuery } from 'gateway/queries/GetUserInfo/get-user-info.query';
 import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
 
+const GetUserInfoQueryHandler = outerQuery(GetUserInfoQuery, 'QueryCore');
+
 @Global()
 @Module({
   imports: [
@@ -45,7 +47,7 @@ import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
   ],
   providers: [
     ReqLoggingInterceptor,
-    outerQuery(GetUserInfoQuery, 'QueryCore'),
+    GetUserInfoQueryHandler,
     {
       provide: ForumApi,
       useFactory: (config: ConfigService) =>
@@ -59,7 +61,7 @@ import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
     RabbitMQModule,
     ReqLoggingInterceptor,
     ForumApi,
-    outerQuery(GetUserInfoQuery, 'QueryCore'),
+    GetUserInfoQueryHandler.provide,
   ],
 })
 export class CoreModule {}
