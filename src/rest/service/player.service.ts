@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { Connection, Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
-import { GameServerService } from 'gameserver/gameserver.service';
-import { HeroStatsDto, PlayerHeroPerformance } from 'rest/dto/hero.dto';
-import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
-import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
+import { Injectable } from "@nestjs/common";
+import { Connection, Repository } from "typeorm";
+import { InjectRepository } from "@nestjs/typeorm";
+import { MatchmakingMode } from "gateway/shared-types/matchmaking-mode";
+import { HeroStatsDto, PlayerHeroPerformance } from "rest/dto/hero.dto";
+import PlayerInMatchEntity from "gameserver/model/player-in-match.entity";
+import { VersionPlayerEntity } from "gameserver/model/version-player.entity";
 
 
 // TODO: we probably need to orm this shit up
@@ -16,7 +15,6 @@ export class PlayerService {
     private readonly versionPlayerRepository: Repository<VersionPlayerEntity>,
     @InjectRepository(PlayerInMatchEntity)
     private readonly playerInMatchRepository: Repository<PlayerInMatchEntity>,
-    private readonly gsService: GameServerService,
     private readonly connection: Connection,
   ) {}
 

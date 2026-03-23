@@ -47,39 +47,40 @@ export class MakeSureExistsHandler
       },
     });
 
-    if (existing) {
-      return;
+    if (!existing) {
+      await this.versionPlayerRepository
+        .createQueryBuilder()
+        .insert()
+        .values(
+          new VersionPlayerEntity(
+            steamId,
+            await this.startingMmrService.getStartingMMRForSteamId(steamId),
+            season.id,
+          ),
+        )
+        .orIgnore()
+        .execute();
     }
 
-    await this.versionPlayerRepository
-      .createQueryBuilder()
-      .insert()
-      .values(
-        new VersionPlayerEntity(
-          steamId,
-          await this.startingMmrService.getStartingMMRForSteamId(steamId),
-          season.id,
-        ),
-      )
-      .orIgnore()
-      .execute();
+    const existingLock = await this.educationLockRepo.findOne({ where: { steamId } });
+    if (!existingLock) {
+      const botGamesQuery = this.playerInMatchRepo
+        .createQueryBuilder('pim')
+        .innerJoin('pim.match', 'fm')
+        .where('pim.playerId = :steamId', { steamId })
+        .andWhere('fm.matchmaking_mode IN (:...modes)', { modes: [7, 13] });
 
-    const botGamesQuery = this.playerInMatchRepo
-      .createQueryBuilder('pim')
-      .innerJoin('pim.match', 'fm')
-      .where('pim.playerId = :steamId', { steamId })
-      .andWhere('fm.matchmaking_mode IN (:...modes)', { modes: [7, 13] });
+      const [totalBotGames, hasBotWins] = await Promise.all([
+        botGamesQuery.getCount(),
+        botGamesQuery.clone().andWhere('pim.team = fm.winner').getCount().then(c => c > 0),
+      ]);
 
-    const [totalBotGames, hasBotWins] = await Promise.all([
-      botGamesQuery.getCount(),
-      botGamesQuery.clone().andWhere('pim.team = fm.winner').getCount().then(c => c > 0),
-    ]);
-
-    await this.educationLockRepo
-      .createQueryBuilder()
-      .insert()
-      .values({ steamId, requiredGames: 1, resolved: hasBotWins, totalBotGames, recentKda: 0, recentWinrate: 0 })
-      .orIgnore()
-      .execute();
+      await this.educationLockRepo
+        .createQueryBuilder()
+        .insert()
+        .values({ steamId, requiredGames: 1, resolved: hasBotWins, totalBotGames, recentKda: 0, recentWinrate: 0 })
+        .orIgnore()
+        .execute();
+    }
   }
 }
