@@ -1,14 +1,14 @@
-import { Injectable } from "@nestjs/common";
-import { ProcessRankedMatchHandler } from "gameserver/command/ProcessRankedMatch/process-ranked-match.handler";
-import { LeaderboardEntryDto, PlayerSummaryDto } from "rest/dto/player.dto";
-import { LeaderboardView } from "gameserver/model/leaderboard.view";
-import { Repository } from "typeorm";
-import { InjectRepository } from "@nestjs/typeorm";
-import { PlayerServiceV2 } from "gameserver/service/player-service-v2.service";
-import PlayerInMatchEntity from "gameserver/model/player-in-match.entity";
-import { VersionPlayerEntity } from "gameserver/model/version-player.entity";
-import { GameSeasonService } from "gameserver/service/game-season.service";
-import { sum } from "util/avg";
+import { Injectable } from '@nestjs/common';
+import { ProcessRankedMatchHandler } from 'gameserver/command/ProcessRankedMatch/process-ranked-match.handler';
+import { LeaderboardEntryDto, PlayerSummaryDto } from 'rest/dto/player.dto';
+import { LeaderboardView } from 'gameserver/model/leaderboard.view';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { PlayerServiceV2 } from 'gameserver/service/player-service-v2.service';
+import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
+import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
+import { GameSeasonService } from 'gameserver/service/game-season.service';
+import { sum } from 'util/avg';
 
 interface CalcPlayerStats {
   steam_id: string;
@@ -76,7 +76,7 @@ export class LeaderboardService {
             lobbyType: session.session.matchmaking_mode,
             abandoned: session.abandoned,
             canAbandon:
-              session.session.players.find(
+              session.session?.players.find(
                 (t) => t.abandoned || t.userAbandoned,
               ) != undefined,
           }
