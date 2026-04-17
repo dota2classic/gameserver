@@ -54,6 +54,7 @@ export class PlayerGameSessionDto {
   serverUrl: string;
   @ApiProperty({ enum: MatchmakingMode, enumName: "MatchmakingMode" })
   lobbyType: MatchmakingMode;
+  canAbandon: boolean;
 }
 
 export class PlayerSummaryDto {

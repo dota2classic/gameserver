@@ -1,17 +1,17 @@
-import { Controller, Get, Param, Query, UseInterceptors } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
-import { NullableIntPipe } from 'util/pipes';
-import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
-import { CommandBus } from '@nestjs/cqrs';
-import { MakeSureExistsCommand } from 'gameserver/command/MakeSureExists/make-sure-exists.command';
-import { PlayerId } from 'gateway/shared-types/player-id';
-import { PlayerSummaryDto, PlayerTeammateDto, PlayerTeammatePage } from 'rest/dto/player.dto';
-import { HeroStatsDto } from 'rest/dto/hero.dto';
-import { LeaderboardService } from 'gameserver/service/leaderboard.service';
-import { PlayerFeedbackService } from 'gameserver/service/player-feedback.service';
-import { PlayerService } from 'rest/service/player.service';
-import { DataSource } from 'typeorm';
-import { InjectDataSource } from '@nestjs/typeorm';
+import { Controller, Get, Param, Query, UseInterceptors } from "@nestjs/common";
+import { ApiQuery, ApiTags } from "@nestjs/swagger";
+import { NullableIntPipe } from "util/pipes";
+import { ReqLoggingInterceptor } from "rest/service/req-logging.interceptor";
+import { CommandBus } from "@nestjs/cqrs";
+import { MakeSureExistsCommand } from "gameserver/command/MakeSureExists/make-sure-exists.command";
+import { PlayerId } from "gateway/shared-types/player-id";
+import { PlayerSummaryDto, PlayerTeammateDto, PlayerTeammatePage } from "rest/dto/player.dto";
+import { HeroStatsDto } from "rest/dto/hero.dto";
+import { LeaderboardService } from "gameserver/service/leaderboard.service";
+import { PlayerFeedbackService } from "gameserver/service/player-feedback.service";
+import { PlayerService } from "rest/service/player.service";
+import { DataSource } from "typeorm";
+import { InjectDataSource } from "@nestjs/typeorm";
 
 @Controller('player')
 @ApiTags('player')
@@ -27,7 +27,7 @@ export class PlayerProfileController {
 
   @Get('/summary/:id')
   async playerSummary(@Param('id') steamId: string): Promise<PlayerSummaryDto> {
-    await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steamId)));
+    // await this.cbus.execute(new MakeSureExistsCommand(new PlayerId(steamId)));
     const [summary, reports] = await Promise.combine([
       this.leaderboardService.getPlayerSummary(steamId),
       this.report.getPlayerReportState(steamId),

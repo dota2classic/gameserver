@@ -148,6 +148,12 @@ limit 1`,
         "gss",
         "gss.match_id = gssp.match_id",
       )
+      .innerJoinAndMapMany(
+        "gssp.session.players",
+        GameSessionPlayerEntity,
+        "gsps",
+        "gsps.match_id = gss.match_id",
+      )
       .where("gssp.steam_id = :steamId", { steamId })
       .andWhere("gssp.user_abandoned = false")
       .andWhere("gss.game_state != :postGame", {
