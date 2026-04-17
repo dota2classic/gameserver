@@ -76,9 +76,9 @@ export class LeaderboardService {
             lobbyType: session.session.matchmaking_mode,
             abandoned: session.abandoned,
             canAbandon:
-              session.session?.players.find(
+              session.session?.players?.find(
                 (t) => t.abandoned || t.userAbandoned,
-              ) != undefined,
+              ) != undefined || false,
           }
         : undefined,
     };
