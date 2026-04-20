@@ -7,8 +7,7 @@ import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
-import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
-import { Dota2Version } from 'gateway/shared-types/dota2version';
+import { SessionEndedEvent } from 'gameserver/event/session-ended.event';
 import { GameSeasonService } from 'gameserver/service/game-season.service';
 import { MatchRecordedEvent } from 'gateway/events/gs/match-recorded.event';
 
@@ -138,9 +137,6 @@ export class SaveGameResultsHandler
       ),
     );
 
-    // FIXME: this is not right event naming, but will do for now
-    await this.ebus.publish(
-      new GameServerStoppedEvent(event.server, Dota2Version.Dota_684),
-    );
+    this.ebus.publish(new SessionEndedEvent(event.server, 'COMPLETED'));
   }
 }

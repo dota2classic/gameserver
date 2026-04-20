@@ -1,9 +1,8 @@
 import { GameserverSaga } from "gameserver/saga/gameserver.saga";
 import { FindGameServerHandler } from "gameserver/command/FindGameServer/find-game-server.handler";
-import { GameServerStoppedHandler } from "gameserver/event-handler/game-server-stopped.handler";
+import { SessionEndedHandler } from "gameserver/event-handler/session-ended.handler";
 import { GameServerStartedHandler } from "gameserver/event-handler/game-server-started.handler";
 import { GameServerNotStartedHandler } from "gameserver/event-handler/game-server-not-started.handler";
-import { GameSessionFinishedHandler } from "gameserver/event-handler/game-session-finished.handler";
 import { MatchStartedHandler } from "gameserver/event-handler/match-started.handler";
 import { MatchFinishedHandler } from "gameserver/event-handler/match-finished.handler";
 import { GetSessionByUserHandler } from "gameserver/query/get-session-by-user.handler";
@@ -58,10 +57,9 @@ const EventHandlers = [
   PlayerConnectedHandler,
   LiveMatchUpdateHandler,
 
-  GameServerStoppedHandler,
+  SessionEndedHandler,
   GameServerStartedHandler,
   GameServerNotStartedHandler,
-  GameSessionFinishedHandler,
 
   MatchStartedHandler,
   MatchFinishedHandler,

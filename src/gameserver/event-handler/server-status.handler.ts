@@ -3,10 +3,9 @@ import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
 import { Logger } from '@nestjs/common';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
-import { Dota2Version } from 'gateway/shared-types/dota2version';
+import { SessionEndedEvent } from 'gameserver/event/session-ended.event';
 
 @EventsHandler(ServerStatusEvent)
 export class ServerStatusHandler implements IEventHandler<ServerStatusEvent> {
@@ -31,9 +30,7 @@ export class ServerStatusHandler implements IEventHandler<ServerStatusEvent> {
     } else if (!event.running && existingSession) {
       // remove session if it exists
       this.logger.log("Game server is stopped!");
-      this.ebus.publish(
-        new GameServerStoppedEvent(event.url, Dota2Version.Dota_684),
-      );
+      this.ebus.publish(new SessionEndedEvent(event.url, 'CRASHED'));
     }
   }
 }

@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { MatchEntity } from 'gameserver/model/match.entity';
 import { PlayerNotLoadedEvent } from 'gateway/events/bans/player-not-loaded.event';
 import { PlayerId } from 'gateway/shared-types/player-id';
+import { SessionEndedEvent } from 'gameserver/event/session-ended.event';
 
 @CommandHandler(SaveMatchFailedCommand)
 export class SaveMatchFailedHandler
@@ -43,5 +44,7 @@ export class SaveMatchFailedHandler
         pl => new PlayerNotLoadedEvent(new PlayerId(pl), event.matchId, match.matchInfoJson.lobbyType),
       ),
     );
+
+    this.ebus.publish(new SessionEndedEvent(event.serverUrl, 'LOAD_FAILURE', event.failedPlayers));
   }
 }
