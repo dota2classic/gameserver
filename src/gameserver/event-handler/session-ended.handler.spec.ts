@@ -63,9 +63,9 @@ describe('SessionEndedHandler', () => {
     const session = await te.repo(GameServerSessionEntity).findOne({ where: { matchId } });
     expect(session).toBeNull();
 
-    expect(te.ebusSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ matchId, constructor: MatchFinishedEvent } as any),
-    );
+    const call = te.ebusSpy.mock.calls.find(([e]) => e instanceof MatchFinishedEvent);
+    expect(call).toBeDefined();
+    expect(call![0].matchId).toBe(matchId);
   });
 
   it('CRASHED: clears session and emits MatchFinishedEvent', async () => {
