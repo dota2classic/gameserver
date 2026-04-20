@@ -2,6 +2,7 @@ import { Controller, Logger } from '@nestjs/common';
 import { Constructor, EventBus } from '@nestjs/cqrs';
 import { EventPattern } from '@nestjs/microservices';
 import { GameServerStoppedEvent } from 'gateway/events/game-server-stopped.event';
+import { SessionEndedEvent } from 'gameserver/event/session-ended.event';
 import { GameServerDiscoveredEvent } from 'gateway/events/game-server-discovered.event';
 import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event';
 import { ServerStatusEvent } from 'gateway/events/gs/server-status.event';
@@ -27,7 +28,7 @@ export class SessionRedisListener {
 
   @EventPattern(GameServerStoppedEvent.name)
   async GameServerStoppedEvent(data: GameServerStoppedEvent) {
-    this.event(GameServerStoppedEvent, data);
+    this.ebus.publish(new SessionEndedEvent(data.url, 'CRASHED'));
   }
 
   @EventPattern(GameServerDiscoveredEvent.name)

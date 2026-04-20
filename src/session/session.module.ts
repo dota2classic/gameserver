@@ -12,10 +12,9 @@ import { FindGameServerHandler } from "gameserver/command/FindGameServer/find-ga
 import { AssignStartedServerHandler } from "gameserver/command/AssignStartedServer/assign-started-server.handler";
 import { LeaveGameSessionHandler } from "gameserver/command/LeaveGameSessionCommand/leave-game-session.handler";
 import { GameServerStartedHandler } from "gameserver/event-handler/game-server-started.handler";
-import { GameServerStoppedHandler } from "gameserver/event-handler/game-server-stopped.handler";
+import { SessionEndedHandler } from "gameserver/event-handler/session-ended.handler";
 import { GameServerNotStartedHandler } from "gameserver/event-handler/game-server-not-started.handler";
 import { GameSessionCreatedHandler } from "gameserver/event-handler/game-session-created.handler";
-import { GameSessionFinishedHandler } from "gameserver/event-handler/game-session-finished.handler";
 import { PlayerConnectedHandler } from "gameserver/event-handler/player-connected.handler";
 import { LiveMatchUpdateHandler } from "gameserver/event-handler/live-match-update.handler";
 import { ServerStatusHandler } from "gameserver/event-handler/server-status.handler";
@@ -52,10 +51,9 @@ import { ModerationModule } from "moderation/moderation.module";
     AssignStartedServerHandler,
     LeaveGameSessionHandler,
     GameServerStartedHandler,
-    GameServerStoppedHandler,
+    SessionEndedHandler,
     GameServerNotStartedHandler,
     GameSessionCreatedHandler,
-    GameSessionFinishedHandler,
     PlayerConnectedHandler,
     LiveMatchUpdateHandler,
     ServerStatusHandler,

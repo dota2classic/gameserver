@@ -23,6 +23,7 @@ import { PlayerFeedbackCreatedEvent } from "gateway/events/player-feedback-creat
 import { LaunchGameServerCommand } from "gateway/commands/LaunchGameServer/launch-game-server.command";
 import { PlayerFinishedMatchEvent } from "gateway/events/gs/player-finished-match.event";
 import { GameSessionUpdateEvent } from "gateway/events/gs/game-session-update.event";
+import { ReturnGoodPlayersToQueueEvent } from "gateway/events/mm/return-good-players-to-queue.event";
 
 @Injectable()
 export class AppService implements OnApplicationBootstrap {
@@ -68,6 +69,7 @@ export class AppService implements OnApplicationBootstrap {
           PlayerSmurfDetectedEvent,
           PlayerFinishedMatchEvent,
           AchievementCompleteEvent,
+          ReturnGoodPlayersToQueueEvent,
         ),
       )
       .subscribe((msg) =>
