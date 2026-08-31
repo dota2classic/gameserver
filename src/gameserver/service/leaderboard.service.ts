@@ -8,7 +8,7 @@ import { PlayerServiceV2 } from "gameserver/service/player-service-v2.service";
 import PlayerInMatchEntity from "gameserver/model/player-in-match.entity";
 import { VersionPlayerEntity } from "gameserver/model/version-player.entity";
 import { GameSeasonService } from "gameserver/service/game-season.service";
-import { sum } from "util/avg";
+import { kda, sum, winrate } from "util/avg";
 import { MatchmakingMode } from "gateway/shared-types/matchmaking-mode";
 
 interface CalcPlayerStats {
@@ -108,6 +108,12 @@ export class LeaderboardService {
       return this.approximatePlayerLeaderboardEntry(steamId, false);
     }
 
+    const totalGames = sum(lb.map((it) => it.games));
+    const totalWins = sum(lb.map((it) => it.wins));
+    const totalKills = sum(lb.map((it) => it.kills));
+    const totalDeaths = sum(lb.map((it) => it.deaths));
+    const totalAssists = sum(lb.map((it) => it.assists));
+
     return {
       rank: -1,
 
@@ -115,14 +121,17 @@ export class LeaderboardService {
       seasonId: -1,
       mmr: -1,
 
-      games: sum(lb.map((it) => it.games)),
-      wins: sum(lb.map((it) => it.wins)),
+      games: totalGames,
+      wins: totalWins,
       abandons: sum(lb.map((it) => it.abandons)),
 
-      kills: sum(lb.map((it) => it.kills)),
-      deaths: sum(lb.map((it) => it.deaths)),
-      assists: sum(lb.map((it) => it.assists)),
+      kills: totalKills,
+      deaths: totalDeaths,
+      assists: totalAssists,
       recalibrationAttempted: false,
+
+      winrate: winrate(totalWins, totalGames),
+      kda: kda(totalKills, totalDeaths, totalAssists),
 
       playtime: sum(lb.map((it) => it.playtime)),
     };
@@ -157,6 +166,9 @@ export class LeaderboardService {
       kills: lb.kills,
       deaths: lb.deaths,
       assists: lb.assists,
+
+      winrate: lb.winrate,
+      kda: lb.kda,
 
       playtime: lb.playtime,
     };
@@ -232,6 +244,9 @@ order by
       deaths: stats?.deaths || 0,
       assists: stats?.assists || 0,
       recalibrationAttempted: stats?.recalibration_attempted || false,
+
+      winrate: winrate(stats?.wins || 0, stats?.games || 0),
+      kda: kda(stats?.kills || 0, stats?.deaths || 0, stats?.assists || 0),
 
       playtime: stats?.play_time || 0,
     };

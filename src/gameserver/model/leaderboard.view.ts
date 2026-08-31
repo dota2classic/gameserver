@@ -31,6 +31,8 @@ SELECT vp.steam_id,
        assists::float,
        deaths::float,
        play_time::int,
+       (wins::float / NULLIF(games, 0)::float) AS winrate,
+       ((kills::float + assists::float) / GREATEST(deaths::float, 1)) AS kda,
        (ROW_NUMBER() OVER (PARTITION BY vp.season_id
                           ORDER BY vp.mmr DESC))::int AS RANK,
        (rc is not null and recalibration_attempted = 1)::boolean as recalibration_attempted
@@ -80,6 +82,14 @@ export class LeaderboardView {
   deaths: number;
   @ViewColumn()
   assists: number;
+
+  @Index()
+  @ViewColumn()
+  winrate: number;
+
+  @Index()
+  @ViewColumn()
+  kda: number;
 
   @ViewColumn({
     name: "recalibration_attempted",
