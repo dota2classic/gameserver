@@ -21,6 +21,9 @@ export class LeaderboardEntryDto {
   deaths: number;
   assists: number;
 
+  winrate: number;
+  kda: number;
+
   playtime: number;
 }
 
