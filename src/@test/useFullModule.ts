@@ -31,6 +31,7 @@ import { PlayerSocialController } from "social/player-social.controller";
 import { PlayerSessionController } from "session/player-session.controller";
 import { PlayerEducationController } from "education/player-education.controller";
 import { PlayerAchievementsController } from "achievement/player-achievements.controller";
+import { AchievementPercentileService } from "achievement/achievement-percentile.service";
 import { EducationLockService } from "education/education-lock.service";
 import { PlayerQueryController } from "player/player-query.controller";
 import { SessionQueryController } from "session/session-query.controller";
@@ -247,6 +248,7 @@ export function useFullModule(): TestEnvironment {
         MmrBucketService,
         EducationLockService,
         DodgeService,
+        AchievementPercentileService,
         Mapper,
         ...GameServerDomain,
         {
