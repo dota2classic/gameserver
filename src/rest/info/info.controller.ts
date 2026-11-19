@@ -10,7 +10,7 @@ import {
   UpdateGamemodeDto,
 } from 'rest/dto/info.dto';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
-import { CacheTTL } from '@nestjs/cache-manager';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { MatchmakingModeMappingEntity } from 'gameserver/model/matchmaking-mode-mapping.entity';
 import { InfoMapper } from 'rest/info/info.mapper';
 import { InfoService } from 'rest/info/info.service';
@@ -79,7 +79,8 @@ export class InfoController {
   }
 
   @Get("current_online")
-  @CacheTTL(10)
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(10_000)
   public async getCurrentOnline(): Promise<number> {
     const allSessions = await this.gameServerSessionModelRepository.find({
       relations: ["players"],

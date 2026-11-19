@@ -19,6 +19,7 @@ export const getTypeormConfig = (
     entities: Entities,
     migrations: ["src/database/migrations/*.*"],
     migrationsRun: false,
+    migrationsTransactionMode: "each",
     migrationsTableName: "gameserver_migrations",
     logging: true,
 

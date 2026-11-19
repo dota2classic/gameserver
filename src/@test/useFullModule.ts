@@ -19,7 +19,8 @@ import { InfoService } from "rest/info/info.service";
 import { MmrBucketService } from "gameserver/mmr-bucket.service";
 import { Mapper } from "rest/mapper";
 import { GameServerDomain } from "gameserver";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { getTypeormConfig } from "config/typeorm.config";
 import { RabbitMQContainer, StartedRabbitMQContainer } from "@testcontainers/rabbitmq";
 import { MatchController } from "rest/match/match.controller";
 import { InfoController } from "rest/info/info.controller";
@@ -30,6 +31,7 @@ import { PlayerSocialController } from "social/player-social.controller";
 import { PlayerSessionController } from "session/player-session.controller";
 import { PlayerEducationController } from "education/player-education.controller";
 import { PlayerAchievementsController } from "achievement/player-achievements.controller";
+import { AchievementPercentileService } from "achievement/achievement-percentile.service";
 import { EducationLockService } from "education/education-lock.service";
 import { PlayerQueryController } from "player/player-query.controller";
 import { SessionQueryController } from "session/session-query.controller";
@@ -132,18 +134,19 @@ export function useFullModule(): TestEnvironment {
         }),
         CqrsModule.forRoot(),
         TypeOrmModule.forRoot({
-          host: te.containers.pg.getHost(),
-          port: te.containers.pg.getFirstMappedPort(),
-
-          type: "postgres",
-          database: "postgres",
-          // logging: true,
-
-          username: te.containers.pg.getUsername(),
-          password: te.containers.pg.getPassword(),
-          entities: Entities,
+          ...getTypeormConfig(
+            new ConfigService({
+              postgres: {
+                host: te.containers.pg.getHost(),
+                port: te.containers.pg.getFirstMappedPort(),
+                username: te.containers.pg.getUsername(),
+                password: te.containers.pg.getPassword(),
+              },
+            }),
+          ),
           migrations: ["dist/src/database/migrations/*.*"],
           migrationsRun: true,
+          logging: false,
           ssl: false,
         }),
         TypeOrmModule.forFeature(Entities),
@@ -245,6 +248,7 @@ export function useFullModule(): TestEnvironment {
         MmrBucketService,
         EducationLockService,
         DodgeService,
+        AchievementPercentileService,
         Mapper,
         ...GameServerDomain,
         {

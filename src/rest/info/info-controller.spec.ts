@@ -20,6 +20,7 @@ import { GameSeasonEntity } from 'gameserver/model/game-season.entity';
 import { VersionPlayerEntity } from 'gameserver/model/version-player.entity';
 import { RecalibrationEntity } from 'gameserver/model/recalibration.entity';
 import { DotaPatch } from 'gateway/constants/patch';
+import { CacheModule } from '@nestjs/cache-manager';
 
 describe("InfoController", () => {
   jest.setTimeout(60000);
@@ -48,6 +49,7 @@ describe("InfoController", () => {
 
     module = await Test.createTestingModule({
       imports: [
+        CacheModule.register(),
         TypeOrmModule.forRoot({
           host: container.getHost(),
           port: container.getFirstMappedPort(),

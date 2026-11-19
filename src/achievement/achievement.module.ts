@@ -7,13 +7,14 @@ import { AchievementService } from 'gameserver/achievement.service';
 import { ProcessAchievementsHandler } from 'gameserver/command/ProcessAchievements/process-achievements.handler';
 import { GameserverSaga } from 'gameserver/saga/gameserver.saga';
 import { PlayerAchievementsController } from './player-achievements.controller';
+import { AchievementPercentileService } from './achievement-percentile.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([AchievementEntity, PlayerInMatchEntity, FinishedMatchEntity]),
   ],
   controllers: [PlayerAchievementsController],
-  providers: [AchievementService, ProcessAchievementsHandler, GameserverSaga],
+  providers: [AchievementService, AchievementPercentileService, ProcessAchievementsHandler, GameserverSaga],
   exports: [AchievementService],
 })
 export class AchievementModule {}
