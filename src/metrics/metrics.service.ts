@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Counter, Gauge } from 'prom-client';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
@@ -6,7 +6,9 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { DataSource } from 'typeorm';
 
 @Injectable()
-export class MetricsService {
+export class MetricsService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(MetricsService.name);
+
   constructor(
     private readonly ds: DataSource,
     @InjectMetric("d2c_parallel_games")
@@ -20,6 +22,12 @@ export class MetricsService {
     @InjectMetric("d2c_not_loaded_count")
     private readonly notLoadedCount: Counter<string>,
   ) {}
+
+  onApplicationBootstrap() {
+    this.calculateSatisfactionMetric().catch((e) =>
+      this.logger.error("Failed to calculate satisfaction metric", e),
+    );
+  }
 
   public recordNotLoaded(mode: MatchmakingMode) {
     this.notLoadedCount.labels(mode.toString()).inc();
@@ -41,8 +49,7 @@ export class MetricsService {
     this.satisfactionGauge.set(satisfactionLevel);
   }
 
-  // @Cron(CronExpression.EVERY_10_MINUTES)
-  @Cron(CronExpression.EVERY_5_SECONDS)
+  @Cron(CronExpression.EVERY_10_MINUTES)
   private async calculateSatisfactionMetric() {
     const satisfactions = await this.ds.query<
       { satisfaction_metric: number }[]
