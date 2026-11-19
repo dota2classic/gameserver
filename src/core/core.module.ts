@@ -2,7 +2,8 @@ import { Global, Module } from "@nestjs/common";
 import { CqrsModule } from "@nestjs/cqrs";
 import { ScheduleModule } from "@nestjs/schedule";
 import { CacheModule } from "@nestjs/cache-manager";
-import { ClientsModule, RedisOptions, Transport } from "@nestjs/microservices";
+import { ClientsModule } from "@nestjs/microservices";
+import { getRedisTransportOptions } from "config/redis.config";
 import { ConfigService } from "@nestjs/config";
 import { RabbitMQConfig, RabbitMQModule } from "@golevelup/nestjs-rabbitmq";
 import { Configuration, ForumApi } from "generated-api/forum";
@@ -21,15 +22,7 @@ const GetUserInfoQueryHandler = outerQuery(GetUserInfoQuery, 'QueryCore');
     ClientsModule.registerAsync([
       {
         name: 'QueryCore',
-        useFactory(config: ConfigService): RedisOptions {
-          return {
-            transport: Transport.REDIS,
-            options: {
-              host: config.get('redis.host'),
-              password: config.get('redis.password'),
-            },
-          };
-        },
+        useFactory: getRedisTransportOptions,
         inject: [ConfigService],
       },
     ]),

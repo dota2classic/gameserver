@@ -3,11 +3,12 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { EventPublisher } from "@nestjs/cqrs";
-import { Transport } from "@nestjs/microservices";
+import { RedisOptions } from "@nestjs/microservices";
 import { INestApplication } from "@nestjs/common";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import "./util/promise";
 import configuration from "config/configuration";
+import { getRedisTransportOptions } from "config/redis.config";
 import { ConfigService } from "@nestjs/config";
 import fastify from "fastify";
 import { types } from "pg";
@@ -47,16 +48,7 @@ async function bootstrap() {
     },
   )) as INestApplication<AppModule>;
 
-  app.connectMicroservice({
-    transport: Transport.REDIS,
-    options: {
-      url: `redis://${config.get("redis.host")}:6379`,
-      host: config.get("redis.host"),
-      retryAttempts: Infinity,
-      retryDelay: 5000,
-      password: config.get("redis.password"),
-    },
-  });
+  app.connectMicroservice<RedisOptions>(getRedisTransportOptions(config));
 
   // app.use(compression());
 
