@@ -8,5 +8,6 @@ export const getRedisTransportOptions = (cs: ConfigService): RedisOptions => ({
     password: cs.get('redis.password'),
     retryAttempts: Infinity,
     retryDelay: 2000,
+    maxRetriesPerRequest: null,
   },
 });
