@@ -7,6 +7,10 @@ import { PlayerAspect } from 'gateway/shared-types/player-aspect';
   ["reporterSteamId", "reportedSteamId", "matchId"],
   { unique: true },
 )
+@Index("IDX_player_report_reported_steam_id_chosen_aspect", [
+  "reportedSteamId",
+  "aspect",
+])
 export class PlayerReportEntity {
   @PrimaryGeneratedColumn("increment")
   id: number;
