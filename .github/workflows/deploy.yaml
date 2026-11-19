@@ -36,17 +36,20 @@ jobs:
             dota2classic/gameserver:k8s-latest
 
       - name: Set up kubectl
+        if: vars.AUTO_DEPLOY_ENABLED == 'true'
         uses: azure/setup-kubectl@v4
         with:
           version: latest
 
       - name: Set up kubeconfig
+        if: vars.AUTO_DEPLOY_ENABLED == 'true'
         run: |
           mkdir -p ~/.kube
           echo "${{ secrets.KUBECONFIG_DATA }}" > ~/.kube/config
           chmod 600 ~/.kube/config
 
       - name: Rollout restart deployment
+        if: vars.AUTO_DEPLOY_ENABLED == 'true'
         run: |
           source .github/deploy.env
           kubectl rollout restart deployment "$DEPLOYMENT" -n "$NAMESPACE"
