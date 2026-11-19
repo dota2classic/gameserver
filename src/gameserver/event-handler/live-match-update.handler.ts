@@ -1,7 +1,7 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
 import { LiveMatchUpdateEvent } from 'gateway/events/gs/live-match-update.event';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { GameServerSessionEntity } from 'gameserver/model/game-server-session.entity';
 import { GameSessionPlayerEntity } from 'gameserver/model/game-session-player.entity';
 
@@ -14,7 +14,6 @@ export class LiveMatchUpdateHandler
     private readonly sessionRepo: Repository<GameServerSessionEntity>,
     @InjectRepository(GameSessionPlayerEntity)
     private readonly plrRepo: Repository<GameSessionPlayerEntity>,
-    private readonly dataSource: DataSource,
   ) {}
 
   async handle(event: LiveMatchUpdateEvent) {
@@ -27,24 +26,27 @@ export class LiveMatchUpdateHandler
 
     if (!session) return;
 
-    await this.dataSource.transaction(async (em) => {
-      session.timestamp = new Date(event.timestamp * 1000);
-      session.gameState = event.game_state;
-      session.gameMode = event.game_mode;
-      session.matchmaking_mode = event.matchmaking_mode;
-      session.duration = event.duration;
+    await this.sessionRepo.update(
+      { matchId: event.matchId },
+      {
+        timestamp: new Date(event.timestamp * 1000),
+        gameState: event.game_state,
+        gameMode: event.game_mode,
+        matchmaking_mode: event.matchmaking_mode,
+        duration: event.duration,
+      },
+    );
 
-      await em.save(GameServerSessionEntity, session);
+    await Promise.all(
       session.players.map((plr) => {
-        const matchingPlayer = event.heroes.find(
-          (hero) => hero.steam_id === plr.steamId,
+        const hero = event.heroes.find((it) => it.steam_id === plr.steamId);
+        if (!hero || hero.connection === plr.connection) return;
+
+        return this.plrRepo.update(
+          { steamId: plr.steamId, matchId: plr.matchId },
+          { connection: hero.connection },
         );
-        if (!matchingPlayer) return;
-
-        plr.connection = matchingPlayer.connection;
-      });
-
-      await em.save(GameSessionPlayerEntity, session.players);
-    });
+      }),
+    );
   }
 }
