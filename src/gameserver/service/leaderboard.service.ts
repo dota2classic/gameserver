@@ -8,6 +8,7 @@ import { PlayerServiceV2 } from "gameserver/service/player-service-v2.service";
 import PlayerInMatchEntity from "gameserver/model/player-in-match.entity";
 import { VersionPlayerEntity } from "gameserver/model/version-player.entity";
 import { GameSeasonService } from "gameserver/service/game-season.service";
+import { GameSeasonEntity } from "gameserver/model/game-season.entity";
 import { kda, sum, winrate } from "util/avg";
 import { MatchmakingMode } from "gateway/shared-types/matchmaking-mode";
 
@@ -104,10 +105,6 @@ export class LeaderboardService {
       where: { steamId },
     });
 
-    if (!lb) {
-      return this.approximatePlayerLeaderboardEntry(steamId, false);
-    }
-
     const totalGames = sum(lb.map((it) => it.games));
     const totalWins = sum(lb.map((it) => it.wins));
     const totalKills = sum(lb.map((it) => it.kills));
@@ -147,7 +144,7 @@ export class LeaderboardService {
 
     // if it exists in the view, we happy
     if (!lb) {
-      return this.approximatePlayerLeaderboardEntry(steamId, true);
+      return this.approximatePlayerLeaderboardEntry(steamId, season);
     }
 
     return {
@@ -176,7 +173,7 @@ export class LeaderboardService {
 
   private async approximatePlayerLeaderboardEntry(
     steamId: string,
-    seasonal: boolean = true,
+    season: GameSeasonEntity,
   ): Promise<
     LeaderboardEntryDto & {
       calibrationGames: number;
@@ -190,9 +187,8 @@ select
     *
 from
     game_season gs
-order by
-    gs.start_timestamp ${seasonal ? "DESC" : "ASC"}
-limit 1)
+where
+    gs.id = $2)
 select
     vp.steam_id,
     vp.season_id as season_id,
@@ -224,7 +220,7 @@ order by
     rank asc,
     games desc;
 `,
-        [steamId],
+        [steamId, season.id],
       )
       .then((it) => it[0]);
 
