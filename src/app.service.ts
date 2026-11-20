@@ -72,26 +72,21 @@ export class AppService implements OnApplicationBootstrap {
           ReturnGoodPlayersToQueueEvent,
         ),
       )
-      .subscribe((msg) =>
-        this.amqpConnection
-          .publish("app.events", msg.constructor.name, msg)
-          .then(() =>
-            this.logger.log(`Published RMQ event ${msg.constructor.name}`),
-          ),
-      );
+      .subscribe((msg) => this.publishToRmq(msg.constructor.name, msg));
 
     this.ebus
       .pipe(ofType(LaunchGameServerCommand))
       .subscribe((msg: LaunchGameServerCommand) =>
-        this.amqpConnection
-          .publish(
-            "app.events",
-            `${LaunchGameServerCommand.name}.${msg.region}`,
-            msg,
-          )
-          .then(() =>
-            this.logger.log(`Published RMQ event ${msg.constructor.name}`),
-          ),
+        this.publishToRmq(`${LaunchGameServerCommand.name}.${msg.region}`, msg),
+      );
+  }
+
+  private publishToRmq(routingKey: string, msg: object) {
+    this.amqpConnection
+      .publish("app.events", routingKey, msg)
+      .then(() => this.logger.log(`Published RMQ event ${routingKey}`))
+      .catch((error) =>
+        this.logger.error(`Failed to publish RMQ event ${routingKey}`, error),
       );
   }
 }
