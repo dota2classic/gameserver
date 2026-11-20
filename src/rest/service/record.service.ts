@@ -142,13 +142,21 @@ export class RecordService {
   ) {}
 
   public async getPlayerRecords(steamId?: string): Promise<PlayerRecords> {
-    const holders: [RecordTimespan, RecordHolderRow[]][] = [];
+    const holders: [RecordTimespan, (RecordHolderRow | undefined)[]][] = [];
     for (const [span, period] of RECORD_PERIODS) {
-      holders.push([span, await this.findRecordHolders(period, steamId)]);
+      const rows = await this.findRecordHolders(period, steamId);
+      holders.push([
+        span,
+        RECORD_VALUES.map(([type]) => rows.find((row) => row[type])),
+      ]);
     }
 
     const matchIds = [
-      ...new Set(holders.flatMap(([, rows]) => rows.map((row) => row.fm_id))),
+      ...new Set(
+        holders.flatMap(([, picked]) =>
+          picked.filter(Boolean).map((row) => row.fm_id),
+        ),
+      ),
     ];
     const matches = matchIds.length
       ? await this.finishedMatchEntityRepository.find({
@@ -158,9 +166,9 @@ export class RecordService {
     const matchById = new Map(matches.map((match) => [match.id, match]));
 
     const records = {} as PlayerRecords;
-    for (const [span, rows] of holders) {
-      records[span] = RECORD_VALUES.map(([type]): RecordEntry => {
-        const holder = rows.find((row) => row[type]);
+    for (const [span, picked] of holders) {
+      records[span] = RECORD_VALUES.map(([type], i): RecordEntry => {
+        const holder = picked[i];
         return holder
           ? { type, steamId: holder.steam_id, match: matchById.get(holder.fm_id) }
           : { type, steamId, match: undefined };
