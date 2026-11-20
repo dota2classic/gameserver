@@ -16,7 +16,7 @@ import { WinHourGameAchievement } from 'gameserver/achievements/win-hour-game.ac
 import { GlassCannonAchievement } from 'gameserver/achievements/glasscannon.achievement';
 import { WinModeFactory } from 'gameserver/achievements/win-mode.factory';
 import { AllMeleeAchievement } from 'gameserver/achievements/all-melee.achievement';
-import { MeatGrinderAchievement } from 'gameserver/achievements/meatgrinder.achievement';
+import { AchievementEntity } from 'gameserver/model/achievement.entity';
 
 @Injectable()
 export class AchievementService {
@@ -71,10 +71,7 @@ export class AchievementService {
     key: AchievementKey,
     modes: MatchmakingMode[],
     checkpoints: number[],
-    progress: (
-      pim: PlayerInMatchEntity,
-      m: FinishedMatchEntity,
-    ) => Promise<number> | number,
+    increment: (pim: PlayerInMatchEntity, m: FinishedMatchEntity) => number,
   ) => {
     const c = new (class extends BaseAchievement {
       key = key;
@@ -87,8 +84,9 @@ export class AchievementService {
       async progress(
         pim: PlayerInMatchEntity,
         match: FinishedMatchEntity,
+        status: AchievementEntity,
       ): Promise<number> {
-        return progress(pim, match);
+        return status.progress + increment(pim, match);
       }
     })(this.finishedMatchEntityRepository, this.playerInMatchEntityRepository);
 
@@ -273,44 +271,14 @@ export class AchievementService {
     this.custom(GlassCannonAchievement);
     this.custom(AllMeleeAchievement);
 
-    this.custom(MeatGrinderAchievement);
-
     this.totalAchievement(
       AchievementKey.MEAT_GRINDER,
       BaseAchievement.REAL_LOBBY_TYPES,
       [1],
-      (t) => {
-        return this.finishedMatchEntityRepository
-          .createQueryBuilder("fm")
-          .innerJoin("fm.players", "pim") // relation: MatchEntity.players → PlayerInMatchEntity
-          .where((qb) => {
-            const subQuery = qb
-              .subQuery()
-              .select("pim2.matchId")
-              .from(PlayerInMatchEntity, "pim2")
-              .groupBy("pim2.matchId")
-              .having("MIN(pim2.kills) >= :kills", { kills: 10 })
-              .andHaving("MIN(pim2.deaths) >= :deaths", { deaths: 10 })
-              .andHaving("MIN(pim2.assists) >= :assists", { assists: 10 })
-              .getQuery();
-            return "fm.id IN " + subQuery;
-          })
-          .andWhere((qb) => {
-            const existsSub = qb
-              .subQuery()
-              .select("1")
-              .from(PlayerInMatchEntity, "pim3")
-              .where("pim3.matchId = fm.id")
-              .andWhere("pim3.playerId = :pid", { pid: t.playerId })
-              .getQuery();
-            return "EXISTS " + existsSub;
-          })
-          .andWhere("fm.matchmaking_mode in (:...modes)", {
-            modes: BaseAchievement.REAL_LOBBY_TYPES,
-          })
-          .printSql()
-          .getCount();
-      },
+      (_, m) =>
+        +m.players.every(
+          (p) => p.kills >= 10 && p.deaths >= 10 && p.assists >= 10,
+        ),
     );
   }
 }

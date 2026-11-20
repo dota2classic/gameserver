@@ -34,20 +34,15 @@ export abstract class BaseAchievement {
   abstract progress(
     pim: PlayerInMatchEntity,
     match: FinishedMatchEntity,
+    status: AchievementEntity,
   ): Promise<Progress>;
-
-  public async batchProgress(
-    pims: PlayerInMatchEntity[],
-    match: FinishedMatchEntity,
-  ): Promise<Progress[]> {
-    return Promise.all(pims.map((pim) => this.progress(pim, match)));
-  }
 
   async getProgress(
     pim: PlayerInMatchEntity,
     match: FinishedMatchEntity,
+    status: AchievementEntity,
   ): Promise<AchievementProgress> {
-    const p = await this.progress(pim, match);
+    const p = await this.progress(pim, match, status);
 
     return typeof p === "number"
       ? {
@@ -80,7 +75,11 @@ export abstract class BaseAchievement {
     if (this.isFullyComplete(playerAchievementStatus)) {
       return "none";
     }
-    const progress = await this.getProgress(pim, match);
+    const progress = await this.getProgress(
+      pim,
+      match,
+      playerAchievementStatus,
+    );
     const currentCheckpoint = this.getCompleteCheckpoint(
       playerAchievementStatus,
     );
