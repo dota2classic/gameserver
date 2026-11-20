@@ -11,6 +11,7 @@ import { MatchMapper } from 'rest/match/match.mapper';
 import { MatchController } from 'rest/match/match.controller';
 import { SaveGameResultsHandler } from 'gameserver/command/SaveGameResults/save-game-results.handler';
 import { SaveMatchFailedHandler } from 'gameserver/command/SaveMatchFailed/save-match-failed.handler';
+import { SaveGameServerNotFoundHandler } from 'gameserver/command/SaveGameServerNotFound/save-game-server-not-found.handler';
 import { SavePlayerAbandonHandler } from 'gameserver/command/SavePlayerAbandon/save-player-abandon.handler';
 import { AttachReplayHandler } from 'gameserver/command/AttachReplayCommand/attach-replay.handler';
 import { MatchFinishedHandler } from 'gameserver/event-handler/match-finished.handler';
@@ -37,6 +38,7 @@ import { SeasonModule } from 'season/season.module';
     MatchMapper,
     SaveGameResultsHandler,
     SaveMatchFailedHandler,
+    SaveGameServerNotFoundHandler,
     SavePlayerAbandonHandler,
     AttachReplayHandler,
     MatchFinishedHandler,
