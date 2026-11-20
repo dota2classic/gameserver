@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import PlayerInMatchEntity from 'gameserver/model/player-in-match.entity';
 import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 import { PlayerDailyRecord, PlayerYearSummaryDto } from 'rest/dto/record.dto';
@@ -37,6 +37,63 @@ export interface RecordEntry {
   steamId: string;
   match?: FinishedMatchEntity;
 }
+
+export type PlayerRecords = Record<RecordTimespan, RecordEntry[]>;
+
+const RECORD_VALUES: [PlayerRecordType, string][] = [
+  [PlayerRecordType.KDA, "(pim.kills + pim.assists) / GREATEST(pim.deaths, 1)"],
+  [PlayerRecordType.KILLS, "pim.kills"],
+  [PlayerRecordType.DEATHS, "pim.deaths"],
+  [PlayerRecordType.ASSISTS, "pim.assists"],
+  [PlayerRecordType.LAST_HITS, "pim.last_hits"],
+  [PlayerRecordType.DENIES, "pim.denies"],
+  [PlayerRecordType.GPM, "pim.gpm"],
+  [PlayerRecordType.XPM, "pim.xpm"],
+  [PlayerRecordType.NETWORTH, "pim.gold"],
+  [PlayerRecordType.TOWER_DAMAGE, "pim.tower_damage"],
+  [PlayerRecordType.HERO_DAMAGE, "pim.hero_damage"],
+  [PlayerRecordType.HERO_HEALING, "pim.hero_healing"],
+];
+
+const RECORD_PERIODS: [RecordTimespan, string][] = [
+  [RecordTimespan.OVERALL, "true"],
+  [
+    RecordTimespan.SEASON,
+    "fm.timestamp >= (SELECT gs.start_timestamp::date FROM game_season gs ORDER BY gs.start_timestamp DESC LIMIT 1)",
+  ],
+  [
+    RecordTimespan.MONTHLY,
+    "fm.timestamp >= date_trunc('month', localtimestamp) AND fm.timestamp < date_trunc('month', localtimestamp) + interval '1 month'",
+  ],
+  [
+    RecordTimespan.DAY,
+    "fm.timestamp >= date_trunc('day', localtimestamp) AND fm.timestamp < date_trunc('day', localtimestamp) + interval '1 day'",
+  ],
+];
+
+const RECORD_MODES = [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED];
+
+type RecordHolderRow = { fm_id: number; steam_id: string } & Record<
+  PlayerRecordType,
+  boolean
+>;
+
+const recordHoldersQuery = (period: string, byPlayer: boolean) => `
+WITH scope AS NOT MATERIALIZED (
+  SELECT fm.id AS fm_id, pim.*
+  FROM finished_match fm
+  INNER JOIN player_in_match pim ON pim."matchId" = fm.id
+  WHERE fm.matchmaking_mode = ANY($1) AND (${period})${byPlayer ? ' AND pim."playerId" = $2' : ""}
+),
+best AS (
+  SELECT ${RECORD_VALUES.map(([type, value]) => `max(${value}) AS "${type}"`).join(", ")}
+  FROM scope pim
+)
+SELECT pim.fm_id, pim."playerId" AS steam_id, ${RECORD_VALUES.map(([type, value]) => `(${value}) = best."${type}" AS "${type}"`).join(", ")}
+FROM scope pim
+CROSS JOIN best
+WHERE ${RECORD_VALUES.map(([type, value]) => `(${value}) = best."${type}"`).join(" OR ")}
+ORDER BY pim.fm_id, pim."playerId"`;
 
 export interface PlayerYearSummary {
   steam_id: string;
@@ -84,76 +141,50 @@ export class RecordService {
     private readonly datasource: DataSource,
   ) {}
 
-  public async getPlayerRecords(span: RecordTimespan, steamId?: string) {
-    return Promise.all([
-      this.getMostFactory(
+  public async getPlayerRecords(steamId?: string): Promise<PlayerRecords> {
+    const holders: [RecordTimespan, (RecordHolderRow | undefined)[]][] = [];
+    for (const [span, period] of RECORD_PERIODS) {
+      const rows = await this.findRecordHolders(period, steamId);
+      holders.push([
         span,
-        PlayerRecordType.KDA,
-        "MAX((pim.kills + pim.assists) / GREATEST(pim.deaths, 1))",
-        steamId,
-      ),
+        RECORD_VALUES.map(([type]) => rows.find((row) => row[type])),
+      ]);
+    }
 
-      this.getMostFactory(
-        span,
-        PlayerRecordType.KILLS,
-        "max(pim.kills)",
-        steamId,
+    const matchIds = [
+      ...new Set(
+        holders.flatMap(([, picked]) =>
+          picked.filter(Boolean).map((row) => row.fm_id),
+        ),
       ),
-      this.getMostFactory(
-        span,
-        PlayerRecordType.DEATHS,
-        "max(pim.deaths)",
-        steamId,
-      ),
-      this.getMostFactory(
-        span,
-        PlayerRecordType.ASSISTS,
-        "max(pim.assists)",
-        steamId,
-      ),
+    ];
+    const matches = matchIds.length
+      ? await this.finishedMatchEntityRepository.find({
+          where: { id: In(matchIds) },
+        })
+      : [];
+    const matchById = new Map(matches.map((match) => [match.id, match]));
 
-      this.getMostFactory(
-        span,
-        PlayerRecordType.LAST_HITS,
-        "max(pim.last_hits)",
-        steamId,
-      ),
-      this.getMostFactory(
-        span,
-        PlayerRecordType.DENIES,
-        "max(pim.denies)",
-        steamId,
-      ),
+    const records = {} as PlayerRecords;
+    for (const [span, picked] of holders) {
+      records[span] = RECORD_VALUES.map(([type], i): RecordEntry => {
+        const holder = picked[i];
+        return holder
+          ? { type, steamId: holder.steam_id, match: matchById.get(holder.fm_id) }
+          : { type, steamId, match: undefined };
+      });
+    }
+    return records;
+  }
 
-      this.getMostFactory(span, PlayerRecordType.GPM, "max(pim.gpm)", steamId),
-      this.getMostFactory(span, PlayerRecordType.XPM, "max(pim.xpm)", steamId),
-
-      this.getMostFactory(
-        span,
-        PlayerRecordType.NETWORTH,
-        "max(pim.gold)",
-        steamId,
-      ),
-
-      this.getMostFactory(
-        span,
-        PlayerRecordType.TOWER_DAMAGE,
-        "max(pim.tower_damage)",
-        steamId,
-      ),
-      this.getMostFactory(
-        span,
-        PlayerRecordType.HERO_DAMAGE,
-        "max(pim.hero_damage)",
-        steamId,
-      ),
-      this.getMostFactory(
-        span,
-        PlayerRecordType.HERO_HEALING,
-        "max(pim.hero_healing)",
-        steamId,
-      ),
-    ]);
+  private findRecordHolders(
+    period: string,
+    steamId?: string,
+  ): Promise<RecordHolderRow[]> {
+    return this.datasource.query<RecordHolderRow[]>(
+      recordHoldersQuery(period, !!steamId),
+      steamId ? [RECORD_MODES, steamId] : [RECORD_MODES],
+    );
   }
 
   public async dailyPlayerRecords() {
@@ -170,77 +201,6 @@ INNER JOIN finished_match fm ON fm.id = mcle."matchId"
 WHERE fm."timestamp"::date = now()::date
 GROUP BY steam_id;
 `);
-  }
-
-  private async getMostFactory(
-    span: RecordTimespan,
-    type: PlayerRecordType,
-    condition: string,
-    steamId?: string,
-  ): Promise<RecordEntry> {
-    let timeCondition: string | object;
-    switch (span) {
-      case RecordTimespan.OVERALL:
-        timeCondition = "true";
-        break;
-      case RecordTimespan.SEASON:
-        timeCondition = `fm.timestamp >= (
-            select
-                gs.start_timestamp::date
-            from
-                game_season gs
-            order by
-                gs.start_timestamp desc
-            limit 1)`;
-        break;
-      case RecordTimespan.MONTHLY:
-        timeCondition = `extract(YEAR FROM fm.timestamp) = extract(YEAR FROM now()) and extract(MONTH FROM fm.timestamp) = extract(MONTH FROM now())`;
-        break;
-      case RecordTimespan.DAY:
-        timeCondition = `fm.timestamp::date = now()::date`;
-    }
-
-    let pimJoin = 'pim."matchId" = fm.id';
-    if (steamId) {
-      pimJoin += ` and pim."playerId" = '${steamId}'`;
-    }
-
-    const d = await this.datasource
-      .createQueryBuilder()
-      .addSelect([
-        "fm.id as fm_id",
-        'pim."playerId" as steam_id',
-        `${condition} as mk`,
-      ])
-      .from("finished_match", "fm")
-      .innerJoin("player_in_match", "pim", pimJoin)
-      .where("fm.matchmaking_mode in (:...modes)", {
-        modes: [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],
-      })
-      .andWhere(timeCondition)
-      .groupBy('fm.id, pim."playerId"')
-      .orderBy("3", "DESC", "NULLS LAST")
-      .limit(1)
-      .getRawOne<{ fm_id: number; steam_id: string; mk: number }>();
-
-    if (!d) {
-      return {
-        steamId: steamId,
-        type: type,
-        match: undefined,
-      };
-    }
-
-    const fm = await this.finishedMatchEntityRepository.findOne({
-      where: { id: d.fm_id },
-      relations: ["players"],
-    });
-
-    return {
-      type,
-      match: fm,
-      steamId: d.steam_id,
-    };
   }
 
   public async yearResults(

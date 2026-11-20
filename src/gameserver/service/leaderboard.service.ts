@@ -53,14 +53,20 @@ export class LeaderboardService {
   public async getPlayerSummary(
     steamId: string,
   ): Promise<Omit<PlayerSummaryDto, "reports">> {
-    const [season, overall, educationStatus, recalibration, session] =
+    const [entries, currentSeason, educationStatus, recalibration, session] =
       await Promise.combine([
-        this.getPlayerLeaderboardEntry(steamId),
-        this.getPlayerLeaderboardEntryOverall(steamId),
+        this.leaderboardViewRepository.find({ where: { steamId } }),
+        this.gameSeasonService.getCurrentSeason(),
         this.playerService.getEducationStatus(steamId),
         this.playerService.getRecalibration(steamId),
         this.playerService.getSession(steamId),
       ]);
+    const season = await this.getPlayerLeaderboardEntry(
+      steamId,
+      currentSeason,
+      entries,
+    );
+    const overall = this.getPlayerLeaderboardEntryOverall(steamId, entries);
 
     return {
       steamId,
@@ -98,13 +104,10 @@ export class LeaderboardService {
     };
   }
 
-  private async getPlayerLeaderboardEntryOverall(
+  private getPlayerLeaderboardEntryOverall(
     steamId: string,
-  ): Promise<LeaderboardEntryDto> {
-    const lb = await this.leaderboardViewRepository.find({
-      where: { steamId },
-    });
-
+    lb: LeaderboardView[],
+  ): LeaderboardEntryDto {
     const totalGames = sum(lb.map((it) => it.games));
     const totalWins = sum(lb.map((it) => it.wins));
     const totalKills = sum(lb.map((it) => it.kills));
@@ -136,13 +139,11 @@ export class LeaderboardService {
 
   private async getPlayerLeaderboardEntry(
     steamId: string,
+    season: GameSeasonEntity,
+    entries: LeaderboardView[],
   ): Promise<LeaderboardEntryDto & { calibrationGames: number }> {
-    const season = await this.gameSeasonService.getCurrentSeason();
-    const lb = await this.leaderboardViewRepository.findOne({
-      where: { steamId, seasonId: season.id },
-    });
+    const lb = entries.find((it) => it.seasonId === season.id);
 
-    // if it exists in the view, we happy
     if (!lb) {
       return this.approximatePlayerLeaderboardEntry(steamId, season);
     }

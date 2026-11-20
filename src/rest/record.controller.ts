@@ -1,8 +1,8 @@
-import { Controller, Get, Inject, Logger, Param, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Inject, Param, UseInterceptors } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Cache, CACHE_MANAGER, CacheInterceptor } from '@nestjs/cache-manager';
-import { PlayerDailyRecord, PlayerRecordDto, PlayerRecordsResponse, PlayerYearSummaryDto } from 'rest/dto/record.dto';
-import { RecordService, RecordTimespan } from 'rest/service/record.service';
+import { PlayerDailyRecord, PlayerRecordsResponse, PlayerYearSummaryDto } from 'rest/dto/record.dto';
+import { PlayerRecords, RecordService, RecordTimespan } from 'rest/service/record.service';
 import { Mapper } from 'rest/mapper';
 import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
 
@@ -11,8 +11,6 @@ import { ReqLoggingInterceptor } from 'rest/service/req-logging.interceptor';
 @UseInterceptors(CacheInterceptor)
 @UseInterceptors(ReqLoggingInterceptor)
 export class RecordController {
-  private readonly logger = new Logger(RecordController.name);
-
   constructor(
     private readonly mapper: Mapper,
     private readonly recordService: RecordService,
@@ -32,64 +30,22 @@ export class RecordController {
 
   @Get()
   public async records(): Promise<PlayerRecordsResponse> {
-    this.logger.log("Actual method call");
-    const [overall, season, month, day] = await Promise.combine<
-      PlayerRecordDto[],
-      PlayerRecordDto[],
-      PlayerRecordDto[],
-      PlayerRecordDto[]
-    >([
-      this.recordService
-        .getPlayerRecords(RecordTimespan.OVERALL)
-        .then((all) => Promise.all(all.map(this.mapper.mapRecordDto))),
-      this.recordService
-        .getPlayerRecords(RecordTimespan.SEASON)
-        .then((all) => Promise.all(all.map(this.mapper.mapRecordDto))),
-      this.recordService
-        .getPlayerRecords(RecordTimespan.MONTHLY)
-        .then((all) => Promise.all(all.map(this.mapper.mapRecordDto))),
-      this.recordService
-        .getPlayerRecords(RecordTimespan.DAY)
-        .then((all) => Promise.all(all.map(this.mapper.mapRecordDto))),
-    ]);
-
-    return {
-      overall,
-      season,
-      month,
-      day,
-    };
+    return this.mapRecords(await this.recordService.getPlayerRecords());
   }
 
   @Get("/:steam_id")
   public async playerRecord(
     @Param("steam_id") steamId: string,
   ): Promise<PlayerRecordsResponse> {
-    const [overall, season, month, day] = await Promise.combine<
-      PlayerRecordDto[],
-      PlayerRecordDto[],
-      PlayerRecordDto[],
-      PlayerRecordDto[]
-    >([
-      this.recordService
-        .getPlayerRecords(RecordTimespan.OVERALL, steamId)
-        .then((all) => Promise.all(all.map(this.mapper.mapRecordDto))),
-      this.recordService
-        .getPlayerRecords(RecordTimespan.SEASON, steamId)
-        .then((all) => Promise.all(all.map(this.mapper.mapRecordDto))),
-      this.recordService
-        .getPlayerRecords(RecordTimespan.MONTHLY, steamId)
-        .then((all) => Promise.all(all.map(this.mapper.mapRecordDto))),
-      this.recordService
-        .getPlayerRecords(RecordTimespan.DAY, steamId)
-        .then((all) => Promise.all(all.map(this.mapper.mapRecordDto))),
-    ]);
+    return this.mapRecords(await this.recordService.getPlayerRecords(steamId));
+  }
 
+  private mapRecords(records: PlayerRecords): PlayerRecordsResponse {
     return {
-      overall,
-      season,
-      month,
-      day,
+      overall: records[RecordTimespan.OVERALL].map(this.mapper.mapRecordDto),
+      season: records[RecordTimespan.SEASON].map(this.mapper.mapRecordDto),
+      month: records[RecordTimespan.MONTHLY].map(this.mapper.mapRecordDto),
+      day: records[RecordTimespan.DAY].map(this.mapper.mapRecordDto),
     };
   }
 }

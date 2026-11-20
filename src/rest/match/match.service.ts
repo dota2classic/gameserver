@@ -105,30 +105,43 @@ export class MatchService {
   }
 
 
-  @optimized(true, 'Added index on pim.hero')
+  @optimized(true, 'player_in_match_hero_idx')
   public async heroMatches(
     page: number,
     perPage: number,
     hero: string,
   ): Promise<Page<FinishedMatchEntity>> {
-    const [ids, count] = await this.finishedMatchEntityRepository
+    const heroMatches = this.finishedMatchEntityRepository
       .createQueryBuilder('fm')
-      .select(['fm.id', 'fm.timestamp'])
-      .addOrderBy('fm.timestamp', 'DESC')
-      .leftJoin('fm.players', 'pims')
-      .where('pims.hero = :hero', { hero })
-      .andWhere('fm.matchmaking_mode in (:...modes)', {
+      .where('fm.matchmaking_mode in (:...modes)', {
         modes: [MatchmakingMode.RANKED, MatchmakingMode.UNRANKED],
       })
-      .take(perPage)
-      .skip(perPage * page)
-      .getManyAndCount();
+      .andWhere(
+        'EXISTS (SELECT 1 FROM player_in_match pim WHERE pim."matchId" = fm.id AND pim.hero = :hero)',
+        { hero },
+      );
 
-    const mapped = await this.finishedMatchEntityRepository.find({
-      where: {
-        id: In(ids.map(t => t.id)),
-      },
-    });
+    const [ids, { count }] = await Promise.combine([
+      heroMatches
+        .clone()
+        .select('fm.id', 'id')
+        .orderBy('fm.timestamp', 'DESC')
+        .addOrderBy('fm.id', 'ASC')
+        .limit(perPage)
+        .offset(perPage * page)
+        .getRawMany<{ id: number }>(),
+      heroMatches
+        .clone()
+        .select('COUNT(*)::int', 'count')
+        .getRawOne<{ count: number }>(),
+    ]);
+
+    const mapped = ids.length
+      ? await this.finishedMatchEntityRepository.find({
+          where: { id: In(ids.map((t) => t.id)) },
+          order: { timestamp: 'DESC', id: 'ASC' },
+        })
+      : [];
 
     return {
       data: mapped,
