@@ -9,11 +9,13 @@ import { MetricsService } from 'metrics/metrics.service';
 const LEADERBOARD_REFRESH_CRON = '30 2-59/5 * * * *';
 const HOURLY_VIEWS_REFRESH_CRON = '30 4 * * * *';
 
-const SOURCE_WRITES_QUERY = `
+export const MAX_TICKS_BETWEEN_REFRESHES = 6;
+
+const SOURCE_COUNTERS_QUERY = `
 SELECT CASE
          WHEN count(*) = 0 OR NOT current_setting('track_counts')::boolean THEN NULL
-         ELSE sum(s.n_tup_ins + s.n_tup_upd + s.n_tup_del)::text
-       END AS writes
+         ELSE string_agg(s.relid || ':' || s.n_tup_ins || ':' || s.n_tup_upd || ':' || s.n_tup_del, ',' ORDER BY s.relid)
+       END AS counters
 FROM pg_stat_user_tables s
 WHERE s.relid IN (
   SELECT d.refobjid
@@ -27,7 +29,10 @@ WHERE s.relid IN (
 @Injectable()
 export class LeaderboardRefreshScheduler {
   private readonly logger = new Logger(LeaderboardRefreshScheduler.name);
-  private readonly refreshedAtWrites = new Map<string, string>();
+  private readonly lastRefresh = new Map<
+    string,
+    { counters: string | null; ticks: number }
+  >();
 
   constructor(
     @InjectRepository(LeaderboardView)
@@ -57,25 +62,32 @@ export class LeaderboardRefreshScheduler {
   }
 
   private async refreshIfSourcesChanged(view: string, concurrently: boolean) {
-    const writes = await this.sourceWrites(view);
-    if (writes !== null && this.refreshedAtWrites.get(view) === writes) {
+    const counters = await this.sourceCounters(view);
+    const last = this.lastRefresh.get(view);
+    if (
+      last &&
+      counters !== null &&
+      last.counters === counters &&
+      last.ticks + 1 < MAX_TICKS_BETWEEN_REFRESHES
+    ) {
+      last.ticks++;
       return;
     }
 
     await this.leaderboardViewRepository.query(
       `refresh materialized view ${concurrently ? 'concurrently ' : ''}${view}`,
     );
-    this.refreshedAtWrites.set(view, writes);
+    this.lastRefresh.set(view, { counters, ticks: 0 });
     this.logger.log(`Refreshed ${view}`);
   }
 
-  private async sourceWrites(view: string): Promise<string | null> {
+  private async sourceCounters(view: string): Promise<string | null> {
     try {
-      const [{ writes }]: { writes: string | null }[] =
-        await this.leaderboardViewRepository.query(SOURCE_WRITES_QUERY, [view]);
-      return writes;
+      const [{ counters }]: { counters: string | null }[] =
+        await this.leaderboardViewRepository.query(SOURCE_COUNTERS_QUERY, [view]);
+      return counters;
     } catch (e) {
-      this.logger.error(`Could not read source table writes of ${view}`, e);
+      this.logger.error(`Could not read source table counters of ${view}`, e);
       return null;
     }
   }
