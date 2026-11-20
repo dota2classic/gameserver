@@ -32,12 +32,22 @@ export class AchievementService {
     this.createAchievements();
   }
 
+  private register = (achievement: BaseAchievement) => {
+    if (this.achievementMap.has(achievement.key)) {
+      throw new Error(
+        `Achievement ${AchievementKey[achievement.key]} is registered twice`,
+      );
+    }
+    this.achievementMap.set(achievement.key, achievement);
+  };
+
   private custom = (type: Constructor<BaseAchievement>) => {
-    const instance = new type(
-      this.finishedMatchEntityRepository,
-      this.playerInMatchEntityRepository,
+    this.register(
+      new type(
+        this.finishedMatchEntityRepository,
+        this.playerInMatchEntityRepository,
+      ),
     );
-    this.achievementMap.set(instance.key, instance);
   };
 
   private matchAchievement = (
@@ -62,7 +72,7 @@ export class AchievementService {
       }
     })(this.finishedMatchEntityRepository, this.playerInMatchEntityRepository);
 
-    this.achievementMap.set(key, c);
+    this.register(c);
 
     return c;
   };
@@ -90,7 +100,7 @@ export class AchievementService {
       }
     })(this.finishedMatchEntityRepository, this.playerInMatchEntityRepository);
 
-    this.achievementMap.set(key, c);
+    this.register(c);
 
     return c;
   };
