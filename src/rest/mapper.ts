@@ -33,13 +33,11 @@ export class Mapper {
     matchId: it.matchId,
   });
 
-  public mapRecordDto = async (it: RecordEntry): Promise<PlayerRecordDto> => {
-    return {
-      match: it.match && (await this.matchMapper.mapMatch(it.match)),
-      steamId: it.steamId,
-      recordType: it.type,
-    };
-  };
+  public mapRecordDto = (it: RecordEntry): PlayerRecordDto => ({
+    match: it.match && this.matchMapper.mapMatch(it.match),
+    steamId: it.steamId,
+    recordType: it.type,
+  });
 
   public mapDodgeEntry = (it: DodgeListEntity): DodgeListEntryDto => ({
     steamId: it.dodgedSteamId,
