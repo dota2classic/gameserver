@@ -22,6 +22,7 @@ import { PrepareGameHandler } from "gameserver/command/PrepareGame/prepare-game.
 import { PlayerConnectedHandler } from "gameserver/event-handler/player-connected.handler";
 import { SaveGameResultsHandler } from "gameserver/command/SaveGameResults/save-game-results.handler";
 import { SaveMatchFailedHandler } from "gameserver/command/SaveMatchFailed/save-match-failed.handler";
+import { SaveGameServerNotFoundHandler } from "gameserver/command/SaveGameServerNotFound/save-game-server-not-found.handler";
 import { SavePlayerAbandonHandler } from "gameserver/command/SavePlayerAbandon/save-player-abandon.handler";
 import { GameSeasonService } from "gameserver/service/game-season.service";
 import { PlayerServiceV2 } from "gameserver/service/player-service-v2.service";
@@ -45,6 +46,7 @@ const CommandHandlers = [
 
   SaveGameResultsHandler,
   SaveMatchFailedHandler,
+  SaveGameServerNotFoundHandler,
   SavePlayerAbandonHandler,
   AssignStartedServerHandler,
   LeaveGameSessionHandler,
