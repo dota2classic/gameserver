@@ -4,6 +4,7 @@ import { MmrChangeLogEntity } from 'gameserver/model/mmr-change-log.entity';
 
 @Entity("player_in_match")
 @Index("player_match_index", ["matchId"])
+@Index("player_in_match_hero_idx", ["hero", "matchId"])
 export default class PlayerInMatchEntity {
   /**
    * PlayerId
@@ -72,7 +73,6 @@ export default class PlayerInMatchEntity {
   gold: number = 0;
 
   @Column("varchar")
-  @Index("player_in_match_hero_hash_index", { synchronize: false })
   hero!: string;
 
   @Column("smallint", { default: 0 })
