@@ -6,8 +6,6 @@ import { GameResultsEvent } from 'gateway/events/gs/game-results.event';
 import { SaveGameResultsCommand } from 'gameserver/command/SaveGameResults/save-game-results.command';
 import { MatchFailedEvent } from 'gateway/events/match-failed.event';
 import { SaveMatchFailedCommand } from 'gameserver/command/SaveMatchFailed/save-match-failed.command';
-import { GameServerNotFoundEvent } from 'gateway/events/game-server-not-found.event';
-import { SaveGameServerNotFoundCommand } from 'gameserver/command/SaveGameServerNotFound/save-game-server-not-found.command';
 import { PlayerAbandonedEvent } from 'gateway/events/bans/player-abandoned.event';
 import { SavePlayerAbandonCommand } from 'gameserver/command/SavePlayerAbandon/save-player-abandon.command';
 import { MatchArtifactUploadedEvent } from 'gateway/events/match-artifact-uploaded.event';
@@ -41,16 +39,6 @@ export class MatchRmqListener {
   })
   async MatchFailedEvent(data: MatchFailedEvent) {
     await this.cbus.execute(new SaveMatchFailedCommand(data));
-  }
-
-  @RabbitSubscribe({
-    exchange: 'app.events',
-    routingKey: GameServerNotFoundEvent.name,
-    queue: `gs-queue.${GameServerNotFoundEvent.name}`,
-    errorBehavior: MessageHandlerErrorBehavior.REQUEUE,
-  })
-  async GameServerNotFoundEvent(data: GameServerNotFoundEvent) {
-    await this.cbus.execute(new SaveGameServerNotFoundCommand(data));
   }
 
   @RabbitSubscribe({
