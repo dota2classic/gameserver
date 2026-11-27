@@ -8,6 +8,7 @@ import { Dota_GameMode } from "gateway/shared-types/dota-game-mode";
 import { MatchmakingModeMappingEntity } from "gameserver/model/matchmaking-mode-mapping.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { DotaTeam } from "gateway/shared-types/dota-team";
 import { Dota2Version } from "gateway/shared-types/dota2version";
 import { DotaPatch } from "gateway/constants/patch";
 import { GameServerPluginParameters } from "gateway/commands/LaunchGameServer/game-server-plugin-parameters";
@@ -24,7 +25,18 @@ export class PrepareGameHandler implements ICommandHandler<PrepareGameCommand> {
   ) {}
 
   async execute(command: PrepareGameCommand) {
-    const mapping = await this.getMappingForLobbyType(command.lobbyType);
+    const secret = command.lobbyType === MatchmakingMode.SECRET;
+    if (secret) {
+      const radiant = command.players.filter((player) => player.team === DotaTeam.RADIANT);
+      const dire = command.players.filter((player) => player.team === DotaTeam.DIRE);
+      const uniquePlayers = new Set(command.players.map((player) => player.playerId.value));
+      if (command.players.length !== 10 || uniquePlayers.size !== 10 ||
+          radiant.length !== 5 || dire.length !== 5) {
+        this.logger.warn("Rejected SECRET room with invalid 5v5 roster");
+        return;
+      }
+    }
+    const mapping = secret ? undefined : await this.getMappingForLobbyType(command.lobbyType);
 
     this.ebus.publish(
       new GamePreparedEvent(
