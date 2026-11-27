@@ -6,7 +6,10 @@ import { Repository } from "typeorm";
 import { LIGHT_PUNISHMENT } from "gateway/shared-types/timings";
 import { BanReason } from "gateway/shared-types/ban";
 import { Logger } from "@nestjs/common";
-import { BanSystemEntry, BanSystemEvent } from "gateway/events/gs/ban-system.event";
+import {
+  BanSystemEntry,
+  BanSystemEvent,
+} from "gateway/events/gs/ban-system.event";
 import { PlayerId } from "gateway/shared-types/player-id";
 import { PlayerBanEntity } from "gameserver/model/player-ban.entity";
 import { MatchmakingMode } from "gateway/shared-types/matchmaking-mode";
@@ -211,7 +214,15 @@ export class CrimeLogCreatedHandler
     } else {
       this.logger.log("Ban time is active: extending endTime by duration");
       ban.endTime = new Date(ban.endTime.getTime() + duration);
-      ban.reason = crime.crime;
+      const queueCooldown =
+        crime.crime === BanReason.GAME_DECLINE ||
+        crime.crime === BanReason.LOAD_FAILURE;
+      const restrictedBan = [
+        BanReason.INFINITE_BAN,
+        BanReason.ABANDON,
+        BanReason.RULE_VIOLATION,
+      ].includes(ban.reason);
+      if (!queueCooldown || !restrictedBan) ban.reason = crime.crime;
     }
 
     await this.playerBanRepository.save(ban);
