@@ -73,6 +73,7 @@ export class PlayerSummaryDto {
   @ApiProperty({ enum: MatchAccessLevel, enumName: "MatchAccessLevel" })
   accessLevel: MatchAccessLevel;
   readinessProgress: number;
+  educationVerified: boolean;
   reports: PlayerAspectCountDto[];
 }
 

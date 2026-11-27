@@ -70,12 +70,16 @@ export class PlayerServiceV2 {
 
   public async getEducationStatus(
     steamId: string,
-  ): Promise<{ accessLevel: MatchAccessLevel; readinessProgress: number }> {
+  ): Promise<{ accessLevel: MatchAccessLevel; readinessProgress: number; educationVerified: boolean }> {
     const lock = await this.educationLockRepo.findOne({ where: { steamId } });
 
     // No lock = existing player created before this feature — free access
     if (!lock || lock.resolved) {
-      return { accessLevel: MatchAccessLevel.HUMAN_GAMES, readinessProgress: 1 };
+      return {
+        accessLevel: MatchAccessLevel.HUMAN_GAMES,
+        readinessProgress: 1,
+        educationVerified: lock?.resolved === true,
+      };
     }
 
     const accessLevel =
@@ -86,7 +90,7 @@ export class PlayerServiceV2 {
     const readinessProgress =
       Math.min(lock.totalBotGames, lock.requiredGames) / lock.requiredGames;
 
-    return { accessLevel, readinessProgress };
+    return { accessLevel, readinessProgress, educationVerified: false };
   }
 
   public async getMatchAccessLevel(steamId: string): Promise<MatchAccessLevel> {

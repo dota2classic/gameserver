@@ -81,6 +81,7 @@ export class LeaderboardService {
         : undefined,
       accessLevel: educationStatus.accessLevel,
       readinessProgress: educationStatus.readinessProgress,
+      educationVerified: educationStatus.educationVerified,
       calibrationGamesLeft: Math.max(
         ProcessRankedMatchHandler.TOTAL_CALIBRATION_GAMES -
           season.calibrationGames,
