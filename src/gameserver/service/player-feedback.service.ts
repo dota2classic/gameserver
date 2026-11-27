@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PlayerReportEntity } from 'gameserver/model/player-report.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
@@ -10,6 +10,9 @@ import { PlayerReportsDto } from 'rest/dto/player.dto';
 import { PlayerCrimeLogEntity } from 'gameserver/model/player-crime-log.entity';
 import { PlayerFeedbackCreatedEvent } from 'gateway/events/player-feedback-created.event';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
+
+import FinishedMatchEntity from 'gameserver/model/finished-match.entity';
+import { MatchmakingMode } from 'gateway/shared-types/matchmaking-mode';
 
 @Injectable()
 export class PlayerFeedbackService {
@@ -58,6 +61,15 @@ export class PlayerFeedbackService {
     aspect: PlayerAspect,
     matchId: number,
   ) {
+    const match = await this.ds.getRepository(FinishedMatchEntity).findOne({
+      where: { id: matchId },
+      select: { id: true, matchmaking_mode: true },
+    });
+    if (!match) throw new NotFoundException("Match not found");
+    if (match.matchmaking_mode === MatchmakingMode.SECRET) {
+      throw new ForbiddenException("Reports are disabled for SECRET matches");
+    }
+
     const prs = await this.playerReportStatusEntityRepository.findOneOrFail({
       where: {
         steam_id: reporter,
@@ -108,7 +120,7 @@ export class PlayerFeedbackService {
    FROM finished_match fm
    INNER JOIN player_in_match this_plr ON this_plr."playerId" = $2
    AND this_plr."matchId" = fm.id
-   WHERE id = $1)
+   WHERE fm.id = $1 AND fm.matchmaking_mode <> $3)
 SELECT pim."playerId" AS reported_steam_id,
        fm."timestamp" AS match_date,
        array_agg(DISTINCT pr.reporter_steam_id) AS reporters
@@ -118,7 +130,7 @@ LEFT JOIN player_report pr ON pr.match_id = pim."matchId"
 AND pr.reported_steam_id = pim."playerId" GROUP
     BY 1,
        2`,
-      [matchId, steamId],
+      [matchId, steamId, MatchmakingMode.SECRET],
     );
   }
 }

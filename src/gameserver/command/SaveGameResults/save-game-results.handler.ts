@@ -11,6 +11,8 @@ import { SessionEndedEvent } from 'gameserver/event/session-ended.event';
 import { GameSeasonService } from 'gameserver/service/game-season.service';
 import { MatchRecordedEvent } from 'gateway/events/gs/match-recorded.event';
 
+import { MatchEntity } from 'gameserver/model/match.entity';
+
 @CommandHandler(SaveGameResultsCommand)
 export class SaveGameResultsHandler
   implements ICommandHandler<SaveGameResultsCommand>
@@ -45,12 +47,18 @@ export class SaveGameResultsHandler
     const season = await this.gameSeasonService.getCurrentSeason();
 
     this.logger.log(`Saving match result ${event.matchId}`)
-    let modeOverride =
-      (event.type === MatchmakingMode.UNRANKED ||
-        event.type === MatchmakingMode.RANKED) &&
+    const scheduledMatch = await this.datasource.getRepository(MatchEntity).findOne({
+      where: { id: event.matchId },
+      select: { id: true, mode: true },
+    });
+    const mode = scheduledMatch?.mode === MatchmakingMode.SECRET
+      ? MatchmakingMode.SECRET
+      : event.type;
+    const modeOverride =
+      (mode === MatchmakingMode.UNRANKED || mode === MatchmakingMode.RANKED) &&
       event.players.length !== 10
         ? MatchmakingMode.BOTS
-        : event.type;
+        : mode;
 
     const m = await this.datasource.transaction<FinishedMatchEntity>(
       async (entityManager) => {

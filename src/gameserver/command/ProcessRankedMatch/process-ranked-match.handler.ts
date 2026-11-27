@@ -118,6 +118,11 @@ export class ProcessRankedMatchHandler
     )
       return;
 
+    const m = await this.finishedMatchEntityRepository.findOneOrFail({
+      where: { id: command.matchId },
+    });
+    if (m.matchmaking_mode === MatchmakingMode.SECRET) return;
+
     // find latest season which start_timestamp > now
     const currentSeason = await this.seasonService.getCurrentSeason();
 
@@ -131,12 +136,6 @@ export class ProcessRankedMatchHandler
       );
       return;
     }
-
-    const m = await this.finishedMatchEntityRepository.findOneOrFail({
-      where: {
-        id: command.matchId,
-      },
-    });
 
     this.logger.log(`Processing ranked match ${m.id}`);
     const { diffDeviationFactor, winnerAverage, loserAverage } =
